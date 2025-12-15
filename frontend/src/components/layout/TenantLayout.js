@@ -23,10 +23,14 @@ export const TenantLayout = ({ children }) => {
     navigate('/login');
   };
 
-  // Get branding colors
-  const primaryColor = brandingStyles?.primary_color || 'hsl(210, 85%, 52%)';
-  const secondaryColor = brandingStyles?.secondary_color || 'hsl(265, 60%, 55%)';
-  const logo = brandingStyles?.logo_base64 || brandingStyles?.logo_url;
+  // Get branding - use master's branding if this is a sub-client
+  const effectiveBranding = currentTenant?.master_branding || brandingStyles || {};
+  const primaryColor = effectiveBranding?.primary_color || 'hsl(210, 85%, 52%)';
+  const secondaryColor = effectiveBranding?.secondary_color || 'hsl(265, 60%, 55%)';
+  const logo = effectiveBranding?.logo_base64 || effectiveBranding?.logo_url;
+  const poweredByText = currentTenant?.master_client_id 
+    ? `Powered by ${currentTenant.master_client_name || 'Partner'}` 
+    : 'Powered by OutPace Intelligence';
 
   return (
     <div className="flex h-screen overflow-hidden bg-[hsl(var(--background))]">
