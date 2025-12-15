@@ -334,41 +334,157 @@ export default function TenantsPage() {
                 {/* Branding Tab */}
                 <TabsContent value="branding" className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">Logo URL</Label>
+                    <Label className="text-[hsl(var(--foreground))]">Logo Upload</Label>
+                    <Input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                      onChange={async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const formDataUpload = new FormData();
+                          formDataUpload.append('file', file);
+                          
+                          try {
+                            const response = await axios.post(
+                              `${API_URL}/api/upload/logo/${editingTenant?.id || 'temp'}`,
+                              formDataUpload,
+                              { headers: { 'Content-Type': 'multipart/form-data' } }
+                            );
+                            setFormData({...formData, branding: {...formData.branding, logo_base64: response.data.logo_data_uri, logo_url: null}});
+                            toast.success('Logo uploaded!');
+                          } catch (error) {
+                            toast.error('Logo upload failed');
+                          }
+                        }
+                      }}
+                      className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                      disabled={!editingTenant}
+                    />
+                    {!editingTenant && (
+                      <p className="text-xs text-[hsl(var(--accent-warning))]">Save tenant first, then upload logo</p>
+                    )}
+                    {(formData.branding.logo_base64 || formData.branding.logo_url) && (
+                      <div className="mt-2">
+                        <img 
+                          src={formData.branding.logo_base64 || formData.branding.logo_url} 
+                          alt="Logo preview"
+                          className="h-16 object-contain bg-[hsl(var(--background-elevated))] p-2 rounded border border-[hsl(var(--border))]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[hsl(var(--foreground))]">OR Logo URL</Label>
                     <Input
                       placeholder="https://example.com/logo.png"
-                      value={formData.branding.logo_url}
-                      onChange={(e) => setFormData({...formData, branding: {...formData.branding, logo_url: e.target.value}})}
+                      value={formData.branding.logo_url || ''}
+                      onChange={(e) => setFormData({...formData, branding: {...formData.branding, logo_url: e.target.value, logo_base64: null}})}
                       className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
                     />
-                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Direct link to client logo (appears in header & exports)</p>
+                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Use URL OR upload file (upload takes priority)</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[hsl(var(--foreground))]">Primary Color (HSL)</Label>
-                      <Input
-                        placeholder="hsl(210, 85%, 52%)"
-                        value={formData.branding.primary_color}
-                        onChange={(e) => setFormData({...formData, branding: {...formData.branding, primary_color: e.target.value}})}
-                        className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                      />
-                      <div 
-                        className="h-8 rounded border border-[hsl(var(--border))]"
-                        style={{background: formData.branding.primary_color}}
-                      />
+                  
+                  <div className="border-t border-[hsl(var(--border))] pt-4 mt-4">
+                    <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">Brand Colors</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Primary Color</Label>
+                        <Input
+                          placeholder="hsl(210, 85%, 52%)"
+                          value={formData.branding.primary_color}
+                          onChange={(e) => setFormData({...formData, branding: {...formData.branding, primary_color: e.target.value}})}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                        />
+                        <div 
+                          className="h-12 rounded border border-[hsl(var(--border))]"
+                          style={{background: formData.branding.primary_color}}
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Main CTAs, buttons</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Secondary Color</Label>
+                        <Input
+                          placeholder="hsl(265, 60%, 55%)"
+                          value={formData.branding.secondary_color}
+                          onChange={(e) => setFormData({...formData, branding: {...formData.branding, secondary_color: e.target.value}})}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                        />
+                        <div 
+                          className="h-12 rounded border border-[hsl(var(--border))]"
+                          style={{background: formData.branding.secondary_color}}
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Accents, highlights</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Accent Color</Label>
+                        <Input
+                          placeholder="hsl(142, 70%, 45%)"
+                          value={formData.branding.accent_color}
+                          onChange={(e) => setFormData({...formData, branding: {...formData.branding, accent_color: e.target.value}})}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                        />
+                        <div 
+                          className="h-12 rounded border border-[hsl(var(--border))]"
+                          style={{background: formData.branding.accent_color}}
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Success states, positive metrics</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Text Color</Label>
+                        <Input
+                          placeholder="hsl(0, 0%, 98%)"
+                          value={formData.branding.text_color}
+                          onChange={(e) => setFormData({...formData, branding: {...formData.branding, text_color: e.target.value}})}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                        />
+                        <div 
+                          className="h-12 rounded border border-[hsl(var(--border))]"
+                          style={{background: formData.branding.text_color}}
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Primary text color</p>
+                      </div>
                     </div>
+                  </div>
+                  
+                  <div className="bg-[hsl(var(--background-elevated))] p-4 rounded border border-[hsl(var(--border))] mt-4">
+                    <p className="text-sm font-medium text-[hsl(var(--foreground))] mb-2">Branding Preview</p>
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--foreground))]">Secondary Color (HSL)</Label>
-                      <Input
-                        placeholder="hsl(265, 60%, 55%)"
-                        value={formData.branding.secondary_color}
-                        onChange={(e) => setFormData({...formData, branding: {...formData.branding, secondary_color: e.target.value}})}
-                        className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                      />
-                      <div 
-                        className="h-8 rounded border border-[hsl(var(--border))]"
-                        style={{background: formData.branding.secondary_color}}
-                      />
+                      <div className="flex items-center gap-3">
+                        {(formData.branding.logo_base64 || formData.branding.logo_url) && (
+                          <img 
+                            src={formData.branding.logo_base64 || formData.branding.logo_url}
+                            alt="Logo"
+                            className="h-10 object-contain"
+                          />
+                        )}
+                        <span className="text-lg font-semibold" style={{color: formData.branding.text_color}}>
+                          {formData.name || 'Company Name'}
+                        </span>
+                      </div>
+                      <div className="flex gap-2 mt-3">
+                        <button 
+                          type="button"
+                          className="px-4 py-2 rounded font-medium text-white"
+                          style={{background: formData.branding.primary_color}}
+                        >
+                          Primary Button
+                        </button>
+                        <button 
+                          type="button"
+                          className="px-4 py-2 rounded font-medium text-white"
+                          style={{background: formData.branding.secondary_color}}
+                        >
+                          Secondary
+                        </button>
+                        <button 
+                          type="button"
+                          className="px-4 py-2 rounded font-medium text-white"
+                          style={{background: formData.branding.accent_color}}
+                        >
+                          Accent
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
