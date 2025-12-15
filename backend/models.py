@@ -126,6 +126,7 @@ class TenantBase(MongoModel):
     search_profile: SearchProfile = Field(default_factory=SearchProfile)
     scoring_weights: ScoringWeights = Field(default_factory=ScoringWeights)
     agent_config: MistralAgentConfig = Field(default_factory=MistralAgentConfig)
+    intelligence_config: IntelligenceConfig = Field(default_factory=IntelligenceConfig)
     status: TenantStatus = TenantStatus.ACTIVE
 
 class TenantCreate(TenantBase):
