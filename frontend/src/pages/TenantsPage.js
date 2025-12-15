@@ -423,9 +423,9 @@ export default function TenantsPage() {
                         <p className="text-xs text-[hsl(var(--foreground-secondary))]">
                           <strong>This branding is for YOUR CLIENTS (sub-clients), NOT for you.</strong>
                           <br />
-                          When you create sub-clients, they will see THIS logo and colors, not OutPace's.
+                          When you create sub-clients, they will see THIS logo and colors, not OutPace&apos;s.
                           <br />
-                          <strong>Your own branding:</strong> Configure in the "Branding" tab.
+                          <strong>Your own branding:</strong> Configure in the &quot;Branding&quot; tab.
                         </p>
                       </div>
                       
