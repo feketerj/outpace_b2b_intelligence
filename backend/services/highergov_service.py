@@ -11,22 +11,27 @@ from services.mistral_service import score_opportunity_with_ai
 logger = logging.getLogger(__name__)
 
 HIGHERGOV_BASE_URL = "https://www.highergov.com/api-external"
+DEFAULT_HIGHERGOV_KEY = os.getenv("HIGHERGOV_API_KEY")  # Default/fallback key
 
 async def sync_highergov_opportunities(db, tenant: dict) -> int:
     """
     Fetch opportunities from HigherGov API for a tenant.
-    Uses tenant-specific API key and configuration.
+    Uses tenant-specific API key or falls back to default.
     Runs AI scoring BEFORE displaying opportunities.
     Returns number of new opportunities added.
     """
     tenant_id = tenant["id"]
+    tenant_name = tenant["name"]
     search_profile = tenant.get("search_profile", {})
     
-    # Get tenant-specific HigherGov API key
-    highergov_api_key = search_profile.get("highergov_api_key")
+    # Get API key (tenant-specific or default)
+    highergov_api_key = search_profile.get("highergov_api_key") or DEFAULT_HIGHERGOV_KEY
+    
     if not highergov_api_key or "placeholder" in highergov_api_key.lower():
         logger.warning(f"HigherGov API key not configured for tenant {tenant_id}, skipping sync")
         return 0
+    
+    logger.info(f"Using {'tenant-specific' if search_profile.get('highergov_api_key') else 'default'} HigherGov key for {tenant_name}")
     
     naics_codes = search_profile.get("naics_codes", [])
     keywords = search_profile.get("keywords", [])
