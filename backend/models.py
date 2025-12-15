@@ -71,8 +71,10 @@ class TokenData(BaseModel):
 # Tenant Models
 class BrandingConfig(MongoModel):
     logo_url: Optional[str] = None
+    logo_base64: Optional[str] = None  # For uploaded logos
     primary_color: str = "hsl(210, 85%, 52%)"
     secondary_color: str = "hsl(265, 60%, 55%)"
+    accent_color: str = "hsl(142, 70%, 45%)"
     text_color: str = "hsl(0, 0%, 98%)"
 
 class SearchProfile(MongoModel):
