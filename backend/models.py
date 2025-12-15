@@ -83,11 +83,14 @@ class SearchProfile(MongoModel):
     interest_areas: List[str] = []
     competitors: List[str] = []
     # HigherGov API configuration
-    highergov_api_key: Optional[str] = None  # Per-tenant API key
+    highergov_api_key: Optional[str] = None  # Per-tenant API key (falls back to default)
     fetch_full_documents: bool = False
     fetch_nsn: bool = False
     fetch_grants: bool = True
     fetch_contracts: bool = True
+    # Auto-update settings
+    auto_update_enabled: bool = True
+    auto_update_interval_hours: int = 24  # How often to poll HigherGov
 
 class IntelligenceConfig(MongoModel):
     """Configuration for intelligence report generation"""
