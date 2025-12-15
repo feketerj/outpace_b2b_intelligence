@@ -386,7 +386,78 @@ export default function TenantsPage() {
                   </div>
                 </TabsContent>
 
-                {/* Branding Tab */}
+                {/* Master White-Label Tab */}
+                <TabsContent value="master" className="space-y-4 mt-4">
+                  {formData.is_master_client ? (
+                    <>
+                      <div className="bg-[hsl(var(--accent-success))]/10 p-4 rounded border border-[hsl(var(--accent-success))]/30 mb-4">
+                        <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-1">✓ Master Client White-Label Configuration</p>
+                        <p className="text-xs text-[hsl(var(--foreground-secondary))]">
+                          This branding will appear on ALL sub-clients under this Master Client. 
+                          Sub-clients will see "{formData.name}" branding instead of OutPace.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Master Logo Upload</Label>
+                        <Input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (file && editingTenant) {
+                              const formDataUpload = new FormData();
+                              formDataUpload.append('file', file);
+                              try {
+                                const response = await axios.post(`${API_URL}/api/upload/logo/${editingTenant.id}`, formDataUpload);
+                                setFormData({...formData, master_branding: {...(formData.master_branding || {}), logo_base64: response.data.logo_data_uri}});
+                                toast.success('Master logo uploaded!');
+                              } catch (error) {
+                                toast.error('Upload failed');
+                              }
+                            }
+                          }}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                          disabled={!editingTenant}
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Logo shown to all sub-clients</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Master Primary Color</Label>
+                          <Input
+                            value={(formData.master_branding?.primary_color) || 'hsl(210, 85%, 52%)'}
+                            onChange={(e) => setFormData({...formData, master_branding: {...(formData.master_branding || {}), primary_color: e.target.value}})}
+                            className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                          />
+                          <div className="h-12 rounded border" style={{background: formData.master_branding?.primary_color || 'hsl(210, 85%, 52%)'}} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Master Secondary Color</Label>
+                          <Input
+                            value={(formData.master_branding?.secondary_color) || 'hsl(265, 60%, 55%)'}
+                            onChange={(e) => setFormData({...formData, master_branding: {...(formData.master_branding || {}), secondary_color: e.target.value}})}
+                            className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                          />
+                          <div className="h-12 rounded border" style={{background: formData.master_branding?.secondary_color || 'hsl(265, 60%, 55%)'}} />
+                        </div>
+                      </div>
+                      
+                      <div className="bg-[hsl(var(--background-elevated))] p-4 rounded border border-[hsl(var(--border))]">
+                        <p className="text-sm font-medium text-[hsl(var(--foreground))] mb-2">Preview: Sub-Client Footer</p>
+                        <div className="text-xs text-[hsl(var(--foreground-secondary))]">
+                          Powered by <span className="font-semibold">{formData.name || 'Master Client Name'}</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-12 text-center">
+                      <p className="text-[hsl(var(--foreground-secondary))]">
+                        Enable "Master Client" in Basic tab to configure white-labeling
+                      </p>
+                    </div>
+                  )}\n                </TabsContent>\n\n                {/* Branding Tab */}
                 <TabsContent value="branding" className="space-y-4 mt-4">
                   <div className="space-y-2">
                     <Label className="text-[hsl(var(--foreground))]">Logo Upload</Label>
