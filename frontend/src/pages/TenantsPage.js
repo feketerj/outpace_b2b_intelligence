@@ -44,6 +44,7 @@ export default function TenantsPage() {
       slug: '',
       status: 'active',
       is_master_client: false,
+      master_branding: null,
       branding: {
         logo_url: '',
         logo_base64: null,
