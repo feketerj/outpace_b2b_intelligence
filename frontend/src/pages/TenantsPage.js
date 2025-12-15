@@ -45,8 +45,10 @@ export default function TenantsPage() {
       status: 'active',
       branding: {
         logo_url: '',
+        logo_base64: null,
         primary_color: 'hsl(210, 85%, 52%)',
         secondary_color: 'hsl(265, 60%, 55%)',
+        accent_color: 'hsl(142, 70%, 45%)',
         text_color: 'hsl(0, 0%, 98%)'
       },
       search_profile: {
