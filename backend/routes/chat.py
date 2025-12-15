@@ -10,11 +10,11 @@ from models import ChatMessage, ChatMessageCreate
 from utils.auth import get_current_user, TokenData
 from database import get_database
 
-def get_db():
-    return get_database()
-
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+def get_db():
+    return get_database()
 
 MISTRAL_API_KEY = os.getenv("EMERGENT_LLM_KEY")
 MISTRAL_API_URL = "https://api.mistral.ai/v1/agents/completions"
