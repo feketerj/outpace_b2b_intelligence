@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { Building2, Users, LayoutDashboard, LogOut, Settings } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { Button } from '../ui/button';
 
 export const SuperAdminLayout = ({ children }) => {
   const navigate = useNavigate();
