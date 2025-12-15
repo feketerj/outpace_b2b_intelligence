@@ -85,9 +85,9 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/users"
+        path="/admin/users"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requireSuperAdmin>
             <UsersPage />
           </ProtectedRoute>
         }
