@@ -6,10 +6,13 @@ import logging
 
 from models import LoginRequest, Token, User, UserCreate, UserInDB, UserRole
 from utils.auth import verify_password, get_password_hash, create_access_token, get_current_user
-from server import db as get_db
+from database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+def get_db():
+    return get_database()
 
 @router.post("/login", response_model=Token)
 async def login(login_data: LoginRequest):
