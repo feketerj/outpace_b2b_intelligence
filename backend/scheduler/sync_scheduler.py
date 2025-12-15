@@ -15,17 +15,63 @@ def start_scheduler(db):
     """Start the background scheduler for automated syncs"""
     logger.info("Starting automated sync scheduler...")
     
-    # Daily sync at 2 AM UTC
+    # Default daily sync at 2 AM UTC for tenants without custom schedule
     scheduler.add_job(
         lambda: asyncio.run(daily_sync_all_tenants(db)),
         trigger=CronTrigger(hour=2, minute=0),
-        id="daily_sync",
-        name="Daily Data Sync",
+        id="daily_sync_default",
+        name="Daily Data Sync (Default)",
         replace_existing=True
     )
     
+    # Add per-tenant custom schedules
+    asyncio.run(setup_tenant_schedules(db))
+    
     scheduler.start()
     logger.info("Scheduler started successfully")
+
+async def setup_tenant_schedules(db):
+    """Set up individual schedules for tenants with custom intelligence config"""
+    tenants_cursor = db.tenants.find({"status": "active"}, {"_id": 0})
+    tenants = await tenants_cursor.to_list(length=None)
+    
+    for tenant in tenants:
+        intel_config = tenant.get("intelligence_config", {})
+        schedule_cron = intel_config.get("schedule_cron")
+        
+        # Only add custom schedule if different from default
+        if schedule_cron and schedule_cron != "0 2 * * *":
+            tenant_id = tenant["id"]
+            tenant_name = tenant["name"]
+            
+            try:
+                # Parse cron expression
+                parts = schedule_cron.split()
+                if len(parts) == 5:
+                    minute, hour, day, month, day_of_week = parts
+                    
+                    scheduler.add_job(
+                        lambda tid=tenant_id: asyncio.run(sync_single_tenant_by_id(db, tid)),
+                        trigger=CronTrigger(
+                            minute=minute,
+                            hour=hour,
+                            day=day,
+                            month=month,
+                            day_of_week=day_of_week
+                        ),
+                        id=f"sync_tenant_{tenant_id}",
+                        name=f"Custom Sync: {tenant_name}",
+                        replace_existing=True
+                    )
+                    logger.info(f"Added custom schedule for {tenant_name}: {schedule_cron}")
+            except Exception as e:
+                logger.error(f"Failed to parse cron schedule '{schedule_cron}' for tenant {tenant_name}: {e}")
+
+async def sync_single_tenant_by_id(db, tenant_id: str):
+    """Sync a single tenant by ID (for custom schedules)"""
+    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
+    if tenant:
+        await sync_tenant_data(db, tenant)
 
 def stop_scheduler():
     """Stop the background scheduler"""
