@@ -237,9 +237,6 @@ export default function TenantsPage() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-[hsl(var(--foreground-muted))]">
-                      {tenant.slug}
-                    </p>
                   </div>
                   
                   {/* Stats Grid */}
