@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def get_db():
     return get_database()
 
-MISTRAL_API_KEY = os.getenv("EMERGENT_LLM_KEY")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
 @router.post("/message", response_model=ChatMessage)
 async def send_chat_message(
