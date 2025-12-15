@@ -108,6 +108,7 @@ export default function TenantsPage() {
         name: tenant.name,
         slug: tenant.slug,
         status: tenant.status,
+        is_master_client: tenant.is_master_client || false,
         branding: tenant.branding || getEmptyFormData().branding,
         search_profile: tenant.search_profile || getEmptyFormData().search_profile,
         intelligence_config: tenant.intelligence_config || getEmptyFormData().intelligence_config,
