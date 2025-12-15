@@ -92,7 +92,53 @@ async def manual_sync_tenant(
             detail=f"Sync failed: {str(e)}"
         )
 
-@router.get("/status/{tenant_id}")
+@router.post("/opportunity/{tenant_id}")
+async def fetch_opportunity_by_id(
+    tenant_id: str,
+    opportunity_data: dict = Body(...),
+    current_user: TokenData = Depends(get_current_user)
+):
+    """
+    Fetch a single opportunity from HigherGov by opportunity ID.
+    For manual entry of specific opportunity numbers.
+    Expects: {"opportunity_id": "12345"}
+    """
+    db = get_db()
+    
+    # Access control
+    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    tenant = await db.tenants.find_one({"id": tenant_id})
+    if not tenant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tenant not found"
+        )
+    
+    opportunity_id = opportunity_data.get("opportunity_id")
+    if not opportunity_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="opportunity_id required"
+        )
+    
+    from services.highergov_service import fetch_single_opportunity
+    
+    try:
+        opp_data = await fetch_single_opportunity(db, tenant, opportunity_id)
+        return {
+            "status": "success",
+            "opportunity": opp_data
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch opportunity: {str(e)}"
+        )
 async def get_sync_status(
     tenant_id: str,
     current_user: TokenData = Depends(get_current_user)
