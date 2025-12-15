@@ -60,7 +60,9 @@ export default function TenantsPage() {
         fetch_full_documents: false,
         fetch_nsn: false,
         fetch_grants: true,
-        fetch_contracts: true
+        fetch_contracts: true,
+        auto_update_enabled: true,
+        auto_update_interval_hours: 24
       },
       intelligence_config: {
         enabled: true,
