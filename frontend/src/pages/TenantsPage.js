@@ -266,6 +266,27 @@ export default function TenantsPage() {
                       <Button
                         size="sm"
                         variant="outline"
+                        onClick={async () => {
+                          try {
+                            toast.info('Syncing data...');
+                            const response = await axios.post(`${API_URL}/api/sync/manual/${tenant.id}`);
+                            toast.success(`Synced ${response.data.opportunities_synced + response.data.intelligence_synced} items!`);
+                            fetchTenants();
+                          } catch (error) {
+                            toast.error('Sync failed');
+                          }
+                        }}
+                        className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary)))"
+                        data-testid={`sync-tenant-${tenant.slug}`}
+                      >
+                        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Sync Now
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
                         className="border-[hsl(var(--accent-danger))] text-[hsl(var(--accent-danger))] hover:bg-[hsl(var(--accent-danger))]/10"
                         data-testid={`delete-tenant-${tenant.slug}`}
