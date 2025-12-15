@@ -220,103 +220,114 @@ export default function TenantsPage() {
                 data-testid={`tenant-card-${tenant.slug}`}
               >
                 <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold text-[hsl(var(--foreground))]">
-                          {tenant.name}
-                        </h3>
-                        <Badge 
-                          className={tenant.status === 'active' ? 'bg-[hsl(var(--accent-success))]' : 'bg-[hsl(var(--foreground-muted))]'}
-                        >
-                          {tenant.status}
+                  {/* Header Section */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-2xl font-heading font-bold text-[hsl(var(--foreground))]">
+                        {tenant.name}
+                      </h3>
+                      <Badge 
+                        className={tenant.status === 'active' ? 'bg-[hsl(var(--accent-success))]' : 'bg-[hsl(var(--foreground-muted))]'}
+                      >
+                        {tenant.status}
+                      </Badge>
+                      {tenant.is_master_client && (
+                        <Badge className="bg-[hsl(var(--secondary))]">
+                          Master Client
                         </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
-                        <div>
-                          <span className="text-[hsl(var(--foreground-muted))]">Slug:</span>
-                          <span className="ml-2 font-mono text-[hsl(var(--foreground-secondary))]">{tenant.slug}</span>
-                        </div>
-                        <div>
-                          <span className="text-[hsl(var(--foreground-muted))]">NAICS Codes:</span>
-                          <span className="ml-2 text-[hsl(var(--foreground-secondary))]">
-                            {tenant.search_profile?.naics_codes?.length || 0}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[hsl(var(--foreground-muted))]">Keywords:</span>
-                          <span className="ml-2 text-[hsl(var(--foreground-secondary))]">
-                            {tenant.search_profile?.keywords?.length || 0}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[hsl(var(--foreground-muted))]">Intelligence:</span>
-                          <span className="ml-2 text-[hsl(var(--foreground-secondary))]">
-                            {tenant.intelligence_config?.enabled ? '✓ Enabled' : '✗ Disabled'}
-                          </span>
-                        </div>
-                      </div>
+                      )}
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleOpenDialog(tenant)}
-                        className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90"
-                        data-testid={`edit-tenant-${tenant.slug}`}
-                      >
-                        <Edit2 className="h-4 w-4 mr-2" />
-                        Configure
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          // Store current admin session
-                          sessionStorage.setItem('admin_return', 'true');
-                          sessionStorage.setItem('preview_tenant_id', tenant.id);
-                          // Open tenant view in new tab
-                          window.open(`/dashboard?preview=${tenant.id}`, '_blank');
-                        }}
-                        className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))]"
-                        title="Preview what this tenant sees"
-                      >
-                        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        Preview
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={async () => {
-                          try {
-                            toast.info('Syncing data...');
-                            const response = await axios.post(`${API_URL}/api/sync/manual/${tenant.id}`);
-                            toast.success(`Synced ${response.data.opportunities_synced + response.data.intelligence_synced} items!`);
-                            fetchTenants();
-                          } catch (error) {
-                            toast.error('Sync failed');
-                          }
-                        }}
-                        className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary)))"
-                        data-testid={`sync-tenant-${tenant.slug}`}
-                      >
-                        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Sync Now
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
-                        className="border-[hsl(var(--accent-danger))] text-[hsl(var(--accent-danger))] hover:bg-[hsl(var(--accent-danger))]/10"
-                        data-testid={`delete-tenant-${tenant.slug}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <p className="text-sm text-[hsl(var(--foreground-muted))]">
+                      {tenant.slug}
+                    </p>
+                  </div>
+                  
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-4 gap-4 mb-4 pb-4 border-b border-[hsl(var(--border))]">
+                    <div>
+                      <p className="text-xs text-[hsl(var(--foreground-muted))] mb-1">NAICS Codes</p>
+                      <p className="text-base font-semibold text-[hsl(var(--foreground))]">
+                        {tenant.search_profile?.naics_codes?.length || 0}
+                      </p>
                     </div>
+                    <div>
+                      <p className="text-xs text-[hsl(var(--foreground-muted))] mb-1">Keywords</p>
+                      <p className="text-base font-semibold text-[hsl(var(--foreground))]">
+                        {tenant.search_profile?.keywords?.length || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[hsl(var(--foreground-muted))] mb-1">Intelligence</p>
+                      <p className="text-base font-semibold text-[hsl(var(--foreground))]">
+                        {tenant.intelligence_config?.enabled ? '✓' : '✗'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[hsl(var(--foreground-muted))] mb-1">Auto-Update</p>
+                      <p className="text-base font-semibold text-[hsl(var(--foreground))]">
+                        {tenant.search_profile?.auto_update_enabled !== false ? '✓' : '✗'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleOpenDialog(tenant)}
+                      className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90"
+                      data-testid={`edit-tenant-${tenant.slug}`}
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Configure
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        sessionStorage.setItem('admin_return', 'true');
+                        sessionStorage.setItem('preview_tenant_id', tenant.id);
+                        window.open(`/dashboard?preview=${tenant.id}`, '_blank');
+                      }}
+                      className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))]"
+                      title="Preview what this tenant sees"
+                    >
+                      <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Preview
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          toast.info('Syncing data...');
+                          const response = await axios.post(`${API_URL}/api/sync/manual/${tenant.id}`);
+                          toast.success(`Synced ${response.data.opportunities_synced + response.data.intelligence_synced} items!`);
+                          fetchTenants();
+                        } catch (error) {
+                          toast.error('Sync failed');
+                        }
+                      }}
+                      className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary)))"
+                      data-testid={`sync-tenant-${tenant.slug}`}
+                    >
+                      <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Sync Now
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
+                      className="border-[hsl(var(--accent-danger))] text-[hsl(var(--accent-danger))] hover:bg-[hsl(var(--accent-danger))]/10"
+                      data-testid={`delete-tenant-${tenant.slug}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
