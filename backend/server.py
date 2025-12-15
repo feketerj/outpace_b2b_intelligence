@@ -5,11 +5,11 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
-import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
+from routes import auth, tenants, opportunities, intelligence, users, admin, chat, exports
+from scheduler.sync_scheduler import start_scheduler, stop_scheduler
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,54 +19,46 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-# Create a router with the /api prefix
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting OutPace Intelligence Platform")
+    await init_db()
+    start_scheduler(db)
+    logger.info("Application startup complete")
+    yield
+    # Shutdown
+    stop_scheduler()
+    client.close()
+    logger.info("Application shutdown complete")
+
+app = FastAPI(
+    title="OutPace Intelligence API",
+    description="Multi-Tenant B2B Intelligence Platform",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# Create API router
 api_router = APIRouter(prefix="/api")
 
+# Include route modules
+api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+api_router.include_router(tenants.router, prefix="/tenants", tags=["Tenants"])
+api_router.include_router(users.router, prefix="/users", tags=["Users"])
+api_router.include_router(opportunities.router, prefix="/opportunities", tags=["Opportunities"])
+api_router.include_router(intelligence.router, prefix="/intelligence", tags=["Intelligence"])
+api_router.include_router(chat.router, prefix="/chat", tags=["Chat"])
+api_router.include_router(exports.router, prefix="/exports", tags=["Exports"])
+api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class StatusCheckCreate(BaseModel):
-    client_name: str
-
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
-
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
-
-# Include the router in the main app
 app.include_router(api_router)
 
 app.add_middleware(
@@ -77,12 +69,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+async def init_db():
+    """Initialize database with indexes and default super admin"""
+    logger.info("Initializing database indexes...")
+    
+    # Tenants collection indexes
+    await db.tenants.create_index("slug", unique=True)
+    await db.tenants.create_index("name")
+    await db.tenants.create_index("status")
+    
+    # Users collection indexes
+    await db.users.create_index("email", unique=True)
+    await db.users.create_index("tenant_id")
+    await db.users.create_index([('tenant_id', 1), ('role', 1)])
+    
+    # Opportunities collection indexes
+    await db.opportunities.create_index([('tenant_id', 1), ('captured_date', -1)])
+    await db.opportunities.create_index([('tenant_id', 1), ('external_id', 1)], unique=True)
+    await db.opportunities.create_index([('tenant_id', 1), ('score', -1)])
+    await db.opportunities.create_index([('tenant_id', 1), ('due_date', 1)])
+    await db.opportunities.create_index([('naics_code', 1)])
+    await db.opportunities.create_index([("title", "text"), ("description", "text")])
+    
+    # Intelligence collection indexes
+    await db.intelligence.create_index([('tenant_id', 1), ('created_at', -1)])
+    await db.intelligence.create_index([('tenant_id', 1), ('type', 1)])
+    
+    # Chat messages collection indexes
+    await db.chat_messages.create_index([('tenant_id', 1), ('conversation_id', 1), ('created_at', 1)])
+    
+    # Sync logs collection indexes
+    await db.sync_logs.create_index([('tenant_id', 1), ('sync_timestamp', -1)])
+    
+    logger.info("Database indexes created successfully")
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
