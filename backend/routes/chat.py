@@ -24,7 +24,8 @@ async def send_chat_message(
     current_user: TokenData = Depends(get_current_user)
 ):
     """
-    Send message to Mistral agent and get response using conversations API.
+    Send message to Mistral agent.
+    Supports BOTH agent IDs (pre-created agents) OR dynamic instructions.
     Expects: {"conversation_id": str, "message": str, "agent_type": "opportunities" | "intelligence"}
     """
     db = get_db()
@@ -39,7 +40,7 @@ async def send_chat_message(
             detail="conversation_id and message are required"
         )
     
-    # Get tenant to fetch agent instructions
+    # Get tenant configuration
     tenant = await db.tenants.find_one({"id": current_user.tenant_id})
     if not tenant:
         raise HTTPException(
@@ -47,12 +48,15 @@ async def send_chat_message(
             detail="Tenant not found"
         )
     
-    # Determine instructions based on agent type
     agent_config = tenant.get("agent_config", {})
+    
+    # Determine agent ID OR instructions based on what's configured
     if agent_type == "opportunities":
-        instructions = agent_config.get("opportunities_chat_instructions") or "You are a helpful assistant for contract opportunities."
+        agent_id = agent_config.get("opportunities_chat_agent_id")
+        instructions = agent_config.get("opportunities_chat_instructions", "You are a helpful assistant.")
     else:
-        instructions = agent_config.get("intelligence_chat_instructions") or "You are a business intelligence analyst."
+        agent_id = agent_config.get("intelligence_chat_agent_id")
+        instructions = agent_config.get("intelligence_chat_instructions", "You are a business intelligence analyst.")
     
     # Get conversation history (last 10 messages)
     history_cursor = db.chat_messages.find(
@@ -61,7 +65,7 @@ async def send_chat_message(
     ).sort("created_at", 1).limit(10)
     history = await history_cursor.to_list(length=10)
     
-    # Build messages for Mistral
+    # Build messages
     inputs = [
         {"role": msg["role"], "content": msg["content"]}
         for msg in history
@@ -77,27 +81,36 @@ async def send_chat_message(
         "conversation_id": conversation_id,
         "role": "user",
         "content": user_message,
-        "agent_id": agent_type,
+        "agent_id": agent_id or agent_type,
         "created_at": now
     }
     await db.chat_messages.insert_one(user_msg_doc)
     
-    # Call Mistral API using SDK
+    # Call Mistral API
     try:
         client = Mistral(api_key=MISTRAL_API_KEY)
         
-        response = client.beta.conversations.start(
-            inputs=inputs,
-            model="mistral-small-latest",
-            instructions=instructions,
-            completion_args={
-                "temperature": 0.7,
-                "max_tokens": 2000,
-                "top_p": 1
-            }
-        )
+        # Use agent ID if provided, otherwise use instructions
+        if agent_id:
+            # Call specific agent
+            response = client.agents.complete(
+                agent_id=agent_id,
+                messages=inputs
+            )
+        else:
+            # Use dynamic instructions
+            response = client.beta.conversations.start(
+                inputs=inputs,
+                model="mistral-small-latest",
+                instructions=instructions,
+                completion_args={
+                    "temperature": 0.7,
+                    "max_tokens": 2000,
+                    "top_p": 1
+                }
+            )
         
-        # Extract assistant content
+        # Extract content
         if hasattr(response, 'choices') and response.choices:
             assistant_content = response.choices[0].message.content
         elif hasattr(response, 'content'):
@@ -117,7 +130,7 @@ async def send_chat_message(
         "conversation_id": conversation_id,
         "role": "assistant",
         "content": assistant_content,
-        "agent_id": agent_type,
+        "agent_id": agent_id or agent_type,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.chat_messages.insert_one(assistant_msg_doc)
