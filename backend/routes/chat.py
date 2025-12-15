@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import uuid
 import logging
 import os
-import httpx
+from mistralai import Mistral
 
 from models import ChatMessage, ChatMessageCreate
 from utils.auth import get_current_user, TokenData
@@ -17,7 +17,6 @@ def get_db():
     return get_database()
 
 MISTRAL_API_KEY = os.getenv("EMERGENT_LLM_KEY")
-MISTRAL_API_URL = "https://api.mistral.ai/v1/agents/completions"
 
 @router.post("/message", response_model=ChatMessage)
 async def send_chat_message(
@@ -25,7 +24,7 @@ async def send_chat_message(
     current_user: TokenData = Depends(get_current_user)
 ):
     """
-    Send message to Mistral agent and get response.
+    Send message to Mistral agent and get response using conversations API.
     Expects: {"conversation_id": str, "message": str, "agent_type": "opportunities" | "intelligence"}
     """
     db = get_db()
@@ -40,7 +39,7 @@ async def send_chat_message(
             detail="conversation_id and message are required"
         )
     
-    # Get tenant to fetch agent ID
+    # Get tenant to fetch agent instructions
     tenant = await db.tenants.find_one({"id": current_user.tenant_id})
     if not tenant:
         raise HTTPException(
@@ -48,14 +47,14 @@ async def send_chat_message(
             detail="Tenant not found"
         )
     
-    # Determine agent ID
+    # Determine instructions based on agent type
     agent_config = tenant.get("agent_config", {})
     if agent_type == "opportunities":
-        agent_id = agent_config.get("opportunities_chat_agent_id") or os.getenv("DEFAULT_OPP_CHAT_AGENT_ID")
+        instructions = agent_config.get("opportunities_chat_instructions") or "You are a helpful assistant for contract opportunities."
     else:
-        agent_id = agent_config.get("intelligence_chat_agent_id") or os.getenv("DEFAULT_INTEL_CHAT_AGENT_ID")
+        instructions = agent_config.get("intelligence_chat_instructions") or "You are a business intelligence analyst."
     
-    # Get conversation history
+    # Get conversation history (last 10 messages)
     history_cursor = db.chat_messages.find(
         {"tenant_id": current_user.tenant_id, "conversation_id": conversation_id},
         {"_id": 0}
@@ -63,11 +62,11 @@ async def send_chat_message(
     history = await history_cursor.to_list(length=10)
     
     # Build messages for Mistral
-    messages = [
+    inputs = [
         {"role": msg["role"], "content": msg["content"]}
         for msg in history
     ]
-    messages.append({"role": "user", "content": user_message})
+    inputs.append({"role": "user", "content": user_message})
     
     # Save user message
     now = datetime.now(timezone.utc).isoformat()
@@ -78,31 +77,33 @@ async def send_chat_message(
         "conversation_id": conversation_id,
         "role": "user",
         "content": user_message,
-        "agent_id": agent_id,
+        "agent_id": agent_type,
         "created_at": now
     }
     await db.chat_messages.insert_one(user_msg_doc)
     
-    # Call Mistral API
+    # Call Mistral API using SDK
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                MISTRAL_API_URL,
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {MISTRAL_API_KEY}"
-                },
-                json={
-                    "agent_id": agent_id,
-                    "messages": messages,
-                    "temperature": 0.7,
-                    "max_tokens": 2000
-                }
-            )
-            response.raise_for_status()
-            result = response.json()
-            
-            assistant_content = result["choices"][0]["message"]["content"]
+        client = Mistral(api_key=MISTRAL_API_KEY)
+        
+        response = client.beta.conversations.start(
+            inputs=inputs,
+            model="mistral-small-latest",
+            instructions=instructions,
+            completion_args={
+                "temperature": 0.7,
+                "max_tokens": 2000,
+                "top_p": 1
+            }
+        )
+        
+        # Extract assistant content
+        if hasattr(response, 'choices') and response.choices:
+            assistant_content = response.choices[0].message.content
+        elif hasattr(response, 'content'):
+            assistant_content = response.content
+        else:
+            assistant_content = str(response)
             
     except Exception as e:
         logger.error(f"Mistral API error: {e}")
@@ -116,7 +117,7 @@ async def send_chat_message(
         "conversation_id": conversation_id,
         "role": "assistant",
         "content": assistant_content,
-        "agent_id": agent_id,
+        "agent_id": agent_type,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.chat_messages.insert_one(assistant_msg_doc)
