@@ -59,6 +59,7 @@ api_router.include_router(chat.router, prefix="/chat", tags=["Chat"])
 api_router.include_router(exports.router, prefix="/exports", tags=["Exports"])
 api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])
 api_router.include_router(config.router, prefix="/config", tags=["Configuration"])
+api_router.include_router(upload.router, prefix="/upload", tags=["Upload"])
 
 app.include_router(api_router)
 
