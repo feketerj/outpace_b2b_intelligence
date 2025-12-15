@@ -9,10 +9,13 @@ from models import (
     TenantStatus
 )
 from utils.auth import get_current_super_admin, get_current_user, TokenData
-from server import db as get_db
+from database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+def get_db():
+    return get_database()
 
 @router.post("", response_model=Tenant, dependencies=[Depends(get_current_super_admin)])
 async def create_tenant(tenant_data: TenantCreate):
