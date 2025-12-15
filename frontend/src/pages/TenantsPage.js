@@ -57,6 +57,7 @@ export default function TenantsPage() {
         interest_areas: [],
         competitors: [],
         highergov_api_key: '',
+        highergov_search_id: '',
         fetch_full_documents: false,
         fetch_nsn: false,
         fetch_grants: true,
