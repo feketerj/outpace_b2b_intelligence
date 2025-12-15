@@ -1,0 +1,849 @@
+{
+  "project_name": "OutPace Intelligence - Multi-Tenant B2B Intelligence Platform",
+  "design_context": "dashboard",
+  "theme": "dark",
+  "design_philosophy": {
+    "primary_approach": "Big 4 Consulting Aesthetic - Professional, data-dense, trustworthy",
+    "emotional_tone": "Authority, Clarity, Trust, Executive Decision-Making",
+    "key_principles": [
+      "Decision-focused: Every screen answers a specific business question",
+      "Data density over whitespace: Maximize information per screen without clutter",
+      "Professional polish: Consulting-grade exports and presentation quality",
+      "Strict hierarchy: Clear visual structure for scanning and comprehension",
+      "Trustworthy: High contrast, accessible, no playful elements"
+    ],
+    "anti_patterns_to_avoid": [
+      "NO playful or consumer-grade aesthetics",
+      "NO excessive whitespace or 'airy' layouts",
+      "NO bright neon colors or gradients",
+      "NO rounded pill buttons (use sharp, professional edges)",
+      "NO center-aligned text blocks (left-align for readability)",
+      "NO generic SaaS blue (#3B82F6) or teal (#1B93A4)",
+      "NO Space Grotesk font"
+    ]
+  },
+  "typography": {
+    "philosophy": "Swiss Brutalist with Corporate Authority - High contrast weights, professional hierarchy",
+    "font_families": {
+      "headings": {
+        "primary": "IBM Plex Sans",
+        "weights": ["300", "600", "700"],
+        "usage": "Main headings, page titles, dashboard titles",
+        "rationale": "Professional, technical authority without being sterile. Used by enterprise platforms."
+      },
+      "subheadings": {
+        "primary": "Manrope",
+        "weights": ["500", "600", "700"],
+        "usage": "Section headers, card titles, metric labels",
+        "rationale": "Clean, modern, excellent readability for data-heavy interfaces"
+      },
+      "body": {
+        "primary": "Inter",
+        "weights": ["400", "500", "600"],
+        "usage": "Body text, descriptions, table content, form inputs",
+        "rationale": "Industry standard for dashboards, optimized for screen readability"
+      },
+      "data_mono": {
+        "primary": "IBM Plex Mono",
+        "weights": ["400", "500", "600"],
+        "usage": "Numbers, metrics, data values, code snippets, API keys",
+        "rationale": "Monospace for precise data alignment and technical credibility"
+      }
+    },
+    "scale": {
+      "display": "text-5xl md:text-6xl (48px-60px)",
+      "h1": "text-3xl md:text-4xl (30px-36px)",
+      "h2": "text-2xl md:text-3xl (24px-30px)",
+      "h3": "text-xl md:text-2xl (20px-24px)",
+      "h4": "text-lg md:text-xl (18px-20px)",
+      "body_large": "text-base (16px)",
+      "body": "text-sm (14px)",
+      "body_small": "text-xs (12px)",
+      "caption": "text-[10px] (10px)"
+    },
+    "typesetting_rules": {
+      "headlines": "tracking-tight leading-tight font-light or font-bold (high contrast)",
+      "labels": "uppercase tracking-[0.1em] text-xs font-semibold",
+      "body": "leading-relaxed tracking-normal",
+      "data_values": "font-mono tabular-nums (for alignment)",
+      "line_height": {
+        "tight": "leading-tight (1.25)",
+        "normal": "leading-normal (1.5)",
+        "relaxed": "leading-relaxed (1.625)"
+      }
+    },
+    "google_fonts_import": "@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');"
+  },
+  "color_system": {
+    "archetype": "SWISS_HIGH_CONTRAST_WITH_JEWEL_ACCENTS",
+    "description": "Deep, professional dark mode with jewel-tone accents for authority and premium feel. High contrast for data clarity.",
+    "palette": {
+      "background": {
+        "primary": "hsl(220, 18%, 8%)",
+        "secondary": "hsl(220, 16%, 12%)",
+        "tertiary": "hsl(220, 14%, 16%)",
+        "elevated": "hsl(220, 16%, 20%)",
+        "description": "Deep slate backgrounds with subtle blue tint for premium feel"
+      },
+      "foreground": {
+        "primary": "hsl(0, 0%, 98%)",
+        "secondary": "hsl(220, 10%, 75%)",
+        "tertiary": "hsl(220, 10%, 55%)",
+        "muted": "hsl(220, 10%, 40%)",
+        "description": "High contrast text hierarchy"
+      },
+      "brand_primary": {
+        "DEFAULT": "hsl(210, 85%, 52%)",
+        "light": "hsl(210, 85%, 62%)",
+        "dark": "hsl(210, 85%, 42%)",
+        "foreground": "hsl(0, 0%, 100%)",
+        "description": "Professional blue - trustworthy, corporate, not generic SaaS blue. Use ONLY for CTAs and primary actions."
+      },
+      "brand_secondary": {
+        "DEFAULT": "hsl(265, 60%, 55%)",
+        "light": "hsl(265, 60%, 65%)",
+        "dark": "hsl(265, 60%, 45%)",
+        "foreground": "hsl(0, 0%, 100%)",
+        "description": "Deep purple accent - premium, intelligence, sophistication. Use sparingly for highlights."
+      },
+      "accent_success": {
+        "DEFAULT": "hsl(142, 70%, 45%)",
+        "light": "hsl(142, 70%, 55%)",
+        "dark": "hsl(142, 70%, 35%)",
+        "foreground": "hsl(0, 0%, 100%)",
+        "description": "Success states, positive metrics, upward trends"
+      },
+      "accent_warning": {
+        "DEFAULT": "hsl(38, 92%, 50%)",
+        "light": "hsl(38, 92%, 60%)",
+        "dark": "hsl(38, 92%, 40%)",
+        "foreground": "hsl(220, 18%, 8%)",
+        "description": "Warning states, attention needed"
+      },
+      "accent_danger": {
+        "DEFAULT": "hsl(0, 72%, 51%)",
+        "light": "hsl(0, 72%, 61%)",
+        "dark": "hsl(0, 72%, 41%)",
+        "foreground": "hsl(0, 0%, 100%)",
+        "description": "Error states, negative metrics, downward trends"
+      },
+      "accent_info": {
+        "DEFAULT": "hsl(199, 89%, 48%)",
+        "light": "hsl(199, 89%, 58%)",
+        "dark": "hsl(199, 89%, 38%)",
+        "foreground": "hsl(0, 0%, 100%)",
+        "description": "Informational states, neutral highlights"
+      },
+      "border": {
+        "DEFAULT": "hsl(220, 14%, 24%)",
+        "light": "hsl(220, 14%, 32%)",
+        "subtle": "hsl(220, 14%, 18%)",
+        "description": "Borders with subtle blue tint for cohesion"
+      },
+      "chart_colors": {
+        "1": "hsl(210, 85%, 52%)",
+        "2": "hsl(265, 60%, 55%)",
+        "3": "hsl(142, 70%, 45%)",
+        "4": "hsl(38, 92%, 50%)",
+        "5": "hsl(199, 89%, 48%)",
+        "6": "hsl(330, 70%, 55%)",
+        "7": "hsl(180, 65%, 45%)",
+        "8": "hsl(25, 85%, 55%)",
+        "description": "Color-blind friendly palette for data visualization"
+      }
+    },
+    "contrast_rules": {
+      "minimum_contrast": "WCAG AA - 4.5:1 for normal text, 3:1 for large text",
+      "preferred_standard": "APCA - Use https://apcacontrast.com/ for validation",
+      "interactive_states": {
+        "hover": "MUST explicitly set both bg and text color. Hover state should be lighter than default.",
+        "focus": "MUST have HIGHER contrast than default with visible ring",
+        "active": "MUST be darker/more saturated than hover",
+        "disabled": "Reduce opacity to 40-50%, maintain contrast where possible"
+      },
+      "text_on_backgrounds": {
+        "dark_bg": "Use foreground-primary (98% white) for high contrast",
+        "medium_bg": "Use foreground-secondary (75% gray) for hierarchy",
+        "colored_bg": "Always test contrast, add text-shadow if needed",
+        "images": "MUST use gradient overlay or text-shadow for readability"
+      }
+    },
+    "usage_guidelines": {
+      "primary_color_usage": "LIMIT to CTAs, primary buttons, active states, key metrics. Do NOT overuse.",
+      "secondary_color_usage": "Highlights, badges, premium features, intelligence indicators",
+      "semantic_colors": "Use success/warning/danger ONLY for their semantic meaning, not decoration",
+      "neutral_dominance": "95% of UI should be neutral grays. Color is functional, not decorative.",
+      "gradient_policy": "AVOID gradients. Use solid colors with subtle borders and shadows for depth."
+    }
+  },
+  "spacing_system": {
+    "philosophy": "Dense but breathable - maximize data per screen while maintaining clear hierarchy",
+    "scale": {
+      "xs": "4px (p-1)",
+      "sm": "8px (p-2)",
+      "md": "12px (p-3)",
+      "base": "16px (p-4)",
+      "lg": "20px (p-5)",
+      "xl": "24px (p-6)",
+      "2xl": "32px (p-8)",
+      "3xl": "48px (p-12)",
+      "4xl": "64px (p-16)",
+      "5xl": "96px (p-24)"
+    },
+    "component_spacing": {
+      "card_padding": "p-6 (24px) - CRITICAL: All cards with borders MUST have internal padding",
+      "section_padding": "py-8 px-6 md:py-12 md:px-8",
+      "container_max_width": "max-w-7xl (1280px) for main content",
+      "grid_gaps": "gap-4 md:gap-6 for dense layouts, gap-6 md:gap-8 for breathing room",
+      "stack_spacing": "space-y-4 for related items, space-y-6 for sections",
+      "inline_spacing": "space-x-2 for tight groups, space-x-4 for separated items"
+    },
+    "layout_rules": {
+      "mobile_first": "Always start with grid-cols-1, expand to md:grid-cols-2 lg:grid-cols-3",
+      "optical_alignment": "Adjust padding for visual balance, not geometric perfection",
+      "container_constraints": "Use max-w-* to prevent ultra-wide layouts on large screens",
+      "vertical_rhythm": "Consistent spacing between sections using py-* utilities"
+    }
+  },
+  "layout_patterns": {
+    "dashboard_grid": {
+      "type": "CONTROL_ROOM_GRID",
+      "description": "Dense, data-driven grid for maximum information density",
+      "implementation": {
+        "base": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6",
+        "widget_spans": {
+          "summary_metric": "col-span-1 (single KPI card)",
+          "primary_chart": "col-span-full md:col-span-2 lg:col-span-3 (main visualization)",
+          "feed_list": "col-span-1 row-span-2 (tall narrow activity feed)",
+          "table": "col-span-full (full-width data tables)"
+        },
+        "rules": [
+          "Every pixel utilized - no empty grid cells",
+          "Use h-full on children to ensure equal heights",
+          "Grid items MUST be direct children (no wrapper divs)",
+          "Override default stretch with align-items: start, add align-self: stretch to individual items"
+        ]
+      }
+    },
+    "super_admin_layout": {
+      "type": "SIDEBAR_WITH_CONTENT",
+      "description": "Fixed sidebar navigation with scrollable content area",
+      "implementation": {
+        "container": "flex h-screen overflow-hidden",
+        "sidebar": "w-64 bg-background-secondary border-r border-border flex-shrink-0",
+        "main": "flex-1 overflow-y-auto",
+        "content": "max-w-7xl mx-auto p-6 md:p-8"
+      }
+    },
+    "tenant_dashboard_layout": {
+      "type": "HEADER_WITH_GRID",
+      "description": "Sticky header with filters, scrollable grid of opportunities",
+      "implementation": {
+        "header": "sticky top-0 z-10 bg-background-primary/95 backdrop-blur-xl border-b border-border",
+        "filters": "flex flex-wrap gap-3 p-4 md:p-6",
+        "grid": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 p-4 md:p-6"
+      }
+    }
+  },
+  "surface_strategies": {
+    "primary_approach": "FLAT_WITH_BORDERS",
+    "description": "Minimal shadows, sharp edges, 1px borders for definition. Professional, not decorative.",
+    "card_styles": {
+      "default": {
+        "background": "bg-background-secondary",
+        "border": "border border-border",
+        "radius": "rounded-lg (8px max)",
+        "shadow": "shadow-none",
+        "padding": "p-6",
+        "hover": "hover:border-border-light hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+      },
+      "elevated": {
+        "background": "bg-background-tertiary",
+        "border": "border border-border-light",
+        "radius": "rounded-lg",
+        "shadow": "shadow-md",
+        "padding": "p-6"
+      },
+      "flat_no_border": {
+        "background": "bg-background-secondary",
+        "border": "border-0",
+        "radius": "rounded-none or rounded-sm",
+        "shadow": "shadow-none",
+        "padding": "p-6",
+        "description": "For dense dashboards, use flat rectangles with no borders"
+      }
+    },
+    "header_style": {
+      "type": "CRYSTAL_GLASS",
+      "implementation": {
+        "background": "bg-background-primary/95",
+        "blur": "backdrop-blur-xl",
+        "border": "border-b border-border",
+        "shadow": "shadow-sm",
+        "saturation": "backdrop-saturate-150 (if supported)",
+        "description": "Sticky header with glassmorphism for premium feel"
+      }
+    },
+    "modal_overlay": {
+      "background": "bg-black/60",
+      "blur": "backdrop-blur-sm",
+      "description": "Dark overlay for modals and dialogs"
+    },
+    "table_style": {
+      "type": "GRID_BORDERS",
+      "implementation": {
+        "rows": "border-b border-border/40 hover:bg-background-tertiary/50",
+        "headers": "border-b-2 border-border font-semibold",
+        "cells": "px-4 py-3",
+        "description": "Expose the grid structure with visible borders"
+      }
+    }
+  },
+  "component_library": {
+    "philosophy": "Use Shadcn/UI for all interactive components. Customize heavily for brand.",
+    "required_components": {
+      "forms": {
+        "components": ["Input", "Select", "Checkbox", "Radio", "Switch", "Textarea", "Form", "Label"],
+        "path": "/app/frontend/src/components/ui/",
+        "customization": "Override default styles to match dark theme and professional aesthetic"
+      },
+      "data_display": {
+        "components": ["Table", "Badge", "Card", "Separator", "Skeleton"],
+        "path": "/app/frontend/src/components/ui/",
+        "customization": "Remove rounded corners, use flat borders"
+      },
+      "overlays": {
+        "components": ["Dialog", "Sheet", "Popover", "Dropdown Menu", "Tooltip", "Alert Dialog"],
+        "path": "/app/frontend/src/components/ui/",
+        "customization": "Dark backgrounds, high contrast borders"
+      },
+      "feedback": {
+        "components": ["Sonner (Toast)", "Alert", "Progress"],
+        "path": "/app/frontend/src/components/ui/",
+        "usage": "Use Sonner for all toast notifications"
+      },
+      "navigation": {
+        "components": ["Tabs", "Breadcrumb", "Pagination"],
+        "path": "/app/frontend/src/components/ui/",
+        "customization": "Sharp edges, underline active states"
+      },
+      "charts": {
+        "library": "Recharts (via Shadcn Chart components)",
+        "path": "https://ui.shadcn.com/docs/components/chart",
+        "components": ["Bar Chart", "Line Chart", "Area Chart", "Pie Chart"],
+        "customization": "Use chart_colors palette, dark backgrounds, high contrast"
+      }
+    },
+    "custom_components_needed": {
+      "OpportunityCard": {
+        "description": "Card displaying opportunity with score, title, description, tags",
+        "structure": "Flat card with border, score badge, title, metadata row, description preview",
+        "interactions": "Hover lift, click to detail view"
+      },
+      "IntelligenceFeedItem": {
+        "description": "News/intelligence item with source, timestamp, summary",
+        "structure": "Compact row with icon, title, source, timestamp",
+        "interactions": "Click to expand, hover highlight"
+      },
+      "MetricCard": {
+        "description": "KPI display with value, label, trend indicator",
+        "structure": "Large number (mono font), label, trend arrow/percentage",
+        "variants": "Default, success, warning, danger"
+      },
+      "TenantBrandingPreview": {
+        "description": "Live preview of tenant branding (logo, colors)",
+        "structure": "Mock dashboard with applied branding",
+        "interactions": "Real-time updates as colors change"
+      },
+      "ExportModal": {
+        "description": "Selection interface for PDF/Excel export",
+        "structure": "Checkbox list of opportunities, format selector, export button",
+        "interactions": "Select all/none, preview, download"
+      },
+      "ChatAssistant": {
+        "description": "Fixed bottom-right chat bubble with expandable interface",
+        "structure": "Floating button, expandable panel with messages and input",
+        "interactions": "Toggle open/close, send messages, typing indicators"
+      }
+    }
+  },
+  "motion_and_interactions": {
+    "philosophy": "Subtle, professional animations. No playful bounces or excessive motion.",
+    "required_animations": {
+      "hover_states": {
+        "cards": "hover:-translate-y-0.5 hover:border-border-light transition-all duration-200",
+        "buttons": "hover:bg-brand-primary-light hover:text-white transition-colors duration-150",
+        "links": "hover:text-brand-primary transition-colors duration-150",
+        "table_rows": "hover:bg-background-tertiary/50 transition-colors duration-100"
+      },
+      "focus_states": {
+        "inputs": "focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition-all duration-150",
+        "buttons": "focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-primary"
+      },
+      "entrance_animations": {
+        "cards": "Stagger fade-in with slight upward motion",
+        "modals": "Fade in overlay, scale up content from 95% to 100%",
+        "toasts": "Slide in from bottom-right"
+      },
+      "loading_states": {
+        "skeleton": "Use Skeleton component with pulse animation",
+        "spinners": "Simple circular spinner, no elaborate animations",
+        "progress": "Smooth progress bar with indeterminate state"
+      }
+    },
+    "transition_properties": {
+      "rule": "NEVER use transition: all. Always specify properties.",
+      "common": "transition-colors duration-150, transition-transform duration-200, transition-opacity duration-200",
+      "exclude_transforms": "Do not include transform in transition property (breaks animations)"
+    },
+    "accessibility": {
+      "reduced_motion": "MUST respect prefers-reduced-motion media query",
+      "implementation": "@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }",
+      "decorative_elements": "Add aria-hidden='true' to purely decorative animations"
+    }
+  },
+  "icons_and_assets": {
+    "icon_library": {
+      "primary": "lucide-react",
+      "rationale": "Already installed, comprehensive, consistent style",
+      "usage": "Use for all UI icons (navigation, actions, status indicators)",
+      "size_scale": "size-4 (16px), size-5 (20px), size-6 (24px), size-8 (32px)"
+    },
+    "alternative_libraries": {
+      "phosphor_icons": {
+        "install": "yarn add @phosphor-icons/react",
+        "usage": "If duotone weight needed for visual hierarchy",
+        "rationale": "Excellent for dense dashboards with duotone variants"
+      },
+      "heroicons": {
+        "install": "yarn add @heroicons/react",
+        "usage": "Alternative solid/outline variants",
+        "rationale": "Matches Tailwind sizing perfectly"
+      }
+    },
+    "logo_usage": {
+      "tenant_logos": "Dynamic per tenant, displayed in header and exports",
+      "platform_logo": "OutPace Intelligence logo in super admin and footer",
+      "powered_by": "Small 'Powered by OutPace Intelligence' tagline in tenant footer"
+    },
+    "image_requirements": {
+      "none_needed": "This is a data-heavy dashboard. No hero images or marketing photos required.",
+      "charts_and_graphs": "Generated dynamically via Recharts",
+      "avatars": "Use initials in colored circles for user avatars"
+    }
+  },
+  "data_visualization": {
+    "chart_library": "Recharts (via Shadcn Chart components)",
+    "chart_types": {
+      "line_chart": "Trends over time (opportunity scores, activity)",
+      "bar_chart": "Comparisons (opportunities by category, tenant usage)",
+      "area_chart": "Cumulative metrics (total opportunities, revenue)",
+      "pie_chart": "Proportions (opportunity distribution by status)"
+    },
+    "chart_styling": {
+      "background": "bg-background-secondary or transparent",
+      "grid": "stroke-border/20 (subtle grid lines)",
+      "axes": "stroke-foreground-tertiary text-xs",
+      "tooltips": "bg-background-elevated border border-border shadow-lg rounded-md p-3",
+      "colors": "Use chart_colors palette for series",
+      "legend": "text-sm text-foreground-secondary"
+    },
+    "data_density": {
+      "principle": "Show as much data as possible without overwhelming",
+      "techniques": [
+        "Small multiples for comparisons",
+        "Sparklines in table cells",
+        "Inline trend indicators (↑↓ arrows with percentages)",
+        "Compact metric cards with large numbers"
+      ]
+    }
+  },
+  "branding_system": {
+    "multi_tenant_approach": "Dynamic CSS variables injected per tenant",
+    "implementation": {
+      "tenant_primary_color": "Injected as --tenant-primary HSL value",
+      "tenant_secondary_color": "Injected as --tenant-secondary HSL value",
+      "tenant_logo": "URL stored in tenant config, displayed in header",
+      "css_injection": "Use style tag in document head with tenant-specific variables",
+      "example": ":root { --tenant-primary: 210 85% 52%; --tenant-secondary: 265 60% 55%; }"
+    },
+    "branding_constraints": {
+      "logo_size": "max-h-10 (40px) in header, max-h-16 (64px) in exports",
+      "color_usage": "Tenant primary used for CTAs, secondary for accents",
+      "fallback": "If no tenant branding, use platform default (blue/purple)"
+    },
+    "export_branding": {
+      "pdf_header": "Tenant logo + name, report title, date",
+      "pdf_footer": "Page numbers, 'Powered by OutPace Intelligence'",
+      "excel_header": "Tenant branding in first row, frozen header row"
+    }
+  },
+  "accessibility": {
+    "wcag_level": "AA minimum, AAA preferred",
+    "requirements": {
+      "color_contrast": "4.5:1 for normal text, 3:1 for large text and UI components",
+      "keyboard_navigation": "All interactive elements must be keyboard accessible",
+      "focus_indicators": "Visible focus rings on all focusable elements",
+      "screen_readers": "Proper ARIA labels, roles, and live regions",
+      "reduced_motion": "Respect prefers-reduced-motion media query"
+    },
+    "testing_attributes": {
+      "data_testid": "MUST be added to all interactive and key informational elements",
+      "convention": "kebab-case, role-based (e.g., 'login-form-submit-button', 'opportunity-card-123')",
+      "examples": [
+        "data-testid='tenant-list-table'",
+        "data-testid='opportunity-score-badge'",
+        "data-testid='export-pdf-button'",
+        "data-testid='chat-assistant-toggle'",
+        "data-testid='filter-search-input'"
+      ]
+    },
+    "semantic_html": {
+      "headings": "Proper h1-h6 hierarchy",
+      "landmarks": "Use header, nav, main, aside, footer",
+      "lists": "Use ul/ol for lists, not divs",
+      "buttons_vs_links": "Buttons for actions, links for navigation"
+    }
+  },
+  "responsive_design": {
+    "breakpoints": {
+      "sm": "640px",
+      "md": "768px",
+      "lg": "1024px",
+      "xl": "1280px",
+      "2xl": "1536px"
+    },
+    "mobile_strategy": {
+      "philosophy": "Mobile-first, but optimized for desktop (primary use case)",
+      "navigation": "Hamburger menu on mobile, full sidebar on desktop",
+      "grids": "Single column on mobile, 2-3 columns on tablet, 3-4 on desktop",
+      "tables": "Horizontal scroll on mobile, full width on desktop",
+      "modals": "Full screen on mobile, centered on desktop"
+    },
+    "image_constraints": {
+      "mobile_height": "max-h-[80vh] md:max-h-none (prevent images from dominating small screens)",
+      "aspect_ratios": "Use aspect-* utilities for consistent ratios"
+    }
+  },
+  "performance": {
+    "optimization_strategies": {
+      "lazy_loading": "Lazy load charts and heavy components",
+      "code_splitting": "Split routes and large components",
+      "memoization": "Use React.memo for expensive components",
+      "virtualization": "Use virtual scrolling for long lists (react-window)",
+      "image_optimization": "Use WebP format, lazy load images"
+    },
+    "bundle_size": {
+      "chart_library": "Recharts is already included, no additional weight",
+      "icon_library": "Lucide-react is tree-shakeable, only import used icons",
+      "avoid": "Do NOT add heavy 3D libraries (Three.js, R3F) - not needed for this project"
+    }
+  },
+  "export_design": {
+    "pdf_exports": {
+      "style": "Professional consulting report - clean, branded, data-focused",
+      "layout": {
+        "header": "Tenant logo (left), report title (center), date (right)",
+        "body": "Opportunity cards with all details, charts as images",
+        "footer": "Page numbers (left), 'Powered by OutPace Intelligence' (right)"
+      },
+      "typography": {
+        "headings": "IBM Plex Sans Bold, 18-24pt",
+        "body": "Inter Regular, 10-12pt",
+        "data": "IBM Plex Mono, 10pt"
+      },
+      "colors": "Use tenant branding colors, high contrast for print",
+      "spacing": "Generous margins (1 inch), clear section breaks"
+    },
+    "excel_exports": {
+      "style": "Clean data table with branded header",
+      "layout": {
+        "row_1": "Tenant logo and name (merged cells)",
+        "row_2": "Report title and date",
+        "row_3": "Empty (spacing)",
+        "row_4": "Column headers (bold, colored background)",
+        "row_5+": "Data rows"
+      },
+      "formatting": {
+        "headers": "Bold, tenant primary color background, white text",
+        "data": "Alternating row colors for readability",
+        "numbers": "Right-aligned, formatted with commas",
+        "dates": "Consistent date format (YYYY-MM-DD)"
+      }
+    }
+  },
+  "security_and_privacy": {
+    "data_isolation": "Strict tenant data separation - no cross-tenant queries",
+    "ui_considerations": {
+      "no_tenant_switching": "Users cannot see or switch to other tenants",
+      "no_methodology_exposure": "Hide all AI prompts, scoring algorithms, internal logic",
+      "audit_trails": "Log all exports and data access for compliance"
+    },
+    "authentication": {
+      "login_branding": "Branded login page per tenant (subdomain or context)",
+      "session_management": "Secure session handling, auto-logout on inactivity",
+      "role_based_access": "Super Admin, Tenant Admin, Tenant User roles"
+    }
+  },
+  "implementation_phases": {
+    "phase_1_super_admin": {
+      "pages": [
+        "Super Admin Dashboard (tenant list, system health)",
+        "Tenant Management (CRUD operations)",
+        "Tenant Branding Configuration (logo upload, color pickers)",
+        "User Management (list, add, edit, delete)"
+      ],
+      "components": [
+        "Sidebar Navigation",
+        "Tenant Table",
+        "Tenant Form (with branding preview)",
+        "User Table",
+        "User Form",
+        "System Health Cards"
+      ]
+    },
+    "phase_2_tenant_auth": {
+      "pages": [
+        "Tenant Login (branded per tenant)",
+        "Password Reset",
+        "User Profile"
+      ],
+      "components": [
+        "Branded Login Form",
+        "Logo Display",
+        "Dynamic Color Application"
+      ]
+    },
+    "phase_3_tenant_dashboard": {
+      "pages": [
+        "Main Dashboard (opportunity grid)",
+        "Opportunity Detail View",
+        "Intelligence Feed",
+        "Search and Filters"
+      ],
+      "components": [
+        "Opportunity Card",
+        "Intelligence Feed Item",
+        "Filter Bar",
+        "Search Input",
+        "Opportunity Detail Panel",
+        "Score Badge",
+        "Tag List"
+      ]
+    },
+    "phase_4_ai_chat": {
+      "pages": [
+        "Chat Assistant (overlay on all pages)"
+      ],
+      "components": [
+        "Chat Bubble (fixed bottom-right)",
+        "Chat Panel (expandable)",
+        "Message List",
+        "Message Input",
+        "Typing Indicator"
+      ]
+    },
+    "phase_5_exports": {
+      "pages": [
+        "Export Modal (selection interface)"
+      ],
+      "components": [
+        "Export Modal",
+        "Opportunity Selector (checkboxes)",
+        "Format Selector (PDF/Excel)",
+        "Export Button",
+        "Progress Indicator"
+      ]
+    }
+  },
+  "instructions_to_main_agent": {
+    "critical_rules": [
+      "DO NOT use complete transparent backgrounds in headers, overlays, or any surface with content underneath",
+      "DO NOT center-align text blocks - use left-align for readability",
+      "DO NOT use generic SaaS blue (#3B82F6) or teal (#1B93A4) - use the defined brand colors",
+      "DO NOT use Space Grotesk font - use IBM Plex Sans, Manrope, Inter, IBM Plex Mono",
+      "DO NOT add playful elements, emojis, or consumer-grade aesthetics",
+      "DO NOT use rounded pill buttons - use sharp, professional edges (rounded-lg max)",
+      "DO NOT use gradients - use solid colors with borders and shadows",
+      "DO NOT use transition: all - always specify transition properties",
+      "MUST add data-testid to all interactive and key informational elements",
+      "MUST respect prefers-reduced-motion for accessibility",
+      "MUST use Shadcn components for all forms, modals, dropdowns, etc.",
+      "MUST use Recharts (via Shadcn Chart) for all data visualizations",
+      "MUST use Sonner for toast notifications",
+      "MUST use named exports for components, default exports for pages",
+      "MUST ensure high contrast (4.5:1 minimum) for all text",
+      "MUST add internal padding (p-6) to all cards with borders"
+    ],
+    "design_priorities": [
+      "Data density over whitespace - maximize information per screen",
+      "Professional polish - consulting-grade quality",
+      "High contrast - dark mode with clear hierarchy",
+      "Trustworthy - no playful or experimental elements",
+      "Accessible - WCAG AA minimum, keyboard navigable",
+      "Responsive - mobile-first, optimized for desktop",
+      "Performant - lazy load, code split, optimize bundles"
+    ],
+    "component_strategy": {
+      "use_shadcn_for": [
+        "All forms (Input, Select, Checkbox, Radio, Switch, Textarea, Form, Label)",
+        "All overlays (Dialog, Sheet, Popover, Dropdown Menu, Tooltip, Alert Dialog)",
+        "All data display (Table, Badge, Card, Separator, Skeleton)",
+        "All feedback (Sonner, Alert, Progress)",
+        "All navigation (Tabs, Breadcrumb, Pagination)"
+      ],
+      "customize_shadcn": [
+        "Override default styles to match dark theme",
+        "Remove excessive rounded corners (max rounded-lg)",
+        "Use flat borders instead of shadows",
+        "Apply brand colors to interactive states",
+        "Ensure high contrast for accessibility"
+      ],
+      "build_custom_for": [
+        "OpportunityCard (unique to this app)",
+        "IntelligenceFeedItem (unique to this app)",
+        "MetricCard (unique to this app)",
+        "TenantBrandingPreview (unique to this app)",
+        "ExportModal (unique to this app)",
+        "ChatAssistant (unique to this app)"
+      ]
+    },
+    "layout_implementation": {
+      "super_admin": "Fixed sidebar (w-64) with scrollable content area",
+      "tenant_dashboard": "Sticky header with filters, scrollable grid of opportunities",
+      "opportunity_detail": "Full-screen modal or side panel with all details",
+      "chat_assistant": "Fixed bottom-right bubble, expandable panel"
+    },
+    "branding_implementation": {
+      "tenant_colors": "Inject CSS variables (--tenant-primary, --tenant-secondary) in document head",
+      "tenant_logo": "Display from tenant config URL in header and exports",
+      "fallback": "Use platform default colors if tenant branding not configured",
+      "preview": "Live preview in super admin branding configuration"
+    },
+    "export_implementation": {
+      "pdf": "Use library like jsPDF or react-pdf to generate branded PDFs",
+      "excel": "Use library like xlsx or exceljs to generate branded Excel files",
+      "selection": "Modal with checkboxes to select opportunities for export",
+      "branding": "Include tenant logo, colors, and 'Powered by OutPace Intelligence' tagline"
+    },
+    "testing_strategy": {
+      "unit_tests": "Test components in isolation",
+      "integration_tests": "Test user flows (login, view opportunities, export)",
+      "accessibility_tests": "Test keyboard navigation, screen readers, contrast",
+      "visual_regression": "Test UI consistency across browsers and screen sizes",
+      "data_testid": "Use data-testid attributes for stable test selectors"
+    }
+  },
+  "universal_ui_ux_guidelines": {
+    "general_principles": [
+      "Avoid generic centered layouts - use asymmetry and clear hierarchy",
+      "Create depth through layered design with z-index hierarchy",
+      "Use subtle textures (grain, noise) to add richness without clutter",
+      "Every interaction needs micro-animations - hover, focus, active states",
+      "Use 2-3x more spacing than feels comfortable for premium feel",
+      "Static = dead - add subtle motion to bring interfaces to life",
+      "Prioritize reusing existing components from src/components/ui",
+      "Create new components that match existing style and conventions",
+      "Components MUST use named exports, pages MUST use default exports",
+      "Use Sonner for all toast notifications",
+      "Customize scrollbars - NO default browser scrollbar gutter"
+    ],
+    "interaction_design": [
+      "All interactive elements MUST have hover states",
+      "All interactive elements MUST have focus states (for keyboard navigation)",
+      "All interactive elements MUST have active/pressed states",
+      "Disabled states should reduce opacity to 40-50%",
+      "Loading states should use skeleton screens or spinners",
+      "Error states should be clearly visible with semantic colors",
+      "Success states should provide clear feedback (toast, checkmark, etc.)"
+    ],
+    "content_hierarchy": [
+      "Use size, weight, and color to establish clear hierarchy",
+      "Most important content should be largest and highest contrast",
+      "Secondary content should be smaller and lower contrast",
+      "Tertiary content should be smallest and lowest contrast",
+      "Use whitespace to separate sections and create breathing room",
+      "Group related content together with consistent spacing"
+    ],
+    "form_design": [
+      "Always use Shadcn form components (Input, Select, Checkbox, etc.)",
+      "Labels should be clear and positioned above inputs",
+      "Required fields should be marked with asterisk or '(required)'",
+      "Error messages should appear below inputs in danger color",
+      "Success states should show checkmark or success message",
+      "Disabled inputs should be visually distinct (reduced opacity)",
+      "Form buttons should be full-width on mobile, auto-width on desktop"
+    ],
+    "table_design": [
+      "Use Shadcn Table component for all data tables",
+      "Headers should be bold with bottom border",
+      "Rows should have hover state (background change)",
+      "Alternate row colors for better readability (optional)",
+      "Use horizontal scroll on mobile for wide tables",
+      "Sortable columns should have sort indicator (arrow icon)",
+      "Pagination should be clear and accessible"
+    ],
+    "modal_design": [
+      "Use Shadcn Dialog or Sheet for modals",
+      "Overlay should be dark (bg-black/60) with backdrop blur",
+      "Modal content should be centered on desktop, full-screen on mobile",
+      "Close button should be clearly visible (top-right)",
+      "Modal should trap focus (keyboard navigation stays within modal)",
+      "Pressing Escape should close modal",
+      "Clicking overlay should close modal (unless critical action)"
+    ],
+    "navigation_design": [
+      "Primary navigation should be persistent (sidebar or header)",
+      "Active page should be clearly indicated (color, underline, background)",
+      "Hover states should provide feedback",
+      "Mobile navigation should use hamburger menu or bottom tabs",
+      "Breadcrumbs should be used for deep hierarchies",
+      "Back button should be provided when navigating into detail views"
+    ],
+    "feedback_design": [
+      "Use Sonner for toast notifications (success, error, info, warning)",
+      "Toasts should auto-dismiss after 3-5 seconds (unless error)",
+      "Loading states should be immediate (no delay before showing spinner)",
+      "Progress bars should be used for long operations",
+      "Confirmation dialogs should be used for destructive actions",
+      "Success feedback should be clear and celebratory (but professional)"
+    ],
+    "empty_states": [
+      "Empty states should explain why content is missing",
+      "Empty states should provide clear next action (CTA button)",
+      "Use illustration or icon to make empty state friendly",
+      "Avoid generic 'No data' messages - be specific and helpful"
+    ],
+    "error_handling": [
+      "Error messages should be clear and actionable",
+      "Avoid technical jargon in user-facing errors",
+      "Provide suggestions for how to fix the error",
+      "Use danger color for error states",
+      "Log detailed errors to console for debugging"
+    ]
+  },
+  "file_structure": {
+    "pages": "/app/frontend/src/pages/",
+    "components": "/app/frontend/src/components/",
+    "ui_components": "/app/frontend/src/components/ui/",
+    "styles": "/app/frontend/src/",
+    "assets": "/app/frontend/src/assets/",
+    "utils": "/app/frontend/src/utils/",
+    "hooks": "/app/frontend/src/hooks/",
+    "context": "/app/frontend/src/context/"
+  },
+  "next_steps": [
+    "Update index.css with new color system and typography",
+    "Update tailwind.config.js with extended color palette and fonts",
+    "Create custom components (OpportunityCard, MetricCard, etc.)",
+    "Build Super Admin pages (Dashboard, Tenant Management, User Management)",
+    "Build Tenant Auth pages (Login, Password Reset)",
+    "Build Tenant Dashboard pages (Main Dashboard, Opportunity Detail)",
+    "Implement Chat Assistant component",
+    "Implement Export functionality (PDF/Excel generation)",
+    "Add branding injection system (CSS variables per tenant)",
+    "Test accessibility (keyboard navigation, screen readers, contrast)",
+    "Test responsive design (mobile, tablet, desktop)",
+    "Optimize performance (lazy loading, code splitting)"
+  ]
+}
