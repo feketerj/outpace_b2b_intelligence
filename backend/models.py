@@ -76,6 +76,12 @@ class BrandingConfig(MongoModel):
     secondary_color: str = "hsl(265, 60%, 55%)"
     accent_color: str = "hsl(142, 70%, 45%)"
     text_color: str = "hsl(0, 0%, 98%)"
+    # Visual effects and background
+    background_image_url: Optional[str] = None
+    background_image_base64: Optional[str] = None
+    visual_theme: str = "default"  # default, brushed_metal, nvg_green, executive_gloss, tactical_dark, govt_blue, high_tech_sheen
+    enable_glow_effects: bool = False
+    enable_sheen_overlay: bool = False
 
 class SearchProfile(MongoModel):
     naics_codes: List[str] = []
