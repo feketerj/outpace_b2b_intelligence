@@ -6,29 +6,37 @@ import uuid
 from typing import Dict, Any
 
 from utils.scoring import calculate_opportunity_score
+from services.mistral_service import score_opportunity_with_ai
 
 logger = logging.getLogger(__name__)
 
-HIGHERGOV_API_KEY = os.getenv("HIGHERGOV_API_KEY")
 HIGHERGOV_BASE_URL = "https://www.highergov.com/api-external"
 
 async def sync_highergov_opportunities(db, tenant: dict) -> int:
     """
     Fetch opportunities from HigherGov API for a tenant.
+    Uses tenant-specific API key and configuration.
+    Runs AI scoring BEFORE displaying opportunities.
     Returns number of new opportunities added.
     """
     tenant_id = tenant["id"]
     search_profile = tenant.get("search_profile", {})
+    
+    # Get tenant-specific HigherGov API key
+    highergov_api_key = search_profile.get("highergov_api_key")
+    if not highergov_api_key or "placeholder" in highergov_api_key.lower():
+        logger.warning(f"HigherGov API key not configured for tenant {tenant_id}, skipping sync")
+        return 0
+    
     naics_codes = search_profile.get("naics_codes", [])
     keywords = search_profile.get("keywords", [])
+    fetch_full_docs = search_profile.get("fetch_full_documents", False)
+    fetch_nsn = search_profile.get("fetch_nsn", False)
+    fetch_grants = search_profile.get("fetch_grants", True)
+    fetch_contracts = search_profile.get("fetch_contracts", True)
     
     if not naics_codes and not keywords:
         logger.warning(f"No search criteria for tenant {tenant_id}")
-        return 0
-    
-    # Check if placeholder key
-    if not HIGHERGOV_API_KEY or "placeholder" in HIGHERGOV_API_KEY.lower():
-        logger.warning("HigherGov API key not configured, skipping sync")
         return 0
     
     new_count = 0
@@ -37,7 +45,7 @@ async def sync_highergov_opportunities(db, tenant: dict) -> int:
         async with httpx.AsyncClient(timeout=30.0) as client:
             # Build query parameters
             params = {
-                "api_key": HIGHERGOV_API_KEY,
+                "api_key": highergov_api_key,
                 "page_size": 50,
                 "page_number": 1
             }
@@ -46,21 +54,47 @@ async def sync_highergov_opportunities(db, tenant: dict) -> int:
                 params["naics_codes"] = ",".join(naics_codes)
             if keywords:
                 params["keywords"] = " ".join(keywords)
+            if fetch_full_docs:
+                params["include_documents"] = "true"
+            if fetch_nsn:
+                params["include_nsn"] = "true"
             
-            response = await client.get(
-                f"{HIGHERGOV_BASE_URL}/opportunity/",
-                params=params
-            )
-            response.raise_for_status()
-            data = response.json()
+            # Fetch contracts if enabled
+            opportunities_list = []
+            if fetch_contracts:
+                try:
+                    response = await client.get(
+                        f"{HIGHERGOV_BASE_URL}/opportunity/",
+                        params=params
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    opportunities_list.extend(data.get("results", []))
+                    logger.info(f"Fetched {len(data.get('results', []))} contracts for tenant {tenant_id}")
+                except Exception as e:
+                    logger.error(f"Failed to fetch contracts: {e}")
             
-            opportunities = data.get("results", [])
+            # Fetch grants if enabled
+            if fetch_grants:
+                try:
+                    grants_params = params.copy()
+                    grants_params["source_type"] = "grants"
+                    response = await client.get(
+                        f"{HIGHERGOV_BASE_URL}/opportunity/",
+                        params=grants_params
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    opportunities_list.extend(data.get("results", []))
+                    logger.info(f"Fetched {len(data.get('results', []))} grants for tenant {tenant_id}")
+                except Exception as e:
+                    logger.error(f"Failed to fetch grants: {e}")
             
             # Get scoring weights
             weights = tenant.get("scoring_weights", {})
             
-            # Process each opportunity
-            for opp_data in opportunities:
+            # Process each opportunity with AI scoring BEFORE inserting
+            for opp_data in opportunities_list:
                 external_id = opp_data.get("id") or str(uuid.uuid4())
                 
                 # Check if already exists
@@ -95,8 +129,25 @@ async def sync_highergov_opportunities(db, tenant: dict) -> int:
                     "updated_at": now
                 }
                 
-                # Calculate score
+                # Calculate base score
                 opportunity["score"] = calculate_opportunity_score(opportunity, weights)
+                
+                # AI SCORING BEFORE DISPLAY
+                try:
+                    ai_result = await score_opportunity_with_ai(opportunity, tenant)
+                    opportunity["ai_relevance_summary"] = ai_result.get("relevance_summary")
+                    
+                    # Apply AI score adjustment
+                    adjustment = ai_result.get("suggested_score_adjustment", 0)
+                    opportunity["score"] = max(0, min(100, opportunity["score"] + adjustment))
+                    
+                    # Store full AI analysis if schema provided
+                    if "key_highlights" in ai_result:
+                        opportunity["ai_analysis"] = ai_result
+                    
+                    logger.info(f"AI scored opportunity: {opportunity['title'][:50]} - Score: {opportunity['score']}")
+                except Exception as e:
+                    logger.error(f"AI scoring failed: {e}")
                 
                 # Insert into database
                 await db.opportunities.insert_one(opportunity)
@@ -105,7 +156,7 @@ async def sync_highergov_opportunities(db, tenant: dict) -> int:
             # Update tenant rate limit
             await db.tenants.update_one(
                 {"id": tenant_id},
-                {"$inc": {"rate_limit_used": len(opportunities)}}
+                {"$inc": {"rate_limit_used": len(opportunities_list)}}
             )
             
     except Exception as e:
