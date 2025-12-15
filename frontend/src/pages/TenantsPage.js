@@ -513,7 +513,6 @@ export default function TenantsPage() {
                   </div>
                   
                   <div className="space-y-2">
-                  <div className="space-y-2">
                     <Label className="text-[hsl(var(--foreground))]">Logo Upload</Label>
                     <Input
                       type="file"
