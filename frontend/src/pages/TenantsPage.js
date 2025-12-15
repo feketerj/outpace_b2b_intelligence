@@ -427,30 +427,13 @@ export default function TenantsPage() {
                   <div className="space-y-2">
                     <Label className="text-[hsl(var(--foreground))]">Perplexity Prompt Template</Label>
                     <Textarea
-                      placeholder={`{{COMPANY_NAME}} — Washington Update
-
-INSTRUCTIONS:
-- Window: last {{LOOKBACK_DAYS}} days
-- Deadlines: {{DEADLINE_WINDOW}} days
-- Date: {{CURRENT_DATE}}
-
-COMPANY CONTEXT:
-- Competitors: {{COMPETITORS}}
-- NAICS: {{NAICS_CODES}}
-- Keywords: {{KEYWORDS}}
-
-OUTPUT:
-## Report for {{COMPANY_NAME}}
-### 1. Executive Summary
-### 2. Top Actions
-### 3. Opportunities
-...`}
+                      placeholder="Enter your custom Perplexity prompt template here...&#10;&#10;Available variables:&#10;- {COMPANY_NAME}&#10;- {LOOKBACK_DAYS}&#10;- {DEADLINE_WINDOW}&#10;- {COMPETITORS}&#10;- {NAICS_CODES}&#10;- {KEYWORDS}&#10;- {CURRENT_DATE}&#10;&#10;Example: See INTELLIGENCE_CONFIG_GUIDE.md"
                       value={formData.intelligence_config.perplexity_prompt_template}
                       onChange={(e) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, perplexity_prompt_template: e.target.value}})}
                       rows={12}
                       className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] font-mono text-xs"
                     />
-                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Use variables: {{COMPANY_NAME}}, {{LOOKBACK_DAYS}}, {{DEADLINE_WINDOW}}, {{COMPETITORS}}, {{NAICS_CODES}}, {{KEYWORDS}}, {{CURRENT_DATE}}</p>
+                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Use double curly braces for variables in your template</p>
                   </div>
                   
                   <div className="grid grid-cols-3 gap-4">
