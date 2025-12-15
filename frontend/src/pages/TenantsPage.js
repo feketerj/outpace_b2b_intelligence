@@ -63,9 +63,9 @@ export default function TenantsPage() {
         deadline_window_days: 120
       },
       agent_config: {
-        pre_display_agent_id: '',
-        opportunities_chat_agent_id: '',
-        intelligence_chat_agent_id: ''
+        pre_display_scoring_instructions: '',
+        opportunities_chat_instructions: '',
+        intelligence_chat_instructions: ''
       },
       scoring_weights: {
         value_weight: 0.4,
