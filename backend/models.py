@@ -1,0 +1,208 @@
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+from enum import Enum
+
+class UserRole(str, Enum):
+    SUPER_ADMIN = "super_admin"
+    TENANT_ADMIN = "tenant_admin"
+    TENANT_USER = "tenant_user"
+
+class TenantStatus(str, Enum):
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    INACTIVE = "inactive"
+
+class OpportunitySource(str, Enum):
+    HIGHERGOV = "highergov"
+    PERPLEXITY = "perplexity"
+    MANUAL = "manual"
+
+class IntelligenceType(str, Enum):
+    COMPETITIVE = "competitive"
+    NEWS = "news"
+    MARKET = "market"
+
+# Base Models
+class MongoModel(BaseModel):
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+# User Models
+class UserBase(MongoModel):
+    email: EmailStr
+    full_name: str
+    role: UserRole = UserRole.TENANT_USER
+    tenant_id: Optional[str] = None
+
+class UserCreate(UserBase):
+    password: str
+
+class UserUpdate(MongoModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    role: Optional[UserRole] = None
+    password: Optional[str] = None
+
+class User(UserBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+    last_login: Optional[datetime] = None
+
+class UserInDB(User):
+    hashed_password: str
+
+# Authentication Models
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: User
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class TokenData(BaseModel):
+    user_id: str
+    email: str
+    role: UserRole
+    tenant_id: Optional[str] = None
+
+# Tenant Models
+class BrandingConfig(MongoModel):
+    logo_url: Optional[str] = None
+    primary_color: str = "hsl(210, 85%, 52%)"
+    secondary_color: str = "hsl(265, 60%, 55%)"
+    text_color: str = "hsl(0, 0%, 98%)"
+
+class SearchProfile(MongoModel):
+    naics_codes: List[str] = []
+    keywords: List[str] = []
+    interest_areas: List[str] = []
+    competitors: List[str] = []
+
+class ScoringWeights(MongoModel):
+    value_weight: float = 0.4
+    deadline_weight: float = 0.3
+    relevance_weight: float = 0.3
+
+class MistralAgentConfig(MongoModel):
+    pre_display_agent_id: Optional[str] = None
+    opportunities_chat_agent_id: Optional[str] = None
+    intelligence_chat_agent_id: Optional[str] = None
+
+class TenantBase(MongoModel):
+    name: str
+    slug: str
+    branding: BrandingConfig = Field(default_factory=BrandingConfig)
+    search_profile: SearchProfile = Field(default_factory=SearchProfile)
+    scoring_weights: ScoringWeights = Field(default_factory=ScoringWeights)
+    agent_config: MistralAgentConfig = Field(default_factory=MistralAgentConfig)
+    status: TenantStatus = TenantStatus.ACTIVE
+
+class TenantCreate(TenantBase):
+    pass
+
+class TenantUpdate(MongoModel):
+    name: Optional[str] = None
+    slug: Optional[str] = None
+    branding: Optional[BrandingConfig] = None
+    search_profile: Optional[SearchProfile] = None
+    scoring_weights: Optional[ScoringWeights] = None
+    agent_config: Optional[MistralAgentConfig] = None
+    status: Optional[TenantStatus] = None
+
+class Tenant(TenantBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+    last_synced_at: Optional[datetime] = None
+    rate_limit_used: int = 0
+    rate_limit_monthly: int = 500
+    rate_limit_reset_date: Optional[datetime] = None
+
+# Opportunity Models
+class OpportunityBase(MongoModel):
+    external_id: str
+    title: str
+    description: str
+    agency: Optional[str] = None
+    due_date: Optional[datetime] = None
+    estimated_value: Optional[str] = None
+    naics_code: Optional[str] = None
+    keywords: List[str] = []
+    source_type: OpportunitySource = OpportunitySource.MANUAL
+    source_url: Optional[str] = None
+    raw_data: Dict[str, Any] = {}
+
+class OpportunityCreate(OpportunityBase):
+    tenant_id: str
+
+class Opportunity(OpportunityBase):
+    id: str
+    tenant_id: str
+    score: int = 0
+    ai_relevance_summary: Optional[str] = None
+    captured_date: datetime
+    created_at: datetime
+    updated_at: datetime
+
+# Intelligence Models
+class IntelligenceBase(MongoModel):
+    title: str
+    summary: str
+    content: str
+    type: IntelligenceType = IntelligenceType.NEWS
+    source_urls: List[str] = []
+    keywords: List[str] = []
+    metadata: Dict[str, Any] = {}
+
+class IntelligenceCreate(IntelligenceBase):
+    tenant_id: str
+
+class Intelligence(IntelligenceBase):
+    id: str
+    tenant_id: str
+    created_at: datetime
+    updated_at: datetime
+
+# Chat Models
+class ChatMessageBase(MongoModel):
+    conversation_id: str
+    role: str  # "user" or "assistant"
+    content: str
+    agent_id: Optional[str] = None
+
+class ChatMessageCreate(ChatMessageBase):
+    tenant_id: str
+    user_id: str
+
+class ChatMessage(ChatMessageBase):
+    id: str
+    tenant_id: str
+    user_id: str
+    created_at: datetime
+
+# Sync Log Models
+class SyncLog(MongoModel):
+    id: str
+    tenant_id: str
+    sync_type: str  # "opportunities" or "intelligence"
+    sync_timestamp: datetime
+    records_fetched: int = 0
+    records_created: int = 0
+    records_updated: int = 0
+    errors: List[str] = []
+    sync_duration_seconds: float = 0.0
+    status: str = "success"  # "success" or "failed"
+
+# Response Models
+class PaginationMetadata(BaseModel):
+    total: int
+    page: int
+    per_page: int
+    pages: int
+
+class PaginatedResponse(BaseModel):
+    data: List[Any]
+    pagination: PaginationMetadata
