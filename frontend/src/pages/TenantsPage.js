@@ -379,7 +379,7 @@ export default function TenantsPage() {
                         </Label>
                       </div>
                       <p className="text-xs text-[hsl(var(--foreground-secondary))] mt-2 ml-6">
-                        Master clients can create sub-clients and configure white-label branding that appears on all their clients' dashboards
+                        Master clients can create sub-clients and configure white-label branding that appears on all their clients&apos; dashboards
                       </p>
                     </div>
                   </div>
