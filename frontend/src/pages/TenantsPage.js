@@ -634,6 +634,85 @@ export default function TenantsPage() {
                     </div>
                   </div>
                   
+                  <div className="border-t border-[hsl(var(--border))] pt-4 mt-4">
+                    <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">🎨 Visual Effects & Theme</h4>
+                    
+                    <div className="space-y-3 mb-4">
+                      <Label className="text-[hsl(var(--foreground))]">Theme Preset (Military/Gov/Executive)</Label>
+                      <Select 
+                        value={formData.branding.visual_theme || 'default'}
+                        onValueChange={(value) => setFormData({...formData, branding: {...formData.branding, visual_theme: value}})}
+                      >
+                        <SelectTrigger className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]">
+                          <SelectItem value="default">Default - Clean Professional</SelectItem>
+                          <SelectItem value="brushed_metal">🔧 Brushed Metal - Industrial texture</SelectItem>
+                          <SelectItem value="nvg_green">🌃 NVG Green - Night vision tactical</SelectItem>
+                          <SelectItem value="executive_gloss">✨ Executive Gloss - Polished shine</SelectItem>
+                          <SelectItem value="tactical_dark">🎖️ Tactical Dark - Military ops</SelectItem>
+                          <SelectItem value="govt_blue">🇺🇸 Government Blue - Federal official</SelectItem>
+                          <SelectItem value="high_tech_sheen">💎 High-Tech Sheen - Futuristic glow</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-[hsl(var(--foreground-muted))]">Applies visual effects, overlays, and textures</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.branding.enable_glow_effects || false}
+                          onChange={(e) => setFormData({...formData, branding: {...formData.branding, enable_glow_effects: e.target.checked}})}
+                          className="h-4 w-4"
+                          id="glow"
+                        />
+                        <Label htmlFor="glow" className="text-[hsl(var(--foreground))]">Enable Glow Effects</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.branding.enable_sheen_overlay || false}
+                          onChange={(e) => setFormData({...formData, branding: {...formData.branding, enable_sheen_overlay: e.target.checked}})}
+                          className="h-4 w-4"
+                          id="sheen"
+                        />
+                        <Label htmlFor="sheen" className="text-[hsl(var(--foreground))]">Enable Sheen Overlay</Label>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-[hsl(var(--foreground))]">Background Image Upload (Optional)</Label>
+                      <Input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg"
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setFormData({...formData, branding: {...formData.branding, background_image_base64: reader.result}});
+                              toast.success('Background image loaded!');
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                      />
+                      <p className="text-xs text-[hsl(var(--foreground-muted))]">Subtle background pattern (low opacity recommended)</p>
+                      {formData.branding.background_image_base64 && (
+                        <div className="mt-2">
+                          <img 
+                            src={formData.branding.background_image_base64}
+                            alt="Background preview"
+                            className="h-20 w-full object-cover rounded border border-[hsl(var(--border))] opacity-30"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
                   <div className="bg-[hsl(var(--background-elevated))] p-4 rounded border border-[hsl(var(--border))] mt-4">
                     <p className="text-sm font-medium text-[hsl(var(--foreground))] mb-2">Branding Preview</p>
                     <div className="space-y-2">
@@ -652,17 +731,23 @@ export default function TenantsPage() {
                       <div className="flex gap-2 mt-3">
                         <button 
                           type="button"
-                          className="px-4 py-2 rounded font-medium text-white"
-                          style={{background: formData.branding.primary_color}}
+                          className={`px-4 py-2 rounded font-medium text-white ${formData.branding.enable_glow_effects ? 'shadow-lg' : ''}`}
+                          style={{
+                            background: formData.branding.primary_color,
+                            boxShadow: formData.branding.enable_glow_effects ? `0 0 20px ${formData.branding.primary_color}` : 'none'
+                          }}
                         >
-                          Primary Button
+                          Primary
                         </button>
                         <button 
                           type="button"
-                          className="px-4 py-2 rounded font-medium text-white"
+                          className={`px-4 py-2 rounded font-medium text-white ${formData.branding.enable_sheen_overlay ? 'relative overflow-hidden' : ''}`}
                           style={{background: formData.branding.secondary_color}}
                         >
-                          Secondary
+                          {formData.branding.enable_sheen_overlay && (
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                          )}
+                          <span className="relative">Secondary</span>
                         </button>
                         <button 
                           type="button"
@@ -672,6 +757,9 @@ export default function TenantsPage() {
                           Accent
                         </button>
                       </div>
+                      <p className="text-xs text-[hsl(var(--foreground-muted))] mt-2">
+                        Theme: <span className="font-semibold">{formData.branding.visual_theme?.replace('_', ' ') || 'default'}</span>
+                      </p>
                     </div>
                   </div>
                 </TabsContent>
