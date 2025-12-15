@@ -6,7 +6,7 @@ _client = None
 _db = None
 
 def get_database():
-    \"\"\"Get database instance\"\"\"
+    """Get database instance"""
     global _client, _db
     if _db is None:
         mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
@@ -16,7 +16,7 @@ def get_database():
     return _db
 
 def close_database():
-    \"\"\"Close database connection\"\"\"
+    """Close database connection"""
     global _client
     if _client:
         _client.close()
