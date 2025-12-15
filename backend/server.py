@@ -8,7 +8,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from routes import auth, tenants, opportunities, intelligence, users, admin, chat, exports, config, upload
+from routes import auth, tenants, opportunities, intelligence, users, admin, chat, exports, config, upload, sync
 from scheduler.sync_scheduler import start_scheduler, stop_scheduler
 
 ROOT_DIR = Path(__file__).parent
