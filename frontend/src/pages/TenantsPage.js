@@ -748,7 +748,7 @@ export default function TenantsPage() {
                           className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] font-mono text-xs"
                         />
                         <p className="text-xs text-[hsl(var(--foreground-muted))]">
-                          <a href="https://crontab.guru" target="_blank" rel="noopener" className="text-[hsl(var(--primary))] hover:underline">
+                          <a href="https://crontab.guru" target="_blank" rel="noopener noreferrer" className="text-[hsl(var(--primary))] hover:underline">
                             Cron helper →
                           </a>
                         </p>
