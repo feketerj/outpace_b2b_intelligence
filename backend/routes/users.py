@@ -6,7 +6,10 @@ import logging
 
 from models import User, UserCreate, UserUpdate, UserRole, PaginatedResponse, PaginationMetadata
 from utils.auth import get_current_tenant_admin, get_current_user, get_password_hash, TokenData
-from server import db as get_db
+from database import get_database
+
+def get_db():
+    return get_database()
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

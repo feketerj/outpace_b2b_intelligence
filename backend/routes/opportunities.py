@@ -10,7 +10,10 @@ from models import (
 )
 from utils.auth import get_current_user, TokenData
 from utils.scoring import calculate_opportunity_score
-from server import db as get_db
+from database import get_database
+
+def get_db():
+    return get_database()
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
