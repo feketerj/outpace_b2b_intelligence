@@ -63,9 +63,9 @@ export default function TenantsPage() {
         deadline_window_days: 120
       },
       agent_config: {
-        pre_display_scoring_instructions: '',
-        opportunities_chat_instructions: '',
-        intelligence_chat_instructions: ''
+        pre_display_scoring_instructions: 'Analyze this contract opportunity and provide a relevance score and summary for the client.',
+        opportunities_chat_instructions: 'You are a helpful assistant for contract opportunities. Help users understand opportunities and answer questions.',
+        intelligence_chat_instructions: 'You are a business intelligence analyst. Help users interpret intelligence reports and market data.'
       },
       scoring_weights: {
         value_weight: 0.4,
