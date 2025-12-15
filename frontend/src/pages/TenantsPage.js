@@ -522,6 +522,27 @@ export default function TenantsPage() {
 
                 {/* Search Profile Tab (HigherGov) */}
                 <TabsContent value="search" className="space-y-4 mt-4">
+                  <div className="bg-[hsl(var(--accent-info))]/10 p-4 rounded border border-[hsl(var(--accent-info))]/30 mb-4">
+                    <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-1">HigherGov Setup Instructions:</p>
+                    <ol className="text-xs text-[hsl(var(--foreground-secondary))] space-y-1 list-decimal list-inside">
+                      <li>Create saved search in HigherGov platform with your filters (NAICS, keywords, etc.)</li>
+                      <li>Copy the Search ID from HigherGov</li>
+                      <li>Paste Search ID below</li>
+                      <li>System will poll that saved search automatically</li>
+                    </ol>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[hsl(var(--foreground))]">HigherGov Search ID *</Label>
+                    <Input
+                      placeholder="your-saved-search-id-from-highergov-platform"
+                      value={formData.search_profile.highergov_search_id || ''}
+                      onChange={(e) => setFormData({...formData, search_profile: {...formData.search_profile, highergov_search_id: e.target.value}})}
+                      className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                    />
+                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Get this from your saved search in HigherGov platform (prevents keyword overload)</p>
+                  </div>
+                  
                   <div className="space-y-2">
                     <Label className="text-[hsl(var(--foreground))]">HigherGov API Key</Label>
                     <Input
