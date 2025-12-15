@@ -55,7 +55,12 @@ export default function TenantsPage() {
         naics_codes: [],
         keywords: [],
         interest_areas: [],
-        competitors: []
+        competitors: [],
+        highergov_api_key: '',
+        fetch_full_documents: false,
+        fetch_nsn: false,
+        fetch_grants: true,
+        fetch_contracts: true
       },
       intelligence_config: {
         enabled: true,
