@@ -24,8 +24,8 @@ def start_scheduler(db):
         replace_existing=True
     )
     
-    # Add per-tenant custom schedules
-    asyncio.run(setup_tenant_schedules(db))
+    # Note: Per-tenant custom schedules will be loaded on first sync
+    # Cannot use asyncio.run() here as we're in an event loop
     
     scheduler.start()
     logger.info("Scheduler started successfully")
