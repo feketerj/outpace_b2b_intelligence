@@ -84,6 +84,7 @@ class SearchProfile(MongoModel):
     competitors: List[str] = []
     # HigherGov API configuration
     highergov_api_key: Optional[str] = None  # Per-tenant API key (falls back to default)
+    highergov_search_id: Optional[str] = None  # Saved search ID from HigherGov platform
     fetch_full_documents: bool = False
     fetch_nsn: bool = False
     fetch_grants: bool = True
