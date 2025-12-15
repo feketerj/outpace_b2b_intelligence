@@ -502,15 +502,44 @@ export default function TenantsPage() {
                 {/* Search Profile Tab (HigherGov) */}
                 <TabsContent value="search" className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">HigherGov API Key *</Label>
+                    <Label className="text-[hsl(var(--foreground))]">HigherGov API Key</Label>
                     <Input
                       type="password"
-                      placeholder="Enter this client's HigherGov API key"
+                      placeholder="Client's HigherGov API key (optional - uses default if blank)"
                       value={formData.search_profile.highergov_api_key || ''}
                       onChange={(e) => setFormData({...formData, search_profile: {...formData.search_profile, highergov_api_key: e.target.value}})}
                       className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
                     />
-                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Each client has their own HigherGov API key (not shared)</p>
+                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Per-client key for usage tracking. Leave blank to use shared default key.</p>
+                  </div>
+                  
+                  <div className="border-t border-[hsl(var(--border))] pt-4">
+                    <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">Auto-Update Settings</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.search_profile.auto_update_enabled !== false}
+                          onChange={(e) => setFormData({...formData, search_profile: {...formData.search_profile, auto_update_enabled: e.target.checked}})}
+                          className="h-4 w-4"
+                          id="auto-update-toggle"
+                        />
+                        <Label htmlFor="auto-update-toggle" className="text-[hsl(var(--foreground))]">Enable Auto-Update (Polling Timer)</Label>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Update Interval (Hours)</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="168"
+                          value={formData.search_profile.auto_update_interval_hours || 24}
+                          onChange={(e) => setFormData({...formData, search_profile: {...formData.search_profile, auto_update_interval_hours: parseInt(e.target.value)}})}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                          disabled={!formData.search_profile.auto_update_enabled}
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">How often to poll HigherGov (1-168 hours). Default: 24 hours (daily)</p>
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="border-t border-[hsl(var(--border))] pt-4">
@@ -553,6 +582,7 @@ export default function TenantsPage() {
                         <Label className="text-[hsl(var(--foreground))]">Fetch NSN Data</Label>
                       </div>
                     </div>
+                    <p className="text-xs text-[hsl(var(--foreground-muted))] mt-2">Full documents and NSN data increase API usage</p>
                   </div>
                   
                   <div className="border-t border-[hsl(var(--border))] pt-4">
