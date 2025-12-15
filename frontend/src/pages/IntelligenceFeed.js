@@ -1,0 +1,1 @@
+export default function IntelligenceFeed() { return <div>Intelligence Feed Page</div>; }

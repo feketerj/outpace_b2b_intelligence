@@ -1,0 +1,1 @@
+export default function OpportunityDetail() { return <div>Opportunity Detail Page</div>; }

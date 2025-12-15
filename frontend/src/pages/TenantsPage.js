@@ -1,0 +1,1 @@
+export default function TenantsPage() { return <div>Tenants Management Page</div>; }
