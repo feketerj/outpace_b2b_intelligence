@@ -674,56 +674,110 @@ export default function TenantsPage() {
 
                 {/* Intelligence Config Tab (Perplexity) */}
                 <TabsContent value="intelligence" className="space-y-4 mt-4">
+                  <div className="bg-[hsl(var(--accent-success))]/10 p-4 rounded border border-[hsl(var(--accent-success))]/30 mb-4">
+                    <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-1">✓ Automated Intelligence Reports</p>
+                    <p className="text-xs text-[hsl(var(--foreground-secondary))]">
+                      Configure when Perplexity generates intelligence reports automatically for this client. 
+                      Reports run on schedule without manual intervention.
+                    </p>
+                  </div>
+                  
                   <div className="flex items-center gap-2 mb-4">
                     <input
                       type="checkbox"
                       checked={formData.intelligence_config.enabled}
                       onChange={(e) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, enabled: e.target.checked}})}
                       className="h-4 w-4"
+                      id="intel-enabled"
                     />
-                    <Label className="text-[hsl(var(--foreground))]">Enable Intelligence Reports</Label>
+                    <Label htmlFor="intel-enabled" className="text-[hsl(var(--foreground))] font-medium">Enable Automated Intelligence Reports</Label>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">Perplexity Prompt Template</Label>
-                    <Textarea
-                      placeholder="Enter your custom Perplexity prompt template here...&#10;&#10;Available variables:&#10;- {COMPANY_NAME}&#10;- {LOOKBACK_DAYS}&#10;- {DEADLINE_WINDOW}&#10;- {COMPETITORS}&#10;- {NAICS_CODES}&#10;- {KEYWORDS}&#10;- {CURRENT_DATE}&#10;&#10;Example: See INTELLIGENCE_CONFIG_GUIDE.md"
-                      value={formData.intelligence_config.perplexity_prompt_template}
-                      onChange={(e) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, perplexity_prompt_template: e.target.value}})}
-                      rows={12}
-                      className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] font-mono text-xs"
-                    />
-                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Use double curly braces for variables in your template</p>
+                  <div className="border-t border-[hsl(var(--border))] pt-4">
+                    <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">Report Schedule (Automated)</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Schedule Presets</Label>
+                        <Select 
+                          value={formData.intelligence_config.schedule_cron}
+                          onValueChange={(value) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, schedule_cron: value}})}
+                        >
+                          <SelectTrigger className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]">
+                            <SelectValue placeholder="Select schedule" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]">
+                            <SelectItem value="0 2 * * *">Daily at 2 AM UTC</SelectItem>
+                            <SelectItem value="0 6 * * *">Daily at 6 AM UTC</SelectItem>
+                            <SelectItem value="0 9 * * 1">Weekly - Monday 9 AM</SelectItem>
+                            <SelectItem value="0 9 * * 1,4">Twice Weekly - Mon & Thu 9 AM</SelectItem>
+                            <SelectItem value="0 3 1 * *">Monthly - 1st at 3 AM</SelectItem>
+                            <SelectItem value="0 */6 * * *">Every 6 Hours</SelectItem>
+                            <SelectItem value="0 */12 * * *">Every 12 Hours</SelectItem>
+                            <SelectItem value="custom">Custom Cron...</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Custom Cron Expression</Label>
+                        <Input
+                          placeholder="0 2 * * * (min hour day month weekday)"
+                          value={formData.intelligence_config.schedule_cron}
+                          onChange={(e) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, schedule_cron: e.target.value}})}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] font-mono text-xs"
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">
+                          <a href="https://crontab.guru" target="_blank" rel="noopener" className="text-[hsl(var(--primary))] hover:underline">
+                            Cron helper →
+                          </a>
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[hsl(var(--foreground))]">Schedule (Cron)</Label>
-                      <Input
-                        placeholder="0 2 * * *"
-                        value={formData.intelligence_config.schedule_cron}
-                        onChange={(e) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, schedule_cron: e.target.value}})}
-                        className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                      />
-                      <p className="text-xs text-[hsl(var(--foreground-muted))]">Daily 2 AM UTC</p>
+                  <div className="border-t border-[hsl(var(--border))] pt-4">
+                    <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">Report Configuration</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Lookback Days</Label>
+                        <Input
+                          type="number"
+                          value={formData.intelligence_config.lookback_days}
+                          onChange={(e) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, lookback_days: parseInt(e.target.value)}})}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Search window</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Deadline Window (Days)</Label>
+                        <Input
+                          type="number"
+                          value={formData.intelligence_config.deadline_window_days}
+                          onChange={(e) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, deadline_window_days: parseInt(e.target.value)}})}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Future horizon</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Next Report</Label>
+                        <div className="h-10 px-3 bg-[hsl(var(--background-elevated))] border border-[hsl(var(--border))] rounded flex items-center text-sm text-[hsl(var(--foreground-secondary))]">
+                          {formData.intelligence_config.enabled ? 'Scheduled' : 'Disabled'}
+                        </div>
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Based on cron</p>
+                      </div>
                     </div>
+                  </div>
+                  
+                  <div className="border-t border-[hsl(var(--border))] pt-4">
+                    <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">Perplexity Prompt Template</h4>
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--foreground))]">Lookback Days</Label>
-                      <Input
-                        type="number"
-                        value={formData.intelligence_config.lookback_days}
-                        onChange={(e) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, lookback_days: parseInt(e.target.value)}})}
-                        className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                      <Textarea
+                        placeholder="Enter your custom Perplexity prompt template here...&#10;&#10;Available variables:&#10;- {{COMPANY_NAME}}&#10;- {{LOOKBACK_DAYS}}&#10;- {{DEADLINE_WINDOW}}&#10;- {{COMPETITORS}}&#10;- {{NAICS_CODES}}&#10;- {{KEYWORDS}}&#10;- {{CURRENT_DATE}}&#10;&#10;Example: See INTELLIGENCE_CONFIG_GUIDE.md"
+                        value={formData.intelligence_config.perplexity_prompt_template}
+                        onChange={(e) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, perplexity_prompt_template: e.target.value}})}
+                        rows={12}
+                        className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] font-mono text-xs"
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[hsl(var(--foreground))]">Deadline Window (Days)</Label>
-                      <Input
-                        type="number"
-                        value={formData.intelligence_config.deadline_window_days}
-                        onChange={(e) => setFormData({...formData, intelligence_config: {...formData.intelligence_config, deadline_window_days: parseInt(e.target.value)}})}
-                        className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                      />
+                      <p className="text-xs text-[hsl(var(--foreground-muted))]">Paste your Enchandia-style Washington Update prompt here. Use double curly braces for variables.</p>
                     </div>
                   </div>
                 </TabsContent>
