@@ -149,6 +149,9 @@ class MistralAgentConfig(MongoModel):
 class TenantBase(MongoModel):
     name: str
     slug: str
+    is_master_client: bool = False  # Can resell and white-label to their clients
+    master_client_id: Optional[str] = None  # If this is a sub-client, references master
+    master_branding: Optional[BrandingConfig] = None  # Master's white-label config
     branding: BrandingConfig = Field(default_factory=BrandingConfig)
     search_profile: SearchProfile = Field(default_factory=SearchProfile)
     scoring_weights: ScoringWeights = Field(default_factory=ScoringWeights)
