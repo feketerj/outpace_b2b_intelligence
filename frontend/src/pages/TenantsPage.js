@@ -591,51 +591,102 @@ export default function TenantsPage() {
 
                 {/* Agent Config Tab (Mistral) */}
                 <TabsContent value="agents" className="space-y-4 mt-4">
-                  <p className="text-sm text-[hsl(var(--foreground-secondary))]">Configure Mistral agent system prompts (instructions) for each AI assistant</p>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">Pre-Display Scoring Instructions</Label>
-                    <Textarea
-                      placeholder="You are an expert at analyzing government contract opportunities. Provide relevance scores and summaries for the client."
-                      value={formData.agent_config.pre_display_scoring_instructions}
-                      onChange={(e) => setFormData({...formData, agent_config: {...formData.agent_config, pre_display_scoring_instructions: e.target.value}})}
-                      rows={3}
-                      className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] text-sm"
-                    />
-                    <p className="text-xs text-[hsl(var(--foreground-muted))]">System prompt for AI scoring before displaying opportunities</p>
+                  <div className="bg-[hsl(var(--accent-info))]/10 p-4 rounded border border-[hsl(var(--accent-info))]/30 mb-4">
+                    <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-2">Two Options:</p>
+                    <ul className="text-xs text-[hsl(var(--foreground-secondary))] space-y-1">
+                      <li><strong>1. Agent IDs</strong> - Create agents in Mistral platform, paste IDs here (recommended for per-client agents)</li>
+                      <li><strong>2. Instructions</strong> - Set custom system prompts (fallback if no agent ID provided)</li>
+                    </ul>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">Opportunities Chat Instructions</Label>
-                    <Textarea
-                      placeholder="You are a helpful assistant for contract opportunities. Help users understand opportunities and answer questions."
-                      value={formData.agent_config.opportunities_chat_instructions}
-                      onChange={(e) => setFormData({...formData, agent_config: {...formData.agent_config, opportunities_chat_instructions: e.target.value}})}
-                      rows={3}
-                      className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] text-sm"
-                    />
-                    <p className="text-xs text-[hsl(var(--foreground-muted))]">System prompt for live chat on Opportunities section</p>
+                  <div className="space-y-6">
+                    {/* Scoring Agent */}
+                    <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--background-tertiary))]">
+                      <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">1. Pre-Display Scoring Agent</h4>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-[hsl(var(--foreground))]">Agent ID (from Mistral platform)</Label>
+                          <Input
+                            placeholder="ag-client-acme-scoring"
+                            value={formData.agent_config.scoring_agent_id || ''}
+                            onChange={(e) => setFormData({...formData, agent_config: {...formData.agent_config, scoring_agent_id: e.target.value}})}
+                            className="bg-[hsl(var(--background))] border-[hsl(var(--border))]"
+                          />
+                          <p className="text-xs text-[hsl(var(--foreground-muted))]">If provided, uses this agent. Otherwise uses instructions below.</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[hsl(var(--foreground))]">OR Custom Instructions (fallback)</Label>
+                          <Textarea
+                            placeholder="You are an expert at analyzing government contract opportunities..."
+                            value={formData.agent_config.scoring_instructions}
+                            onChange={(e) => setFormData({...formData, agent_config: {...formData.agent_config, scoring_instructions: e.target.value}})}
+                            rows={2}
+                            className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Opportunities Chat Agent */}
+                    <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--background-tertiary))]">
+                      <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">2. Opportunities Chat Agent</h4>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-[hsl(var(--foreground))]">Agent ID</Label>
+                          <Input
+                            placeholder="ag-client-acme-opp-chat"
+                            value={formData.agent_config.opportunities_chat_agent_id || ''}
+                            onChange={(e) => setFormData({...formData, agent_config: {...formData.agent_config, opportunities_chat_agent_id: e.target.value}})}
+                            className="bg-[hsl(var(--background))] border-[hsl(var(--border))]"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[hsl(var(--foreground))]">OR Custom Instructions</Label>
+                          <Textarea
+                            placeholder="You are a helpful assistant for contract opportunities..."
+                            value={formData.agent_config.opportunities_chat_instructions}
+                            onChange={(e) => setFormData({...formData, agent_config: {...formData.agent_config, opportunities_chat_instructions: e.target.value}})}
+                            rows={2}
+                            className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Intelligence Chat Agent */}
+                    <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--background-tertiary))]">
+                      <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">3. Intelligence Chat Agent</h4>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-[hsl(var(--foreground))]">Agent ID</Label>
+                          <Input
+                            placeholder="ag-client-acme-intel-chat"
+                            value={formData.agent_config.intelligence_chat_agent_id || ''}
+                            onChange={(e) => setFormData({...formData, agent_config: {...formData.agent_config, intelligence_chat_agent_id: e.target.value}})}
+                            className="bg-[hsl(var(--background))] border-[hsl(var(--border))]"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[hsl(var(--foreground))]">OR Custom Instructions</Label>
+                          <Textarea
+                            placeholder="You are a business intelligence analyst..."
+                            value={formData.agent_config.intelligence_chat_instructions}
+                            onChange={(e) => setFormData({...formData, agent_config: {...formData.agent_config, intelligence_chat_instructions: e.target.value}})}
+                            rows={2}
+                            className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">Intelligence Chat Instructions</Label>
-                    <Textarea
-                      placeholder="You are a business intelligence analyst. Help users interpret intelligence reports and market data."
-                      value={formData.agent_config.intelligence_chat_instructions}
-                      onChange={(e) => setFormData({...formData, agent_config: {...formData.agent_config, intelligence_chat_instructions: e.target.value}})}
-                      rows={3}
-                      className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] text-sm"
-                    />
-                    <p className="text-xs text-[hsl(var(--foreground-muted))]">System prompt for live chat on Intelligence section</p>
-                  </div>
-                  
-                  <div className="bg-[hsl(var(--background-tertiary))] p-4 rounded border border-[hsl(var(--border))]">
-                    <p className="text-xs text-[hsl(var(--foreground-secondary))]"><strong>Mistral SDK Configuration:</strong></p>
+                  <div className="bg-[hsl(var(--background-tertiary))] p-4 rounded border border-[hsl(var(--border))] mt-4">
+                    <p className="text-xs text-[hsl(var(--foreground-secondary))]"><strong>How It Works:</strong></p>
                     <ul className="text-xs text-[hsl(var(--foreground-muted))] mt-2 space-y-1">
-                      <li>• Model: mistral-small-latest</li>
-                      <li>• Temperature: 0.3 (scoring), 0.7 (chat)</li>
-                      <li>• Max Tokens: 500 (scoring), 2000 (chat)</li>
-                      <li>• Using Emergent LLM Key (Universal Key)</li>
+                      <li>• <strong>With Agent ID:</strong> Uses your pre-configured agent from Mistral platform</li>
+                      <li>• <strong>With Instructions:</strong> Creates agent on-the-fly with custom system prompt</li>
+                      <li>• Agent ID takes priority if both are set</li>
+                      <li>• Each client can have unique agents with their own prompts</li>
                     </ul>
                   </div>
                 </TabsContent>
