@@ -82,6 +82,12 @@ class SearchProfile(MongoModel):
     keywords: List[str] = []
     interest_areas: List[str] = []
     competitors: List[str] = []
+    # HigherGov API configuration
+    highergov_api_key: Optional[str] = None  # Per-tenant API key
+    fetch_full_documents: bool = False
+    fetch_nsn: bool = False
+    fetch_grants: bool = True
+    fetch_contracts: bool = True
 
 class IntelligenceConfig(MongoModel):
     """Configuration for intelligence report generation"""
