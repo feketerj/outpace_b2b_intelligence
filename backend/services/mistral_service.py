@@ -6,7 +6,7 @@ from mistralai import Mistral
 
 logger = logging.getLogger(__name__)
 
-MISTRAL_API_KEY = os.getenv("EMERGENT_LLM_KEY")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
 async def score_opportunity_with_ai(opportunity: dict, tenant: dict) -> Dict[str, Any]:
     """
