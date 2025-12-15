@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,8 +22,16 @@ export default function LoginPage() {
 
     if (result.success) {
       toast.success('Login successful!');
-      // Navigate based on role (will be handled by ProtectedRoute)
-      navigate('/dashboard');
+      
+      // Navigate based on role
+      setTimeout(() => {
+        // Re-fetch user to get updated role
+        if (result.user?.role === 'super_admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
+      }, 100);
     } else {
       toast.error(result.error || 'Login failed');
     }
