@@ -132,6 +132,15 @@ class MistralAgentConfig(MongoModel):
     scoring_instructions: Optional[str] = "Analyze this contract opportunity and provide a relevance score and summary."
     opportunities_chat_instructions: Optional[str] = "You are a helpful assistant for contract opportunities."
     intelligence_chat_instructions: Optional[str] = "You are a business intelligence analyst."
+    
+    # Output schema for AI scoring (JSON schema that agent should follow)
+    scoring_output_schema: Optional[Dict[str, Any]] = {
+        "relevance_summary": "string",
+        "score_adjustment": "number",
+        "key_highlights": "array",
+        "win_probability": "string",
+        "recommended_action": "string"
+    }
 
 class TenantBase(MongoModel):
     name: str
