@@ -15,8 +15,8 @@ DEFAULT_HIGHERGOV_KEY = os.getenv("HIGHERGOV_API_KEY")  # Default/fallback key
 
 async def sync_highergov_opportunities(db, tenant: dict) -> int:
     """
-    Fetch opportunities from HigherGov API for a tenant.
-    Uses tenant-specific API key or falls back to default.
+    Fetch opportunities from HigherGov API for a tenant using Search ID.
+    Uses saved search from HigherGov platform (not keywords - too many results).
     Runs AI scoring BEFORE displaying opportunities.
     Returns number of new opportunities added.
     """
@@ -31,7 +31,144 @@ async def sync_highergov_opportunities(db, tenant: dict) -> int:
         logger.warning(f"HigherGov API key not configured for tenant {tenant_id}, skipping sync")
         return 0
     
-    logger.info(f"Using {'tenant-specific' if search_profile.get('highergov_api_key') else 'default'} HigherGov key for {tenant_name}")
+    # Get search ID (required)
+    search_id = search_profile.get("highergov_search_id")
+    if not search_id:
+        logger.warning(f"HigherGov search_id not configured for tenant {tenant_id}. Create a saved search in HigherGov platform first.")
+        return 0
+    
+    logger.info(f"Polling HigherGov search_id: {search_id} for {tenant_name}")
+    
+    fetch_full_docs = search_profile.get("fetch_full_documents", False)
+    fetch_nsn = search_profile.get("fetch_nsn", False)
+    
+    new_count = 0
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Poll saved search endpoint
+            params = {
+                "api_key": highergov_api_key,
+                "search_id": search_id,
+                "page_size": 100,
+                "page_number": 1
+            }
+            
+            if fetch_full_docs:
+                params["include_documents"] = "true"
+            if fetch_nsn:
+                params["include_nsn"] = "true"
+            
+            response = await client.get(
+                f"{HIGHERGOV_BASE_URL}/search/",
+                params=params
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            opportunities_list = data.get("results", []) or data.get("data", [])
+            logger.info(f"Fetched {len(opportunities_list)} opportunities from search_id {search_id}")
+            
+            # Get scoring weights
+            weights = tenant.get("scoring_weights", {})
+            keywords = search_profile.get("keywords", [])
+            
+            # Process each opportunity with AI scoring BEFORE inserting
+            for opp_data in opportunities_list:
+                external_id = str(opp_data.get("id") or opp_data.get("opportunity_id") or uuid.uuid4())
+                
+                # Check if already exists
+                existing = await db.opportunities.find_one({
+                    "tenant_id": tenant_id,
+                    "external_id": external_id
+                })
+                
+                if existing:
+                    continue
+                
+                # Parse and normalize data
+                now = datetime.now(timezone.utc).isoformat()
+                opportunity = {
+                    "id": str(uuid.uuid4()),
+                    "tenant_id": tenant_id,
+                    "external_id": external_id,
+                    "title": opp_data.get("title", "Untitled"),
+                    "description": opp_data.get("description", ""),
+                    "agency": opp_data.get("agency", "") or opp_data.get("organization", ""),
+                    "due_date": opp_data.get("due_date") or opp_data.get("deadline"),
+                    "estimated_value": opp_data.get("estimated_value") or opp_data.get("amount"),
+                    "naics_code": opp_data.get("naics_code"),
+                    "keywords": keywords,
+                    "source_type": "highergov",
+                    "source_url": opp_data.get("url", "") or opp_data.get("link", ""),
+                    "raw_data": opp_data,
+                    "score": 0,
+                    "ai_relevance_summary": None,
+                    "captured_date": now,
+                    "created_at": now,
+                    "updated_at": now
+                }
+                
+                # Calculate base score
+                opportunity["score"] = calculate_opportunity_score(opportunity, weights)
+                
+                # AI SCORING BEFORE DISPLAY
+                try:
+                    ai_result = await score_opportunity_with_ai(opportunity, tenant)
+                    opportunity["ai_relevance_summary"] = ai_result.get("relevance_summary")
+                    
+                    # Apply AI score adjustment
+                    adjustment = ai_result.get("suggested_score_adjustment", 0)
+                    opportunity["score"] = max(0, min(100, opportunity["score"] + adjustment))
+                    
+                    # Store full AI analysis if schema provided
+                    if "key_highlights" in ai_result:
+                        opportunity["ai_analysis"] = ai_result
+                    
+                    logger.info(f"AI scored: {opportunity['title'][:40]} - Score: {opportunity['score']}")
+                except Exception as e:
+                    logger.error(f"AI scoring failed: {e}")
+                
+                # Insert into database
+                await db.opportunities.insert_one(opportunity)
+                new_count += 1
+            
+            # Update tenant rate limit
+            await db.tenants.update_one(
+                {"id": tenant_id},
+                {"$inc": {"rate_limit_used": len(opportunities_list)}}
+            )
+            
+    except Exception as e:
+        logger.error(f"HigherGov API error for tenant {tenant_id}: {e}")
+        raise
+    
+    return new_count
+
+async def fetch_single_opportunity(db, tenant: dict, opportunity_id: str) -> Dict[str, Any]:
+    """
+    Fetch a single opportunity by ID from HigherGov.
+    For manual entry of specific opportunity numbers.
+    """
+    tenant_id = tenant["id"]
+    search_profile = tenant.get("search_profile", {})
+    
+    highergov_api_key = search_profile.get("highergov_api_key") or DEFAULT_HIGHERGOV_KEY
+    
+    if not highergov_api_key:
+        raise Exception("HigherGov API key not configured")
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                f"{HIGHERGOV_BASE_URL}/opportunity/{opportunity_id}/",
+                params={"api_key": highergov_api_key}
+            )
+            response.raise_for_status()
+            return response.json()
+    except Exception as e:
+        logger.error(f"Failed to fetch opportunity {opportunity_id}: {e}")
+        raise
     
     naics_codes = search_profile.get("naics_codes", [])
     keywords = search_profile.get("keywords", [])
