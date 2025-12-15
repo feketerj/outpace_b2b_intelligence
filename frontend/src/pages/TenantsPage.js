@@ -361,6 +361,26 @@ export default function TenantsPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  <div className="border-t border-[hsl(var(--border))] pt-4 mt-4">
+                    <div className="bg-[hsl(var(--accent-info))]/10 p-4 rounded border border-[hsl(var(--accent-info))]/30">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.is_master_client || false}
+                          onChange={(e) => setFormData({...formData, is_master_client: e.target.checked})}
+                          className="h-4 w-4"
+                          id="is-master"
+                        />
+                        <Label htmlFor="is-master" className="text-[hsl(var(--foreground))] font-medium">
+                          This is a Master Client (Reseller)
+                        </Label>
+                      </div>
+                      <p className="text-xs text-[hsl(var(--foreground-secondary))] mt-2 ml-6">
+                        Master clients can create sub-clients and configure white-label branding that appears on all their clients' dashboards
+                      </p>
+                    </div>
+                  </div>
                 </TabsContent>
 
                 {/* Branding Tab */}
