@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { injectThemeStyles } from '../utils/themeEffects';
 
 const TenantContext = createContext(null);
 
@@ -21,28 +22,39 @@ export const TenantProvider = ({ children }) => {
       const tenant = await response.json();
       
       setCurrentTenant(tenant);
-      applyBranding(tenant.branding);
+      applyBranding(tenant.branding, tenant.master_branding);
     } catch (error) {
       console.error('Failed to fetch tenant branding:', error);
     }
   };
 
-  const applyBranding = (branding) => {
-    if (!branding) return;
+  const applyBranding = (branding, masterBranding) => {
+    if (!branding && !masterBranding) return;
+    
+    // Use master branding if available (for sub-clients)
+    const effectiveBranding = masterBranding || branding;
 
     // Apply dynamic CSS variables
     const root = document.documentElement;
     
-    if (branding.primary_color) {
-      // Parse HSL string and set CSS variable
-      root.style.setProperty('--tenant-primary', branding.primary_color.replace('hsl(', '').replace(')', ''));
+    if (effectiveBranding.primary_color) {
+      root.style.setProperty('--tenant-primary', effectiveBranding.primary_color.replace('hsl(', '').replace(')', ''));
     }
     
-    if (branding.secondary_color) {
-      root.style.setProperty('--tenant-secondary', branding.secondary_color.replace('hsl(', '').replace(')', ''));
+    if (effectiveBranding.secondary_color) {
+      root.style.setProperty('--tenant-secondary', effectiveBranding.secondary_color.replace('hsl(', '').replace(')', ''));
+    }
+    
+    if (effectiveBranding.accent_color) {
+      root.style.setProperty('--tenant-accent', effectiveBranding.accent_color.replace('hsl(', '').replace(')', ''));
+    }
+    
+    // Apply visual theme effects
+    if (effectiveBranding.visual_theme) {
+      injectThemeStyles(effectiveBranding.visual_theme, effectiveBranding);
     }
 
-    setBrandingStyles(branding);
+    setBrandingStyles(effectiveBranding);
   };
 
   return (
