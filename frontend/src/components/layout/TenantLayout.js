@@ -46,7 +46,7 @@ export const TenantLayout = ({ children }) => {
             />
           )}
           <h1 className="text-xl font-heading font-bold text-[hsl(var(--foreground))]">
-            {currentTenant?.name || 'Intelligence Portal'}
+            {currentTenant?.name || 'Dashboard'}
           </h1>
         </div>
 
