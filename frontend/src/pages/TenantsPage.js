@@ -495,41 +495,100 @@ export default function TenantsPage() {
                 {/* Search Profile Tab (HigherGov) */}
                 <TabsContent value="search" className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">NAICS Codes (HigherGov)</Label>
+                    <Label className="text-[hsl(var(--foreground))]">HigherGov API Key *</Label>
                     <Input
-                      placeholder="335911, 336611"
-                      value={formData.search_profile.naics_codes.join(', ')}
-                      onChange={(e) => updateArrayField('search_profile', 'naics_codes', e.target.value)}
+                      type="password"
+                      placeholder="Enter this client's HigherGov API key"
+                      value={formData.search_profile.highergov_api_key || ''}
+                      onChange={(e) => setFormData({...formData, search_profile: {...formData.search_profile, highergov_api_key: e.target.value}})}
                       className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
                     />
-                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Comma-separated NAICS codes for HigherGov API</p>
+                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Each client has their own HigherGov API key (not shared)</p>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">Keywords (HigherGov)</Label>
-                    <Input
-                      placeholder="maritime battery, hybrid ferry, shore power"
-                      value={formData.search_profile.keywords.join(', ')}
-                      onChange={(e) => updateArrayField('search_profile', 'keywords', e.target.value)}
-                      className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                    />
+                  
+                  <div className="border-t border-[hsl(var(--border))] pt-4">
+                    <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">Fetch Settings</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.search_profile.fetch_contracts !== false}
+                          onChange={(e) => setFormData({...formData, search_profile: {...formData.search_profile, fetch_contracts: e.target.checked}})}
+                          className="h-4 w-4"
+                        />
+                        <Label className="text-[hsl(var(--foreground))]">Fetch Contracts</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.search_profile.fetch_grants !== false}
+                          onChange={(e) => setFormData({...formData, search_profile: {...formData.search_profile, fetch_grants: e.target.checked}})}
+                          className="h-4 w-4"
+                        />
+                        <Label className="text-[hsl(var(--foreground))]">Fetch Grants</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.search_profile.fetch_full_documents || false}
+                          onChange={(e) => setFormData({...formData, search_profile: {...formData.search_profile, fetch_full_documents: e.target.checked}})}
+                          className="h-4 w-4"
+                        />
+                        <Label className="text-[hsl(var(--foreground))]">Fetch Full Documents</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.search_profile.fetch_nsn || false}
+                          onChange={(e) => setFormData({...formData, search_profile: {...formData.search_profile, fetch_nsn: e.target.checked}})}
+                          className="h-4 w-4"
+                        />
+                        <Label className="text-[hsl(var(--foreground))]">Fetch NSN Data</Label>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">Competitors (Intelligence)</Label>
-                    <Input
-                      placeholder="Corvus Energy, Shift Clean Energy, Spear Power"
-                      value={formData.search_profile.competitors.join(', ')}
-                      onChange={(e) => updateArrayField('search_profile', 'competitors', e.target.value)}
-                      className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">Interest Areas (Intelligence)</Label>
-                    <Input
-                      placeholder="Maritime electrification, Port infrastructure, Defense platforms"
-                      value={formData.search_profile.interest_areas.join(', ')}
-                      onChange={(e) => updateArrayField('search_profile', 'interest_areas', e.target.value)}
-                      className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                    />
+                  
+                  <div className="border-t border-[hsl(var(--border))] pt-4">
+                    <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">Search Criteria</h4>
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">NAICS Codes</Label>
+                        <Input
+                          placeholder="335911, 336611"
+                          value={formData.search_profile.naics_codes.join(', ')}
+                          onChange={(e) => updateArrayField('search_profile', 'naics_codes', e.target.value)}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Comma-separated NAICS codes for HigherGov filtering</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Keywords</Label>
+                        <Input
+                          placeholder="maritime battery, hybrid ferry, shore power"
+                          value={formData.search_profile.keywords.join(', ')}
+                          onChange={(e) => updateArrayField('search_profile', 'keywords', e.target.value)}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Competitors</Label>
+                        <Input
+                          placeholder="Corvus Energy, Shift Clean Energy, Spear Power"
+                          value={formData.search_profile.competitors.join(', ')}
+                          onChange={(e) => updateArrayField('search_profile', 'competitors', e.target.value)}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Interest Areas</Label>
+                        <Input
+                          placeholder="Maritime electrification, Port infrastructure, Defense platforms"
+                          value={formData.search_profile.interest_areas.join(', ')}
+                          onChange={(e) => updateArrayField('search_profile', 'interest_areas', e.target.value)}
+                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </TabsContent>
 
