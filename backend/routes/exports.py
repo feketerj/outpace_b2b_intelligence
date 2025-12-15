@@ -12,7 +12,10 @@ from reportlab.lib import colors
 import pandas as pd
 
 from utils.auth import get_current_user, TokenData
-from server import db as get_db
+from database import get_database
+
+def get_db():
+    return get_database()
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

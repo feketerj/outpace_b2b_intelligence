@@ -8,7 +8,10 @@ import httpx
 
 from models import ChatMessage, ChatMessageCreate
 from utils.auth import get_current_user, TokenData
-from server import db as get_db
+from database import get_database
+
+def get_db():
+    return get_database()
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

@@ -4,7 +4,10 @@ import logging
 from datetime import datetime, timezone
 
 from utils.auth import get_current_super_admin, TokenData
-from server import db as get_db
+from database import get_database
+
+def get_db():
+    return get_database()
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
