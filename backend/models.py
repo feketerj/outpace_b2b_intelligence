@@ -117,9 +117,15 @@ class ScoringWeights(MongoModel):
     relevance_weight: float = 0.3
 
 class MistralAgentConfig(MongoModel):
-    pre_display_scoring_instructions: Optional[str] = "Analyze this contract opportunity and provide a relevance score and summary for the client."
-    opportunities_chat_instructions: Optional[str] = "You are a helpful assistant for contract opportunities. Help users understand opportunities and answer questions."
-    intelligence_chat_instructions: Optional[str] = "You are a business intelligence analyst. Help users interpret intelligence reports and market data."
+    # Option 1: Use pre-created agents from Mistral platform (recommended)
+    scoring_agent_id: Optional[str] = None
+    opportunities_chat_agent_id: Optional[str] = None
+    intelligence_chat_agent_id: Optional[str] = None
+    
+    # Option 2: Dynamic instructions (fallback if no agent IDs)
+    scoring_instructions: Optional[str] = "Analyze this contract opportunity and provide a relevance score and summary."
+    opportunities_chat_instructions: Optional[str] = "You are a helpful assistant for contract opportunities."
+    intelligence_chat_instructions: Optional[str] = "You are a business intelligence analyst."
 
 class TenantBase(MongoModel):
     name: str
