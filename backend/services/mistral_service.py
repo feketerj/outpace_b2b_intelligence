@@ -25,7 +25,7 @@ async def score_opportunity_with_ai(opportunity: dict, tenant: dict) -> Dict[str
     
     try:
         # Prepare prompt
-        prompt = f\"\"\"
+        prompt = f"""
 Analyze this contract opportunity and provide:
 1. A concise relevance summary (2-3 sentences)
 2. A score adjustment recommendation (-20 to +20)
@@ -45,7 +45,7 @@ Respond in JSON format:
   "relevance_summary": "...",
   "score_adjustment": 0
 }}
-\"\"\"
+"""
         
         client = Mistral(api_key=MISTRAL_API_KEY)
         
