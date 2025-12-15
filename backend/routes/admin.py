@@ -6,11 +6,11 @@ from datetime import datetime, timezone
 from utils.auth import get_current_super_admin, TokenData
 from database import get_database
 
-def get_db():
-    return get_database()
-
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+def get_db():
+    return get_database()
 
 @router.get("/dashboard")
 async def get_admin_dashboard(

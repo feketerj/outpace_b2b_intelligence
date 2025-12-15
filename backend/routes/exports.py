@@ -14,11 +14,11 @@ import pandas as pd
 from utils.auth import get_current_user, TokenData
 from database import get_database
 
-def get_db():
-    return get_database()
-
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+def get_db():
+    return get_database()
 
 @router.post("/pdf")
 async def export_opportunities_pdf(
