@@ -102,7 +102,7 @@ export const TenantLayout = ({ children }) => {
             Logout
           </Button>
           <div className="text-center text-xs text-[hsl(var(--foreground-muted))] pt-2 border-t border-[hsl(var(--border))]">
-            Powered by OutPace Intelligence
+            {poweredByText}
           </div>
         </div>
       </div>
