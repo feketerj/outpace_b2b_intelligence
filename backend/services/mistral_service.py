@@ -49,16 +49,23 @@ Respond in JSON format:
         
         client = Mistral(api_key=MISTRAL_API_KEY)
         
-        response = client.beta.conversations.start(
-            inputs=[{"role": "user", "content": prompt}],
-            model="mistral-small-latest",
-            instructions=instructions,
-            completion_args={
-                "temperature": 0.3,
-                "max_tokens": 500,
-                "top_p": 1
-            }
-        )
+        # Use agent ID if provided, otherwise use instructions
+        if agent_id:
+            response = client.agents.complete(
+                agent_id=agent_id,
+                messages=[{"role": "user", "content": prompt}]
+            )
+        else:
+            response = client.beta.conversations.start(
+                inputs=[{"role": "user", "content": prompt}],
+                model="mistral-small-latest",
+                instructions=instructions,
+                completion_args={
+                    "temperature": 0.3,
+                    "max_tokens": 500,
+                    "top_p": 1
+                }
+            )
         
         # Extract content
         if hasattr(response, 'choices') and response.choices:
