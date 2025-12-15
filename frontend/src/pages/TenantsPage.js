@@ -502,7 +502,10 @@ export default function TenantsPage() {
                         Enable &quot;Master Client&quot; checkbox in Basic tab to configure white-labeling for your downstream clients
                       </p>
                     </div>
-                  )}\n                </TabsContent>\n\n                {/* Branding Tab */}
+                  )}
+                </TabsContent>
+
+                {/* Branding Tab */}
                 <TabsContent value="branding" className="space-y-4 mt-4">
                   <div className="bg-[hsl(var(--accent-info))]/10 p-4 rounded border border-[hsl(var(--accent-info))]/30 mb-4">
                     <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-1">Your Tenant Branding</p>
