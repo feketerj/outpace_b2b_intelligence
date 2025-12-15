@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { SuperAdminLayout } from '../components/layout/SuperAdminLayout';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import axios from 'axios';
-import { Building2, Users, FileText, TrendingUp, LogOut } from 'lucide-react';
+import { Building2, Users, FileText, TrendingUp, Plus } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function SuperAdminDashboard() {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,50 +28,29 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-[hsl(var(--background))] flex items-center justify-center">
-        <div className="text-[hsl(var(--foreground-secondary))]">Loading dashboard...</div>
-      </div>
+      <SuperAdminLayout>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-[hsl(var(--foreground-secondary))]">Loading dashboard...</div>
+        </div>
+      </SuperAdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))]">
-      {/* Header */}
-      <div className="glass-header sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-heading font-bold text-[hsl(var(--foreground))]">
-            Super Admin Dashboard
+    <SuperAdminLayout>
+      <div className="p-6 md:p-8 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-heading font-bold text-[hsl(var(--foreground))]">
+            Dashboard
           </h1>
-          <p className="text-sm text-[hsl(var(--foreground-secondary))]">
-            OutPace Intelligence Platform
+          <p className="text-[hsl(var(--foreground-secondary))] mt-1">
+            System overview and quick actions
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-[hsl(var(--foreground-secondary))]">
-            {user?.full_name}
-          </span>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleLogout}
-            data-testid="logout-button"
-            className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))]"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="p-6 max-w-7xl mx-auto">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]" data-testid="tenants-stat-card">
@@ -155,12 +133,12 @@ export default function SuperAdminDashboard() {
                 onClick={() => navigate('/admin/tenants')}
                 data-testid="manage-tenants-button"
               >
-                <Building2 className="h-4 w-4 mr-2" />
-                Manage Tenants
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Tenant
               </Button>
               <Button 
-                className="w-full justify-start bg-[hsl(var(--background-tertiary))] border border-[hsl(var(--border))] hover:bg-[hsl(var(--background-elevated))]"
-                onClick={() => navigate('/users')}
+                className="w-full justify-start bg-[hsl(var(--background-tertiary))] border border-[hsl(var(--border))] hover:bg-[hsl(var(--background-elevated))] text-[hsl(var(--foreground))]"
+                onClick={() => navigate('/admin/users')}
                 variant="outline"
               >
                 <Users className="h-4 w-4 mr-2" />
@@ -192,6 +170,6 @@ export default function SuperAdminDashboard() {
           </Card>
         </div>
       </div>
-    </div>
+    </SuperAdminLayout>
   );
 }
