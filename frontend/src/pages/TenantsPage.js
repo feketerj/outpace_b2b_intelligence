@@ -499,7 +499,7 @@ export default function TenantsPage() {
                   ) : (
                     <div className="py-12 text-center">
                       <p className="text-[hsl(var(--foreground-secondary))]">
-                        Enable "Master Client" checkbox in Basic tab to configure white-labeling for your downstream clients
+                        Enable &quot;Master Client&quot; checkbox in Basic tab to configure white-labeling for your downstream clients
                       </p>
                     </div>
                   )}\n                </TabsContent>\n\n                {/* Branding Tab */}
