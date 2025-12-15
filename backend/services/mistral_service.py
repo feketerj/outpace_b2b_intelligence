@@ -10,12 +10,13 @@ MISTRAL_API_KEY = os.getenv("EMERGENT_LLM_KEY")
 
 async def score_opportunity_with_ai(opportunity: dict, tenant: dict) -> Dict[str, Any]:
     """
-    Use Mistral scoring agent to analyze and score an opportunity.
+    Use Mistral agent to analyze and score an opportunity.
+    Supports both Agent ID (pre-created) OR dynamic instructions.
     Returns: {"relevance_summary": str, "suggested_score_adjustment": int}
     """
-    # Get scoring instructions
     agent_config = tenant.get("agent_config", {})
-    instructions = agent_config.get("pre_display_scoring_instructions") or "Analyze this contract opportunity and provide a relevance score."
+    agent_id = agent_config.get("scoring_agent_id")
+    instructions = agent_config.get("scoring_instructions", "Analyze this contract opportunity.")
     
     # Check if keys are configured
     if not MISTRAL_API_KEY or "placeholder" in MISTRAL_API_KEY.lower():
