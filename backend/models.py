@@ -81,6 +81,34 @@ class SearchProfile(MongoModel):
     interest_areas: List[str] = []
     competitors: List[str] = []
 
+class IntelligenceConfig(MongoModel):
+    """Configuration for intelligence report generation"""
+    enabled: bool = True
+    perplexity_prompt_template: Optional[str] = None  # Custom prompt template
+    schedule_cron: str = "0 2 * * *"  # Daily at 2 AM UTC by default
+    lookback_days: int = 14  # How many days to look back
+    deadline_window_days: int = 120  # Future deadline window
+    target_sources: List[str] = []  # Specific sites to search
+    report_sections: List[str] = [  # Which sections to include
+        "executive_summary",
+        "top_actions", 
+        "opportunities",
+        "policy_regulation",
+        "defense_signals",
+        "sled_by_state",
+        "competitor_moves",
+        "watchlist",
+        "changelog"
+    ]
+    scoring_weights: Dict[str, int] = {  # For opportunity scoring
+        "relevance": 25,
+        "amount": 20,
+        "timeline": 15,
+        "win_probability": 15,
+        "strategic_fit": 15,
+        "partner_potential": 10
+    }
+
 class ScoringWeights(MongoModel):
     value_weight: float = 0.4
     deadline_weight: float = 0.3
