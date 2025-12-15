@@ -51,7 +51,12 @@ export default function TenantsPage() {
         primary_color: 'hsl(210, 85%, 52%)',
         secondary_color: 'hsl(265, 60%, 55%)',
         accent_color: 'hsl(142, 70%, 45%)',
-        text_color: 'hsl(0, 0%, 98%)'
+        text_color: 'hsl(0, 0%, 98%)',
+        background_image_url: '',
+        background_image_base64: null,
+        visual_theme: 'default',
+        enable_glow_effects: false,
+        enable_sheen_overlay: false
       },
       search_profile: {
         naics_codes: [],
