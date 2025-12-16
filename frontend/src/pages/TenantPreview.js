@@ -147,54 +147,54 @@ export default function TenantPreview() {
                   </Button>
                 </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold font-mono">{opportunities.length}</div>
-                  <div className="text-sm text-[hsl(var(--foreground-secondary))]">Total</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold font-mono">{opportunities.filter(o => o.score >= 75).length}</div>
-                  <div className="text-sm text-[hsl(var(--foreground-secondary))]">High Priority</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold font-mono">{intelligence.length}</div>
-                  <div className="text-sm text-[hsl(var(--foreground-secondary))]">Intelligence</div>
-                </CardContent>
-              </Card>
-            </div>
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold font-mono">{opportunities.length}</div>
+                      <div className="text-sm text-[hsl(var(--foreground-secondary))]">Total</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold font-mono">{opportunities.filter(o => o.score >= 75).length}</div>
+                      <div className="text-sm text-[hsl(var(--foreground-secondary))]">High Priority</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold font-mono">{intelligence.length}</div>
+                      <div className="text-sm text-[hsl(var(--foreground-secondary))]">Intelligence</div>
+                    </CardContent>
+                  </Card>
+                </div>
 
-            {/* Opportunities */}
-            <div className="grid grid-cols-1 gap-4">
-              {opportunities.map((opp) => (
-                <Card key={opp.id} className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">{opp.title}</h3>
-                      <Badge className={`${getScoreColor(opp.score)} text-white font-mono`}>{opp.score}</Badge>
-                    </div>
-                    {opp.ai_relevance_summary && (
-                      <div className="text-sm mb-2 px-3 py-2 rounded border-l-4 bg-[hsl(var(--background-tertiary))]" style={{borderColor: primaryColor}}>
-                        <p className="text-xs text-[hsl(var(--foreground-muted))] mb-1 font-semibold">AI ANALYSIS</p>
-                        <p className="text-[hsl(var(--foreground-secondary))]">{opp.ai_relevance_summary}</p>
-                      </div>
-                    )}
-                    <p className="text-sm text-[hsl(var(--foreground-secondary))]">{opp.description?.slice(0, 150)}...</p>
-                    <div className="flex gap-4 text-xs text-[hsl(var(--foreground-muted))] mt-3">
-                      <span>Agency: {opp.agency}</span>
-                      <span>•</span>
-                      <span>Value: {opp.estimated_value || 'N/A'}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+                {/* Opportunities */}
+                <div className="grid grid-cols-1 gap-4">
+                  {opportunities.map((opp) => (
+                    <Card key={opp.id} className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">{opp.title}</h3>
+                          <Badge className={`${getScoreColor(opp.score)} text-white font-mono`}>{opp.score}</Badge>
+                        </div>
+                        {opp.ai_relevance_summary && (
+                          <div className="text-sm mb-2 px-3 py-2 rounded border-l-4 bg-[hsl(var(--background-tertiary))]" style={{borderColor: primaryColor}}>
+                            <p className="text-xs text-[hsl(var(--foreground-muted))] mb-1 font-semibold">AI ANALYSIS</p>
+                            <p className="text-[hsl(var(--foreground-secondary))]">{opp.ai_relevance_summary}</p>
+                          </div>
+                        )}
+                        <p className="text-sm text-[hsl(var(--foreground-secondary))]">{opp.description?.slice(0, 150)}...</p>
+                        <div className="flex gap-4 text-xs text-[hsl(var(--foreground-muted))] mt-3">
+                          <span>Agency: {opp.agency}</span>
+                          <span>•</span>
+                          <span>Value: {opp.estimated_value || 'N/A'}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
 
           <TabsContent value="intelligence">
             <h1 className="text-3xl font-heading font-bold text-[hsl(var(--foreground))] mb-6">
