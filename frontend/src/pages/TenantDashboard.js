@@ -211,6 +211,7 @@ export default function TenantDashboard() {
         opportunities={opportunities}
         intelligence={[]}
         primaryColor={primaryColor}
+        tenantId={currentTenant?.id}
       />
       
       <ChatAssistant
