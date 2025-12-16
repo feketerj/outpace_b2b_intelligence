@@ -413,9 +413,13 @@ export default function TenantsPage() {
                       onChange={(e) => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})}
                       required
                       disabled={!!editingTenant}
-                      className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
+                      className={`bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] ${editingTenant ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
-                    <p className="text-xs text-[hsl(var(--foreground-muted))]">Lowercase letters, numbers, hyphens only</p>
+                    {editingTenant ? (
+                      <p className="text-xs text-[hsl(var(--accent-warning))]">⚠️ Slug cannot be changed after creation (would break existing URLs/links)</p>
+                    ) : (
+                      <p className="text-xs text-[hsl(var(--foreground-muted))]">Lowercase letters, numbers, hyphens only. Cannot be changed later.</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[hsl(var(--foreground))]">Status</Label>
