@@ -13,6 +13,7 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT
 import pandas as pd
 import base64
 from PIL import Image as PILImage
+import openpyxl.styles
 
 from utils.auth import get_current_user, TokenData
 from database import get_database
