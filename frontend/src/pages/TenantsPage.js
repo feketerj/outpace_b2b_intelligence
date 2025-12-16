@@ -154,15 +154,24 @@ export default function TenantsPage() {
     }
   };
 
-  const handleDeleteTenant = async (tenantId, tenantName) => {
-    if (!window.confirm(`Delete "${tenantName}" and ALL associated data?`)) return;
+  const handleDeleteTenant = (tenant) => {
+    setDeleteConfirm({ open: true, tenant });
+  };
 
+  const confirmDelete = async () => {
+    if (!deleteConfirm.tenant) return;
+    
+    setDeleting(true);
     try {
-      await axios.delete(`${API_URL}/api/tenants/${tenantId}`);
-      toast.success('Tenant deleted');
+      await axios.delete(`${API_URL}/api/tenants/${deleteConfirm.tenant.id}`);
+      toast.success('Tenant deleted successfully');
+      setDeleteConfirm({ open: false, tenant: null });
       fetchTenants();
     } catch (error) {
+      console.error('Delete error:', error);
       toast.error(error.response?.data?.detail || 'Delete failed');
+    } finally {
+      setDeleting(false);
     }
   };
 
