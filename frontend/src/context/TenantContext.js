@@ -18,7 +18,17 @@ export const TenantProvider = ({ children }) => {
   const fetchTenantBranding = async (tenantId) => {
     try {
       const API_URL = process.env.REACT_APP_BACKEND_URL;
-      const response = await fetch(`${API_URL}/api/tenants/${tenantId}`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/tenants/${tenantId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tenant: ${response.status}`);
+      }
+      
       const tenant = await response.json();
       
       setCurrentTenant(tenant);
