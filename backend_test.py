@@ -367,7 +367,7 @@ class OutPaceAPITester:
         """Test opportunities listing"""
         self.log("\n=== OPPORTUNITIES TESTING ===", "INFO")
         
-        if not self.tenant_user_token or not self.test_tenant_id:
+        if not self.super_admin_token or not self.test_tenant_id:
             self.log("Skipping opportunities test - missing token or tenant_id", "WARNING")
             return False
         
@@ -377,7 +377,7 @@ class OutPaceAPITester:
             "opportunities",
             200,
             params={"tenant_id": self.test_tenant_id, "per_page": 10},
-            headers={"Authorization": f"Bearer {self.tenant_user_token}"}
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
         )
         
         if success:
