@@ -76,7 +76,7 @@ export const ChatAssistant = ({ agentType = 'opportunities', primaryColor }) => 
 
       {/* Chat Panel */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-96 h-[500px] bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))] shadow-2xl flex flex-col z-50">
+        <Card className="fixed bottom-6 right-6 w-96 h-[500px] bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))] shadow-2xl flex flex-col z-[9999]">
           {/* Header */}
           <div 
             className="px-4 py-3 border-b border-[hsl(var(--border))] flex items-center justify-between text-white"
