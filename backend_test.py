@@ -650,7 +650,9 @@ class OutPaceAPITester:
             self.test_get_tenant_details()
             self.test_create_tenant()
             self.test_update_tenant()
+            self.test_user_crud_operations()
             self.test_admin_dashboard()
+            self.test_intelligence_config()
             self.test_export_functionality()
         
         # Tenant user features
