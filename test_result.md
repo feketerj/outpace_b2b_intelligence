@@ -116,6 +116,9 @@ backend:
       - working: true
         agent: "main"
         comment: "✅ Login API working. Returns access_token on successful login."
+      - working: true
+        agent: "testing"
+        comment: "✅ RETESTED: Admin login (admin@outpace.ai / Admin123!) working perfectly. Returns valid JWT token and user profile."
 
   - task: "Auth: Get Me API"
     implemented: true
