@@ -13,6 +13,7 @@ import IntelligenceFeed from './pages/IntelligenceFeed';
 import UsersPage from './pages/UsersPage';
 import TenantsPage from './pages/TenantsPage';
 import DatabaseManager from './pages/DatabaseManager';
+import TenantPreview from './pages/TenantPreview';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requireSuperAdmin = false }) => {
