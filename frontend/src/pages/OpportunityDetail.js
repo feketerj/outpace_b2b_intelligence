@@ -35,6 +35,7 @@ export default function OpportunityDetail() {
     } catch (error) {
       console.error('Failed to fetch opportunity:', error);
       toast.error('Failed to load opportunity');
+      navigate('/dashboard');
     } finally {
       setLoading(false);
     }
@@ -47,7 +48,6 @@ export default function OpportunityDetail() {
         client_notes: notes
       });
       toast.success('Saved!');
-      fetchOpportunity();
     } catch (error) {
       toast.error('Failed to save');
     }
@@ -55,7 +55,6 @@ export default function OpportunityDetail() {
 
   const handleDelete = async () => {
     if (!window.confirm('Delete this opportunity?')) return;
-    
     try {
       await axios.delete(`${API_URL}/api/opportunities/${id}`);
       toast.success('Deleted');
@@ -65,19 +64,13 @@ export default function OpportunityDetail() {
     }
   };
 
-  const handleArchive = async () => {
-    try {
-      await axios.patch(`${API_URL}/api/opportunities/${id}`, {
-        is_archived: true
-      });
-      toast.success('Archived');
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error('Failed to archive');
-    }
-  };
-
   const primaryColor = brandingStyles?.primary_color || 'hsl(210, 85%, 52%)';
+  
+  const getScoreColor = (score) => {
+    if (score >= 75) return 'bg-[hsl(var(--accent-success))]';
+    if (score >= 50) return 'bg-[hsl(var(--accent-info))]';
+    return 'bg-[hsl(var(--foreground-muted))]';
+  };
 
   if (loading) {
     return (
@@ -89,174 +82,134 @@ export default function OpportunityDetail() {
     );
   }
 
-  if (!opportunity) {
-    return (
-      <TenantLayout>
-        <div className="p-8 text-center">
-          <p className="text-[hsl(var(--foreground-secondary))]">Opportunity not found</p>
-          <Button onClick={() => navigate('/dashboard')} className="mt-4">
-            Back to Dashboard
-          </Button>
-        </div>
-      </TenantLayout>
-    );
-  }
-
-  const getScoreColor = (score) => {
-    if (score >= 75) return 'bg-[hsl(var(--accent-success))]';
-    if (score >= 50) return 'bg-[hsl(var(--accent-info))]';
-    return 'bg-[hsl(var(--foreground-muted))]';
-  };
-
   return (
     <TenantLayout>
-      <div className=\"p-6 md:p-8 max-w-5xl mx-auto\">
-        {/* Header */}
-        <div className=\"mb-6\">
-          <Button
-            variant=\"outline\"
-            size=\"sm\"
-            onClick={() => navigate('/dashboard')}
-            className=\"mb-4 border-[hsl(var(--border))]\"
-          >
-            <ArrowLeft className=\"h-4 w-4 mr-2\" />
-            Back to Opportunities
-          </Button>
-          <div className=\"flex items-start justify-between\">
-            <div className=\"flex-1\">
-              <div className=\"flex items-center gap-3 mb-2\">
-                <h1 className=\"text-3xl font-heading font-bold text-[hsl(var(--foreground))]\">
-                  {opportunity.title}
-                </h1>
-                <Badge className={`${getScoreColor(opportunity.score)} text-white font-mono text-lg px-3 py-1`}>
-                  {opportunity.score}
-                </Badge>
-              </div>
-              <div className=\"flex items-center gap-4 text-sm text-[hsl(var(--foreground-muted))]\">
-                <span className=\"flex items-center gap-1\">
-                  <Building2 className=\"h-4 w-4\" />
-                  {opportunity.agency || 'N/A'}
-                </span>
-                <span className=\"flex items-center gap-1\">
-                  <Calendar className=\"h-4 w-4\" />
-                  Due: {opportunity.due_date ? new Date(opportunity.due_date).toLocaleDateString() : 'N/A'}
-                </span>
-                <span className=\"flex items-center gap-1\">
-                  <DollarSign className=\"h-4 w-4\" />
-                  {opportunity.estimated_value || 'N/A'}
-                </span>
-              </div>
+      <div className="p-6 md:p-8 max-w-5xl mx-auto">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/dashboard')}
+          className="mb-4 border-[hsl(var(--border))]"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-heading font-bold text-[hsl(var(--foreground))]">
+                {opportunity?.title}
+              </h1>
+              <Badge className={`${getScoreColor(opportunity?.score || 0)} text-white font-mono text-lg px-3 py-1`}>
+                {opportunity?.score}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-[hsl(var(--foreground-muted))]">
+              <span className="flex items-center gap-1">
+                <Building2 className="h-4 w-4" />
+                {opportunity?.agency || 'N/A'}
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="h-4 w-4" />
+                {opportunity?.due_date ? new Date(opportunity.due_date).toLocaleDateString() : 'N/A'}
+              </span>
+              <span className="flex items-center gap-1">
+                <DollarSign className="h-4 w-4" />
+                {opportunity?.estimated_value || 'N/A'}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className=\"grid grid-cols-1 lg:grid-cols-3 gap-6\">
-          {/* Main Content */}
-          <div className=\"lg:col-span-2 space-y-4\">
-            {/* AI Analysis */}
-            {opportunity.ai_relevance_summary && (
-              <Card className=\"bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]\">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            {opportunity?.ai_relevance_summary && (
+              <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
                 <CardHeader>
-                  <CardTitle className=\"text-[hsl(var(--foreground))]\">AI Analysis</CardTitle>
+                  <CardTitle className="text-[hsl(var(--foreground))]">AI Analysis</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className=\"text-[hsl(var(--foreground-secondary))]\">{opportunity.ai_relevance_summary}</p>
+                  <p className="text-[hsl(var(--foreground-secondary))]">{opportunity.ai_relevance_summary}</p>
                 </CardContent>
               </Card>
             )}
 
-            {/* Description */}
-            <Card className=\"bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]\">
+            <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
               <CardHeader>
-                <CardTitle className=\"text-[hsl(var(--foreground))]\">Description</CardTitle>
+                <CardTitle className="text-[hsl(var(--foreground))]">Description</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className=\"text-[hsl(var(--foreground-secondary))] whitespace-pre-wrap\">{opportunity.description}</p>
+                <p className="text-[hsl(var(--foreground-secondary))] whitespace-pre-wrap">{opportunity?.description}</p>
               </CardContent>
             </Card>
 
-            {/* Source Link */}
-            {opportunity.source_url && (
-              <Card className=\"bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]\">
-                <CardContent className=\"p-4\">
-                  <a
-                    href={opportunity.source_url}
-                    target=\"_blank\"
-                    rel=\"noopener noreferrer\"
-                    className=\"flex items-center gap-2 hover:underline\"
-                    style={{color: primaryColor}}
-                  >
-                    <ExternalLink className=\"h-4 w-4\" />
-                    View on HigherGov
-                  </a>
-                </CardContent>
-              </Card>
+            {opportunity?.source_url && (
+              <a
+                href={opportunity.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm hover:underline"
+                style={{color: primaryColor}}
+              >
+                <ExternalLink className="h-4 w-4" />
+                View Original
+              </a>
             )}
           </div>
 
-          {/* Sidebar Actions */}
-          <div className=\"space-y-4\">
-            {/* Status */}
-            <Card className=\"bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]\">
+          <div className="space-y-4">
+            <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
               <CardHeader>
-                <CardTitle className=\"text-sm text-[hsl(var(--foreground))]\">Status</CardTitle>
+                <CardTitle className="text-sm">Status</CardTitle>
               </CardHeader>
               <CardContent>
                 <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger className=\"bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]\">
+                  <SelectTrigger className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className=\"bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]\">
-                    <SelectItem value=\"new\">New</SelectItem>
-                    <SelectItem value=\"interested\">Interested</SelectItem>
-                    <SelectItem value=\"dismissed\">Dismissed</SelectItem>
-                    <SelectItem value=\"won\">Won</SelectItem>
-                    <SelectItem value=\"lost\">Lost</SelectItem>
+                  <SelectContent className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]">
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="interested">Interested</SelectItem>
+                    <SelectItem value="dismissed">Dismissed</SelectItem>
+                    <SelectItem value="won">Won</SelectItem>
+                    <SelectItem value="lost">Lost</SelectItem>
                   </SelectContent>
                 </Select>
               </CardContent>
             </Card>
 
-            {/* Notes */}
-            <Card className=\"bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]\">
+            <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
               <CardHeader>
-                <CardTitle className=\"text-sm text-[hsl(var(--foreground))]\">Your Notes</CardTitle>
+                <CardTitle className="text-sm">Notes</CardTitle>
               </CardHeader>
               <CardContent>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder=\"Add notes about this opportunity...\"
+                  placeholder="Add your notes..."
                   rows={6}
-                  className=\"bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] text-sm\"
+                  className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] text-sm"
                 />
               </CardContent>
             </Card>
 
-            {/* Actions */}
-            <Card className=\"bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]\">
-              <CardContent className=\"p-4 space-y-2\">
+            <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
+              <CardContent className="p-4 space-y-2">
                 <Button
                   onClick={handleSave}
-                  className=\"w-full text-white\"
+                  className="w-full text-white"
                   style={{background: primaryColor}}
                 >
-                  <Save className=\"h-4 w-4 mr-2\" />
-                  Save Changes
-                </Button>
-                <Button
-                  onClick={handleArchive}
-                  variant=\"outline\"
-                  className=\"w-full border-[hsl(var(--border))]\"
-                >
-                  Archive
+                  <Save className="h-4 w-4 mr-2" />
+                  Save
                 </Button>
                 <Button
                   onClick={handleDelete}
-                  variant=\"outline\"
-                  className=\"w-full border-[hsl(var(--accent-danger))] text-[hsl(var(--accent-danger))]\"
+                  variant="outline"
+                  className="w-full border-[hsl(var(--accent-danger))] text-[hsl(var(--accent-danger))]"
                 >
-                  <Trash2 className=\"h-4 w-4 mr-2\" />
+                  <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
               </CardContent>
