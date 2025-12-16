@@ -104,7 +104,7 @@ class OutPaceAPITester:
             200,
             data={
                 "email": "admin@outpace.ai",
-                "password": "outpace2025"
+                "password": "Admin123!"
             }
         )
         
