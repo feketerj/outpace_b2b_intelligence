@@ -203,6 +203,14 @@ export default function TenantDashboard() {
           </div>
         )}
       </div>
+      
+      <ExportModal
+        open={showExportModal}
+        onOpenChange={setShowExportModal}
+        opportunities={opportunities}
+        intelligence={[]}
+        primaryColor={primaryColor}
+      />
     </TenantLayout>
   );
 }
