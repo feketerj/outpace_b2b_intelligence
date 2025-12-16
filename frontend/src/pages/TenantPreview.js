@@ -242,6 +242,7 @@ export default function TenantPreview() {
         opportunities={opportunities}
         intelligence={intelligence}
         primaryColor={primaryColor}
+        tenantId={tenantId}
       />
       
       <ChatAssistant
