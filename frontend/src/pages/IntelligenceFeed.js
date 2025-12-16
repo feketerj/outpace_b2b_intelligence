@@ -3,9 +3,11 @@ import { TenantLayout } from '../components/layout/TenantLayout';
 import { useTenant } from '../context/TenantContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { ExportModal } from '../components/custom/ExportModal';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { TrendingUp, ExternalLink, Calendar, Trash2 } from 'lucide-react';
+import { TrendingUp, ExternalLink, Calendar, Trash2, Download } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -13,6 +15,7 @@ export default function IntelligenceFeed() {
   const { currentTenant, brandingStyles } = useTenant();
   const [intelligence, setIntelligence] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   useEffect(() => {
     if (currentTenant) {
