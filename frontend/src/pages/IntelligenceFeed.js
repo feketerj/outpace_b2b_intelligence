@@ -67,13 +67,24 @@ export default function IntelligenceFeed() {
     <TenantLayout>
       <div className="p-6 md:p-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-heading font-bold text-[hsl(var(--foreground))]">
-            Business Intelligence
-          </h1>
-          <p className="text-[hsl(var(--foreground-secondary))] mt-1">
-            Market insights and competitive analysis for {currentTenant?.name}
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-heading font-bold text-[hsl(var(--foreground))]">
+              Business Intelligence
+            </h1>
+            <p className="text-[hsl(var(--foreground-secondary))] mt-1">
+              Market insights and competitive analysis for {currentTenant?.name}
+            </p>
+          </div>
+          <Button
+            onClick={() => setShowExportModal(true)}
+            variant="outline"
+            className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))]"
+            disabled={intelligence.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
         </div>
 
         {/* Intelligence Feed */}
