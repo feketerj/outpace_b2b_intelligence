@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { TenantLayout } from '../components/layout/TenantLayout';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { ExportModal } from '../components/custom/ExportModal';
 import { ChatAssistant } from '../components/custom/ChatAssistant';
 import axios from 'axios';
