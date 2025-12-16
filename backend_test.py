@@ -525,8 +525,8 @@ class OutPaceAPITester:
             self.log("Skipping export tests - no super admin token", "WARNING")
             return False
         
-        # Test data from the review request
-        test_tenant_id = "bd78ce2b-4e6f-43d2-8580-98bf8cba35f8"
+        # Use the tenant ID we found during testing
+        test_tenant_id = self.test_tenant_id if self.test_tenant_id else "bec8a414-b00d-4a58-9539-5f732db23b35"
         test_opportunity_id = "06a4381e-72b2-48c1-bed8-43c9d19b5252"
         
         # Test 1: PDF Export with tenant_id parameter (should succeed)
