@@ -188,6 +188,7 @@ export default function IntelligenceFeed() {
         opportunities={[]}
         intelligence={intelligence}
         primaryColor={primaryColor}
+        tenantId={currentTenant?.id}
       />
       
       <ChatAssistant
