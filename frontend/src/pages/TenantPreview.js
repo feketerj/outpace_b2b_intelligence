@@ -193,6 +193,44 @@ export default function TenantPreview() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="intelligence">
+            <h1 className="text-3xl font-heading font-bold text-[hsl(var(--foreground))] mb-6">
+              Business Intelligence
+            </h1>
+            <div className="grid grid-cols-1 gap-4">
+              {intelligence.map((item) => (
+                <Card key={item.id} className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">{item.title}</h3>
+                    <Badge className="mb-3" style={{background: primaryColor}}>{item.type}</Badge>
+                    <div className="text-sm text-[hsl(var(--foreground-secondary))] whitespace-pre-wrap">
+                      {item.content}
+                    </div>
+                    {item.source_urls && item.source_urls.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-[hsl(var(--border))]">
+                        <p className="text-xs font-semibold text-[hsl(var(--foreground-muted))] mb-2">SOURCES:</p>
+                        {item.source_urls.slice(0, 5).map((url, idx) => (
+                          <a
+                            key={idx}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block text-xs hover:underline mb-1"
+                            style={{color: primaryColor}}
+                          >
+                            {url}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
           </div>
         </div>
       </div>
