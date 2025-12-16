@@ -95,8 +95,8 @@ async def get_tenant(tenant_id: str, current_user: TokenData = Depends(get_curre
     """Get tenant by ID"""
     db = get_db()
     
-    # Check permissions
-    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
+    # Check permissions - allow tenant users to view their own tenant
+    if current_user.role not in ["super_admin", "tenant_admin"] and current_user.tenant_id != tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
