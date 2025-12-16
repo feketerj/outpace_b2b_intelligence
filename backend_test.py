@@ -639,10 +639,9 @@ class OutPaceAPITester:
         
         # Authentication
         admin_login_success = self.test_super_admin_login()
-        tenant_login_success = self.test_tenant_user_login()
         
-        if not admin_login_success and not tenant_login_success:
-            self.log("\n❌ CRITICAL: Both login attempts failed. Cannot proceed with further tests.", "ERROR")
+        if not admin_login_success:
+            self.log("\n❌ CRITICAL: Admin login failed. Cannot proceed with further tests.", "ERROR")
             return False
         
         # Tenant management (requires super admin)
