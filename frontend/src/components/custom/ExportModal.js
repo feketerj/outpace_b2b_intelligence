@@ -133,9 +133,11 @@ export const ExportModal = ({
                   className="flex items-start gap-3 p-3 rounded border border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))] cursor-pointer"
                   onClick={() => toggleOpp(opp.id)}
                 >
-                  <Checkbox
+                  <input
+                    type="checkbox"
                     checked={selectedOpps.includes(opp.id)}
-                    onCheckedChange={() => toggleOpp(opp.id)}
+                    onChange={() => toggleOpp(opp.id)}
+                    className="mt-1 h-4 w-4"
                   />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-[hsl(var(--foreground))]">{opp.title}</p>
