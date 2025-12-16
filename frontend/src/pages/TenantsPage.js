@@ -287,9 +287,7 @@ export default function TenantsPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        sessionStorage.setItem('admin_return', 'true');
-                        sessionStorage.setItem('preview_tenant_id', tenant.id);
-                        window.open(`/dashboard?preview=${tenant.id}`, '_blank');
+                        window.open(`/preview?tenant_id=${tenant.id}`, '_blank');
                       }}
                       className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))]"
                       title="Preview what this tenant sees"
