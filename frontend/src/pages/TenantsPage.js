@@ -607,63 +607,34 @@ export default function TenantsPage() {
                   
                   <div className="border-t border-[hsl(var(--border))] pt-4 mt-4">
                     <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">Brand Colors</h4>
+                    <p className="text-xs text-[hsl(var(--foreground-muted))] mb-4">
+                      Use the color picker, eyedropper tool, or enter HSL values directly
+                    </p>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-[hsl(var(--foreground))]">Primary Color</Label>
-                        <Input
-                          placeholder="hsl(210, 85%, 52%)"
-                          value={formData.branding.primary_color}
-                          onChange={(e) => setFormData({...formData, branding: {...formData.branding, primary_color: e.target.value}})}
-                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                        />
-                        <div 
-                          className="h-12 rounded border border-[hsl(var(--border))]"
-                          style={{background: formData.branding.primary_color}}
-                        />
-                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Main CTAs, buttons</p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[hsl(var(--foreground))]">Secondary Color</Label>
-                        <Input
-                          placeholder="hsl(265, 60%, 55%)"
-                          value={formData.branding.secondary_color}
-                          onChange={(e) => setFormData({...formData, branding: {...formData.branding, secondary_color: e.target.value}})}
-                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                        />
-                        <div 
-                          className="h-12 rounded border border-[hsl(var(--border))]"
-                          style={{background: formData.branding.secondary_color}}
-                        />
-                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Accents, highlights</p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[hsl(var(--foreground))]">Accent Color</Label>
-                        <Input
-                          placeholder="hsl(142, 70%, 45%)"
-                          value={formData.branding.accent_color}
-                          onChange={(e) => setFormData({...formData, branding: {...formData.branding, accent_color: e.target.value}})}
-                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                        />
-                        <div 
-                          className="h-12 rounded border border-[hsl(var(--border))]"
-                          style={{background: formData.branding.accent_color}}
-                        />
-                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Success states, positive metrics</p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[hsl(var(--foreground))]">Text Color</Label>
-                        <Input
-                          placeholder="hsl(0, 0%, 98%)"
-                          value={formData.branding.text_color}
-                          onChange={(e) => setFormData({...formData, branding: {...formData.branding, text_color: e.target.value}})}
-                          className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                        />
-                        <div 
-                          className="h-12 rounded border border-[hsl(var(--border))]"
-                          style={{background: formData.branding.text_color}}
-                        />
-                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Primary text color</p>
-                      </div>
+                      <ColorPicker
+                        label="Primary Color"
+                        value={formData.branding.primary_color}
+                        onChange={(color) => setFormData({...formData, branding: {...formData.branding, primary_color: color}})}
+                        description="Main CTAs, buttons"
+                      />
+                      <ColorPicker
+                        label="Secondary Color"
+                        value={formData.branding.secondary_color}
+                        onChange={(color) => setFormData({...formData, branding: {...formData.branding, secondary_color: color}})}
+                        description="Accents, highlights"
+                      />
+                      <ColorPicker
+                        label="Accent Color"
+                        value={formData.branding.accent_color}
+                        onChange={(color) => setFormData({...formData, branding: {...formData.branding, accent_color: color}})}
+                        description="Success states, positive metrics"
+                      />
+                      <ColorPicker
+                        label="Text Color"
+                        value={formData.branding.text_color}
+                        onChange={(color) => setFormData({...formData, branding: {...formData.branding, text_color: color}})}
+                        description="Primary text color"
+                      />
                     </div>
                   </div>
                   
