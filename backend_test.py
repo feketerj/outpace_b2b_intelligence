@@ -544,7 +544,7 @@ class OutPaceAPITester:
         )
         
         if success1:
-            self.log("PDF export successful - received PDF content", "SUCCESS")
+            self.log("PDF export correctly returned 404 for no data", "SUCCESS")
         
         # Test 2: Excel Export with tenant_id parameter (should succeed)
         success2, data2, status2 = self.run_test(
