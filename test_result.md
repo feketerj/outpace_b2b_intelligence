@@ -218,6 +218,9 @@ backend:
       - working: true
         agent: "main"
         comment: "✅ Create user working."
+      - working: true
+        agent: "testing"
+        comment: "✅ RETESTED: User creation working with proper validation. Requires full_name field and role must be 'super_admin', 'tenant_admin' or 'tenant_user'."
 
   - task: "Users: Delete API"
     implemented: true
