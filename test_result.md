@@ -198,8 +198,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "PDF Export API"
-    - "Excel Export API"
+    - "Export Modal - Pass tenant_id"
+    - "TenantDashboard - Export tenant_id"
+    - "IntelligenceFeed - Export tenant_id"
+    - "TenantPreview - Export tenant_id"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -207,3 +209,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Fixed export functionality. The issue was that the backend was using current_user.tenant_id from the token, but super_admins have null tenant_id. Fixed by accepting tenant_id in request body and updating all frontend components to pass it. Backend tested with curl - both PDF and Excel exports work. Need to test via frontend UI."
+  - agent: "testing"
+    message: "✅ BACKEND EXPORT TESTING COMPLETE: All export API endpoints working perfectly. Tested 5 scenarios: (1) PDF export with tenant_id ✅ 200, (2) Excel export with tenant_id ✅ 200, (3) PDF without tenant_id ✅ 400 'Tenant ID required', (4) Empty selection ✅ 404 'No data to export', (5) Excel without tenant_id ✅ 400 'Tenant ID required'. Backend export functionality is fully operational. Frontend testing not performed per system limitations."
