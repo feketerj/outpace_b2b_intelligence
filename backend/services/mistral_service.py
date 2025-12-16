@@ -93,19 +93,43 @@ Provide a structured analysis following the schema above.
         # Parse JSON response
         try:
             import json
+            # Try to parse as JSON
             parsed = json.loads(content)
             
+            # Extract relevance_summary
+            relevance_summary = parsed.get("relevance_summary")
+            if not relevance_summary and "analysis" in parsed:
+                # Nested structure
+                relevance_summary = parsed["analysis"].get("relevance_summary", {}).get("description")
+            
+            if not relevance_summary:
+                # Just use first 200 chars of content as summary
+                relevance_summary = content[:200]
+            
             # Ensure backward compatibility
-            if "relevance_summary" not in parsed and "summary" in parsed:
-                parsed["relevance_summary"] = parsed["summary"]
             if "suggested_score_adjustment" not in parsed and "score_adjustment" in parsed:
                 parsed["suggested_score_adjustment"] = parsed["score_adjustment"]
+            elif "suggested_score_adjustment" not in parsed:
+                parsed["suggested_score_adjustment"] = 0
+            
+            # Store clean summary
+            parsed["relevance_summary"] = relevance_summary
             
             return parsed
         except Exception as parse_error:
-            logger.warning(f"Failed to parse JSON, returning raw content: {parse_error}")
+            # Not JSON - use content as-is (but clean it up)
+            logger.warning(f"Failed to parse JSON, using raw content: {parse_error}")
+            
+            # Try to extract just the summary sentence
+            if "The contract opportunity" in content:
+                # Find the first complete sentence
+                import re
+                match = re.search(r'The contract opportunity[^.]*\.', content)
+                if match:
+                    content = match.group(0)
+            
             return {
-                "relevance_summary": content,
+                "relevance_summary": content[:300] if len(content) > 300 else content,
                 "suggested_score_adjustment": 0
             }
     
