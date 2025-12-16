@@ -170,6 +170,46 @@ async def delete_opportunity(
     await db.opportunities.delete_one({"id": opp_id})
     return None
 
+@router.patch("/{opp_id}")
+async def update_opportunity_status(
+    opp_id: str,
+    update_data: dict = Body(...),
+    current_user: TokenData = Depends(get_current_user)
+):
+    """
+    Update opportunity client-editable fields (status, notes, tags, archive).
+    Tenant users can update their own opportunities.
+    """
+    db = get_db()
+    
+    opp_doc = await db.opportunities.find_one({"id": opp_id})
+    if not opp_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Opportunity not found"
+        )
+    
+    # Access control
+    if opp_doc.get("tenant_id") != current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    # Only allow updating client-editable fields
+    allowed_fields = ["client_status", "client_notes", "client_tags", "is_archived"]
+    update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
+    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.opportunities.update_one(
+        {"id": opp_id},
+        {"$set": update_dict}
+    )
+    
+    # Return updated opportunity
+    updated = await db.opportunities.find_one({"id": opp_id}, {"_id": 0})
+    return Opportunity(**updated)
+
 @router.get("/stats/{tenant_id}")
 async def get_opportunity_stats(
     tenant_id: str,
