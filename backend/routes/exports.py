@@ -38,8 +38,20 @@ async def export_branded_pdf(
     opportunity_ids = export_data.get("opportunity_ids", [])
     intelligence_ids = export_data.get("intelligence_ids", [])
     
+    # Get tenant_id from request body (for super_admins viewing tenant data) or from token
+    request_tenant_id = export_data.get("tenant_id")
+    tenant_id = request_tenant_id or current_user.tenant_id
+    
+    # Validate tenant_id exists
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="Tenant ID is required for export")
+    
+    # For super_admins, allow any tenant_id; for others, must match their tenant
+    if current_user.role.value != "super_admin" and tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied to this tenant's data")
+    
     # Get tenant for branding
-    tenant = await db.tenants.find_one({"id": current_user.tenant_id})
+    tenant = await db.tenants.find_one({"id": tenant_id})
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
     
@@ -52,11 +64,11 @@ async def export_branded_pdf(
     intelligence_items = []
     
     if opportunity_ids:
-        cursor = db.opportunities.find({"id": {"$in": opportunity_ids}, "tenant_id": current_user.tenant_id}, {"_id": 0})
+        cursor = db.opportunities.find({"id": {"$in": opportunity_ids}, "tenant_id": tenant_id}, {"_id": 0})
         opportunities = await cursor.to_list(length=len(opportunity_ids))
     
     if intelligence_ids:
-        cursor = db.intelligence.find({"id": {"$in": intelligence_ids}, "tenant_id": current_user.tenant_id}, {"_id": 0})
+        cursor = db.intelligence.find({"id": {"$in": intelligence_ids}, "tenant_id": tenant_id}, {"_id": 0})
         intelligence_items = await cursor.to_list(length=len(intelligence_ids))
     
     if not opportunities and not intelligence_items:
