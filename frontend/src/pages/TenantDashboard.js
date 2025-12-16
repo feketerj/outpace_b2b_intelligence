@@ -212,6 +212,11 @@ export default function TenantDashboard() {
         intelligence={[]}
         primaryColor={primaryColor}
       />
+      
+      <ChatAssistant
+        agentType="opportunities"
+        primaryColor={primaryColor}
+      />
     </TenantLayout>
   );
 }
