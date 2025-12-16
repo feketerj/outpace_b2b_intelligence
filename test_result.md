@@ -167,6 +167,9 @@ backend:
       - working: true
         agent: "main"
         comment: "✅ Create tenant working. Returns new tenant with ID."
+      - working: true
+        agent: "testing"
+        comment: "✅ RETESTED: Tenant creation working perfectly. Successfully created test tenant with full branding and search profile configuration."
 
   - task: "Tenants: Update API"
     implemented: true
