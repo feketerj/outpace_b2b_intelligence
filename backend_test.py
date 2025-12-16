@@ -189,25 +189,38 @@ class OutPaceAPITester:
     
     def test_get_tenant_details(self):
         """Test getting specific tenant details"""
-        if not self.super_admin_token or not self.test_tenant_id:
-            self.log("Skipping tenant details test - missing token or tenant_id", "WARNING")
+        if not self.super_admin_token:
+            self.log("Skipping tenant details test - missing token", "WARNING")
             return False
         
-        success, data, _ = self.run_test(
-            "Get Tenant Details",
-            "GET",
-            f"tenants/{self.test_tenant_id}",
-            200,
-            headers={"Authorization": f"Bearer {self.super_admin_token}"}
-        )
+        # Test with specific tenant IDs from review request
+        test_tenant_ids = [
+            "bec8a414-b00d-4a58-9539-5f732db23b35",
+            "e4e0b3b4-90ec-4c32-88d8-534aa563ed5d"
+        ]
         
-        if success:
-            self.log(f"Tenant: {data.get('name')}", "INFO")
-            self.log(f"  Branding: {bool(data.get('branding', {}).get('logo_url') or data.get('branding', {}).get('logo_base64'))}", "INFO")
-            self.log(f"  Search Profile: {len(data.get('search_profile', {}).get('keywords', []))} keywords", "INFO")
-            self.log(f"  HigherGov Search ID: {data.get('search_profile', {}).get('highergov_search_id', 'Not set')}", "INFO")
+        success_count = 0
+        for tenant_id in test_tenant_ids:
+            success, data, _ = self.run_test(
+                f"Get Tenant Details ({tenant_id[:8]}...)",
+                "GET",
+                f"tenants/{tenant_id}",
+                200,
+                headers={"Authorization": f"Bearer {self.super_admin_token}"}
+            )
+            
+            if success:
+                success_count += 1
+                self.log(f"Tenant: {data.get('name')}", "INFO")
+                self.log(f"  Branding: {bool(data.get('branding', {}).get('logo_url') or data.get('branding', {}).get('logo_base64'))}", "INFO")
+                self.log(f"  Search Profile: {len(data.get('search_profile', {}).get('keywords', []))} keywords", "INFO")
+                self.log(f"  HigherGov Search ID: {data.get('search_profile', {}).get('highergov_search_id', 'Not set')}", "INFO")
+                
+                # Store first successful tenant ID for other tests
+                if not self.test_tenant_id:
+                    self.test_tenant_id = tenant_id
         
-        return success
+        return success_count > 0
     
     def test_create_tenant(self):
         """Test creating a new tenant"""
