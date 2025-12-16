@@ -199,6 +199,11 @@ class OpportunityBase(MongoModel):
     source_type: OpportunitySource = OpportunitySource.MANUAL
     source_url: Optional[str] = None
     raw_data: Dict[str, Any] = {}
+    # Client-editable fields
+    client_status: Optional[str] = "new"  # new, interested, dismissed, won, lost
+    client_notes: Optional[str] = None
+    client_tags: List[str] = []
+    is_archived: bool = False
 
 class OpportunityCreate(OpportunityBase):
     tenant_id: str
