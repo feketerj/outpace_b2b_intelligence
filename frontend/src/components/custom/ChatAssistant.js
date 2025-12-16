@@ -66,7 +66,7 @@ export const ChatAssistant = ({ agentType = 'opportunities', primaryColor }) => 
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg flex items-center justify-center text-white hover:scale-110 transition-transform duration-200 z-50"
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg flex items-center justify-center text-white hover:scale-110 transition-transform duration-200 z-[9999]"
           style={{ background: primaryColor }}
           data-testid="chat-assistant-toggle"
         >
