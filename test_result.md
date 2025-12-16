@@ -359,6 +359,9 @@ backend:
       - working: true
         agent: "main"
         comment: "✅ Fixed Excel export to handle empty data gracefully."
+      - working: true
+        agent: "testing"
+        comment: "✅ RETESTED: Excel export working perfectly. Successfully generates Excel files and handles empty data gracefully. Proper validation for tenant_id requirement."
 
 frontend:
   - task: "Tenant Delete Confirmation Dialog"
