@@ -226,6 +226,9 @@ class IntelligenceBase(MongoModel):
     source_urls: List[str] = []
     keywords: List[str] = []
     metadata: Dict[str, Any] = {}
+    # Client-editable fields
+    is_archived: bool = False
+    client_notes: Optional[str] = None
 
 class IntelligenceCreate(IntelligenceBase):
     tenant_id: str
