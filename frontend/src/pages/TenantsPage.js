@@ -303,6 +303,40 @@ export default function TenantsPage() {
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={() => document.getElementById(`csv-upload-${tenant.id}`).click()}
+                      className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))]"
+                      title="Upload opportunities CSV for this client"
+                    >
+                      <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Upload CSV
+                    </Button>
+                    <input
+                      id={`csv-upload-${tenant.id}`}
+                      type="file"
+                      accept=".csv"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          try {
+                            toast.info(`Uploading opportunities for ${tenant.name}...`);
+                            const response = await axios.post(`${API_URL}/api/upload/opportunities/csv/${tenant.id}`, formData);
+                            toast.success(`Imported ${response.data.imported_count} opportunities for ${tenant.name}!`);
+                            fetchTenants();
+                          } catch (error) {
+                            toast.error('Upload failed');
+                          }
+                        }
+                        e.target.value = '';
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
                       onClick={async () => {
                         try {
                           toast.info('Syncing data...');
