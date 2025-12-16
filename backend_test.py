@@ -536,6 +536,7 @@ class OutPaceAPITester:
             self.test_create_tenant()
             self.test_update_tenant()
             self.test_admin_dashboard()
+            self.test_export_functionality()
         
         # Tenant user features
         if tenant_login_success:
