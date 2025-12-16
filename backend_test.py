@@ -389,6 +389,61 @@ class OutPaceAPITester:
         
         return success
     
+    def test_user_crud_operations(self):
+        """Test user CRUD operations"""
+        self.log("\n=== USER CRUD OPERATIONS ===", "INFO")
+        
+        if not self.super_admin_token:
+            self.log("Skipping user CRUD tests - no super admin token", "WARNING")
+            return False
+        
+        # Test 1: List users
+        success1, data1, _ = self.run_test(
+            "List Users",
+            "GET",
+            "users",
+            200,
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
+        )
+        
+        if success1:
+            users = data1.get('data', [])
+            self.log(f"Found {len(users)} users", "INFO")
+        
+        # Test 2: Create user
+        test_email = f"test-user-{datetime.now().strftime('%H%M%S')}@example.com"
+        success2, data2, _ = self.run_test(
+            "Create User",
+            "POST",
+            "users",
+            200,
+            data={
+                "email": test_email,
+                "password": "TestPassword123!",
+                "role": "user",
+                "tenant_id": self.test_tenant_id if self.test_tenant_id else "bec8a414-b00d-4a58-9539-5f732db23b35"
+            },
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
+        )
+        
+        created_user_id = None
+        if success2:
+            created_user_id = data2.get('id')
+            self.log(f"Created user ID: {created_user_id}", "SUCCESS")
+        
+        # Test 3: Delete user (if created successfully)
+        success3 = True
+        if created_user_id:
+            success3, _, _ = self.run_test(
+                "Delete User",
+                "DELETE",
+                f"users/{created_user_id}",
+                204,
+                headers={"Authorization": f"Bearer {self.super_admin_token}"}
+            )
+        
+        return success1 and success2 and success3
+    
     def test_admin_dashboard(self):
         """Test admin dashboard stats"""
         self.log("\n=== ADMIN DASHBOARD ===", "INFO")
@@ -397,7 +452,7 @@ class OutPaceAPITester:
             self.log("Skipping admin dashboard - no super admin token", "WARNING")
             return False
         
-        success, data, _ = self.run_test(
+        success1, data1, _ = self.run_test(
             "Get Admin Dashboard Stats",
             "GET",
             "admin/dashboard",
@@ -405,14 +460,61 @@ class OutPaceAPITester:
             headers={"Authorization": f"Bearer {self.super_admin_token}"}
         )
         
-        if success:
+        if success1:
             self.log(f"Dashboard stats:", "INFO")
-            self.log(f"  Total tenants: {data.get('total_tenants', 0)}", "INFO")
-            self.log(f"  Active tenants: {data.get('active_tenants', 0)}", "INFO")
-            self.log(f"  Total opportunities: {data.get('total_opportunities', 0)}", "INFO")
-            self.log(f"  Total users: {data.get('total_users', 0)}", "INFO")
+            self.log(f"  Total tenants: {data1.get('total_tenants', 0)}", "INFO")
+            self.log(f"  Active tenants: {data1.get('active_tenants', 0)}", "INFO")
+            self.log(f"  Total opportunities: {data1.get('total_opportunities', 0)}", "INFO")
+            self.log(f"  Total users: {data1.get('total_users', 0)}", "INFO")
         
-        return success
+        # Test system health endpoint
+        success2, data2, _ = self.run_test(
+            "System Health Check",
+            "GET",
+            "admin/system/health",
+            200,
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
+        )
+        
+        if success2:
+            self.log(f"System health: {data2.get('status', 'unknown')}", "INFO")
+        
+        return success1 and success2
+    
+    def test_intelligence_config(self):
+        """Test intelligence configuration endpoints"""
+        self.log("\n=== INTELLIGENCE CONFIG ===", "INFO")
+        
+        if not self.super_admin_token or not self.test_tenant_id:
+            self.log("Skipping intelligence config - missing token or tenant_id", "WARNING")
+            return False
+        
+        # Test get intelligence config
+        success1, data1, _ = self.run_test(
+            "Get Intelligence Config",
+            "GET",
+            f"config/tenants/{self.test_tenant_id}/intelligence-config",
+            200,
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
+        )
+        
+        if success1:
+            self.log(f"Intelligence config retrieved", "SUCCESS")
+        
+        # Test update intelligence config
+        success2, data2, _ = self.run_test(
+            "Update Intelligence Config",
+            "PUT",
+            f"config/tenants/{self.test_tenant_id}/intelligence-config",
+            200,
+            data={
+                "auto_generate": True,
+                "generation_interval_hours": 24
+            },
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
+        )
+        
+        return success1 and success2
     
     def test_export_functionality(self):
         """Test export functionality (PDF and Excel) with specific test data"""
