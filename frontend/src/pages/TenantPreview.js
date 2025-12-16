@@ -120,20 +120,31 @@ export default function TenantPreview() {
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-3xl font-heading font-bold text-[hsl(var(--foreground))]">
-                Contract Opportunities
-              </h1>
-              <Button
-                onClick={() => setShowExportModal(true)}
-                variant="outline"
-                disabled={opportunities.length === 0}
-                className="border-[hsl(var(--border))]"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </div>
+            <Tabs defaultValue="opportunities" className="w-full">
+              <TabsList className="mb-6">
+                <TabsTrigger value="opportunities">
+                  Opportunities ({opportunities.length})
+                </TabsTrigger>
+                <TabsTrigger value="intelligence">
+                  Intelligence ({intelligence.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="opportunities">
+                <div className="flex items-center justify-between mb-6">
+                  <h1 className="text-3xl font-heading font-bold text-[hsl(var(--foreground))]">
+                    Contract Opportunities
+                  </h1>
+                  <Button
+                    onClick={() => setShowExportModal(true)}
+                    variant="outline"
+                    disabled={opportunities.length === 0}
+                    className="border-[hsl(var(--border))]"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 mb-6">
