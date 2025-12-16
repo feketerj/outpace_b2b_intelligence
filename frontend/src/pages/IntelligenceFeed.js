@@ -111,6 +111,24 @@ export default function IntelligenceFeed() {
                         </Badge>
                       </div>
                     </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleArchiveReport(item.id)}
+                        className="border-[hsl(var(--border))]"
+                      >
+                        Archive
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteReport(item.id, item.title)}
+                        className="border-[hsl(var(--accent-danger))] text-[hsl(var(--accent-danger))]"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
