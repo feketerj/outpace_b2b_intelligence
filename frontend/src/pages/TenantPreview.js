@@ -104,7 +104,7 @@ export default function TenantPreview() {
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
       {/* Preview Banner */}
-      <div className="bg-[hsl(var(--accent-warning))] text-black px-4 py-2 text-center text-sm font-medium sticky top-0 z-50">
+      <div className="text-white px-4 py-2 text-center text-sm font-medium sticky top-0 z-50" style={{background: primaryColor}}>
         🔍 PREVIEW MODE - Viewing as: {tenant?.name} | 
         <button onClick={() => window.close()} className="ml-4 underline hover:no-underline">
           Close Preview
@@ -113,21 +113,21 @@ export default function TenantPreview() {
 
       {/* Simulated Tenant Dashboard */}
       <div className="flex h-screen">
-        {/* Sidebar */}
-        <div className="w-64 bg-[hsl(var(--background-secondary))] border-r border-[hsl(var(--border))] flex flex-col">
-          <div className="p-6 border-b border-[hsl(var(--border))]">
+        {/* Sidebar - uses brand colors */}
+        <div className="w-64 border-r border-[hsl(var(--border))] flex flex-col" style={{background: primaryColor}}>
+          <div className="p-6 border-b border-white/20">
             {logo && <img src={logo} alt={tenant?.name} className="h-10 object-contain mb-3" />}
-            <h1 className="text-xl font-heading font-bold text-[hsl(var(--foreground))]">
+            <h1 className="text-xl font-heading font-bold" style={{color: textColor}}>
               {tenant?.name}
             </h1>
           </div>
           <div className="flex-1 p-4">
-            <div className="text-sm text-[hsl(var(--foreground-secondary))]">
+            <div className="text-sm" style={{color: textColor, opacity: 0.8}}>
               Preview of client dashboard
             </div>
           </div>
-          <div className="p-4 border-t border-[hsl(var(--border))]">
-            <div className="text-xs text-center text-[hsl(var(--foreground-muted))]">
+          <div className="p-4 border-t border-white/20">
+            <div className="text-xs text-center" style={{color: textColor, opacity: 0.6}}>
               Powered by {tenant?.master_client_id ? (tenant.master_client_name || 'Partner') : 'OutPace Intelligence'}
             </div>
           </div>
