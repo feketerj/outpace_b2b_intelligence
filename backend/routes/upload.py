@@ -4,8 +4,11 @@ import base64
 import logging
 from PIL import Image
 import io
+import pandas as pd
+import uuid
+from datetime import datetime, timezone
 
-from utils.auth import get_current_tenant_admin, TokenData
+from utils.auth import get_current_tenant_admin, get_current_user, TokenData
 from database import get_database
 
 router = APIRouter()
@@ -13,6 +16,98 @@ logger = logging.getLogger(__name__)
 
 def get_db():
     return get_database()
+
+@router.post("/opportunities/csv/{tenant_id}")
+async def upload_opportunities_csv(
+    tenant_id: str,
+    file: UploadFile = File(...),
+    current_user: TokenData = Depends(get_current_user)
+):
+    """
+    Upload opportunities from CSV file.
+    CSV columns: title, description, agency, due_date, estimated_value, naics_code, source_url
+    """
+    db = get_db()
+    
+    # Access control
+    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    # Validate file type
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be CSV format"
+        )
+    
+    try:
+        # Read CSV
+        contents = await file.read()
+        df = pd.read_csv(io.BytesIO(contents))
+        
+        # Get tenant for scoring
+        tenant = await db.tenants.find_one({"id": tenant_id})
+        if not tenant:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tenant not found"
+            )
+        
+        weights = tenant.get("scoring_weights", {})
+        imported_count = 0
+        
+        # Process each row
+        for _, row in df.iterrows():
+            now = datetime.now(timezone.utc).isoformat()
+            external_id = f"manual-{uuid.uuid4()}"
+            
+            opportunity = {
+                "id": str(uuid.uuid4()),
+                "tenant_id": tenant_id,
+                "external_id": external_id,
+                "title": str(row.get("title", "Untitled")),
+                "description": str(row.get("description", "")),
+                "agency": str(row.get("agency", "")) if pd.notna(row.get("agency")) else None,
+                "due_date": str(row.get("due_date")) if pd.notna(row.get("due_date")) else None,
+                "estimated_value": str(row.get("estimated_value")) if pd.notna(row.get("estimated_value")) else None,
+                "naics_code": str(row.get("naics_code")) if pd.notna(row.get("naics_code")) else None,
+                "keywords": [],
+                "source_type": "manual",
+                "source_url": str(row.get("source_url")) if pd.notna(row.get("source_url")) else "",
+                "raw_data": row.to_dict(),
+                "score": 0,
+                "ai_relevance_summary": None,
+                "captured_date": now,
+                "created_at": now,
+                "updated_at": now,
+                "client_status": "new",
+                "client_notes": None,
+                "client_tags": [],
+                "is_archived": False
+            }
+            
+            # Calculate score
+            from utils.scoring import calculate_opportunity_score
+            opportunity["score"] = calculate_opportunity_score(opportunity, weights)
+            
+            await db.opportunities.insert_one(opportunity)
+            imported_count += 1
+        
+        return {
+            "status": "success",
+            "imported_count": imported_count,
+            "total_rows": len(df)
+        }
+        
+    except Exception as e:
+        logger.error(f"CSV upload failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process CSV: {str(e)}"
+        )
 
 @router.post("/logo/{tenant_id}")
 async def upload_tenant_logo(
