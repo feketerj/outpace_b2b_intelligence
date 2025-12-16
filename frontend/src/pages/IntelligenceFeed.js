@@ -189,6 +189,11 @@ export default function IntelligenceFeed() {
         intelligence={intelligence}
         primaryColor={primaryColor}
       />
+      
+      <ChatAssistant
+        agentType="intelligence"
+        primaryColor={primaryColor}
+      />
     </TenantLayout>
   );
 }
