@@ -105,16 +105,31 @@ async def sync_highergov_opportunities(db, tenant: dict) -> int:
                 
                 # Parse and normalize data
                 now = datetime.now(timezone.utc).isoformat()
+                
+                # Handle nested agency object
+                agency_value = opp_data.get("agency")
+                if isinstance(agency_value, dict):
+                    agency_str = agency_value.get("name") or agency_value.get("agency_name") or str(agency_value.get("agency_key", ""))
+                else:
+                    agency_str = str(agency_value) if agency_value else ""
+                
+                # Handle nested naics_code object
+                naics_value = opp_data.get("naics_code")
+                if isinstance(naics_value, dict):
+                    naics_str = str(naics_value.get("naics_code", ""))
+                else:
+                    naics_str = str(naics_value) if naics_value else None
+                
                 opportunity = {
                     "id": str(uuid.uuid4()),
                     "tenant_id": tenant_id,
                     "external_id": external_id,
                     "title": opp_data.get("title", "Untitled"),
                     "description": opp_data.get("description", ""),
-                    "agency": opp_data.get("agency", "") or opp_data.get("organization", ""),
+                    "agency": agency_str or opp_data.get("organization", ""),
                     "due_date": opp_data.get("due_date") or opp_data.get("deadline"),
                     "estimated_value": opp_data.get("estimated_value") or opp_data.get("amount"),
-                    "naics_code": opp_data.get("naics_code"),
+                    "naics_code": naics_str,
                     "keywords": keywords,
                     "source_type": "highergov",
                     "source_url": opp_data.get("url", "") or opp_data.get("link", ""),
