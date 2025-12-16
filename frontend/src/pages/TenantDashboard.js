@@ -73,46 +73,16 @@ export default function TenantDashboard() {
               {currentTenant?.name} - AI-scored government contracts
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => document.getElementById('csv-upload').click()}
-              variant="outline"
-              className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))]"
-            >
-              Upload CSV
-            </Button>
-            <input
-              id="csv-upload"
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  try {
-                    toast.info('Uploading opportunities...');
-                    const response = await axios.post(`${API_URL}/api/upload/opportunities/csv/${currentTenant.id}`, formData);
-                    toast.success(`Imported ${response.data.imported_count} opportunities!`);
-                    fetchOpportunities();
-                  } catch (error) {
-                    toast.error('Upload failed');
-                  }
-                }
-              }}
-            />
-            <Button
-              onClick={handleManualSync}
-              disabled={syncing}
-              className="text-white"
-              style={{background: primaryColor}}
-              data-testid="manual-sync-button"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing...' : 'Sync Now'}
-            </Button>
-          </div>
+          <Button
+            onClick={handleManualSync}
+            disabled={syncing}
+            className="text-white"
+            style={{background: primaryColor}}
+            data-testid="manual-sync-button"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Syncing...' : 'Sync Now'}
+          </Button>
         </div>
 
         {/* Search Bar */}
