@@ -499,24 +499,18 @@ export default function TenantsPage() {
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Sub-Client Primary Color</Label>
-                          <Input
-                            value={(formData.master_branding?.primary_color) || 'hsl(210, 85%, 52%)'}
-                            onChange={(e) => setFormData({...formData, master_branding: {...(formData.master_branding || {}), primary_color: e.target.value}})}
-                            className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                          />
-                          <div className="h-12 rounded border border-[hsl(var(--border))]" style={{background: formData.master_branding?.primary_color || 'hsl(210, 85%, 52%)'}} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Sub-Client Secondary Color</Label>
-                          <Input
-                            value={(formData.master_branding?.secondary_color) || 'hsl(265, 60%, 55%)'}
-                            onChange={(e) => setFormData({...formData, master_branding: {...(formData.master_branding || {}), secondary_color: e.target.value}})}
-                            className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
-                          />
-                          <div className="h-12 rounded border border-[hsl(var(--border))]" style={{background: formData.master_branding?.secondary_color || 'hsl(265, 60%, 55%)'}} />
-                        </div>
+                        <ColorPicker
+                          label="Sub-Client Primary Color"
+                          value={formData.master_branding?.primary_color || 'hsl(210, 85%, 52%)'}
+                          onChange={(color) => setFormData({...formData, master_branding: {...(formData.master_branding || {}), primary_color: color}})}
+                          description="Primary color for your clients' dashboards"
+                        />
+                        <ColorPicker
+                          label="Sub-Client Secondary Color"
+                          value={formData.master_branding?.secondary_color || 'hsl(265, 60%, 55%)'}
+                          onChange={(color) => setFormData({...formData, master_branding: {...(formData.master_branding || {}), secondary_color: color}})}
+                          description="Secondary color for your clients' dashboards"
+                        />
                       </div>
                       
                       <div className="bg-[hsl(var(--background-elevated))] p-4 rounded border border-[hsl(var(--border))]">
