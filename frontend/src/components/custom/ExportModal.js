@@ -19,7 +19,8 @@ export const ExportModal = ({
   onOpenChange, 
   opportunities = [], 
   intelligence = [],
-  primaryColor 
+  primaryColor,
+  tenantId
 }) => {
   const [selectedOpps, setSelectedOpps] = useState([]);
   const [selectedIntel, setSelectedIntel] = useState([]);
