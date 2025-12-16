@@ -62,7 +62,8 @@ export const ExportModal = ({
         `${API_URL}/api/exports/${format}`,
         {
           opportunity_ids: oppIds,
-          intelligence_ids: intelIds
+          intelligence_ids: intelIds,
+          tenant_id: tenantId
         },
         {
           responseType: 'blob'
