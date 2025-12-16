@@ -181,7 +181,19 @@ async def export_branded_excel(
     opportunity_ids = export_data.get("opportunity_ids", [])
     intelligence_ids = export_data.get("intelligence_ids", [])
     
-    tenant = await db.tenants.find_one({"id": current_user.tenant_id})
+    # Get tenant_id from request body (for super_admins viewing tenant data) or from token
+    request_tenant_id = export_data.get("tenant_id")
+    tenant_id = request_tenant_id or current_user.tenant_id
+    
+    # Validate tenant_id exists
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="Tenant ID is required for export")
+    
+    # For super_admins, allow any tenant_id; for others, must match their tenant
+    if current_user.role.value != "super_admin" and tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied to this tenant's data")
+    
+    tenant = await db.tenants.find_one({"id": tenant_id})
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
     
@@ -190,7 +202,7 @@ async def export_branded_excel(
     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
         # Opportunities sheet
         if opportunity_ids:
-            opps = await db.opportunities.find({"id": {"$in": opportunity_ids}}, {"_id": 0}).to_list(100)
+            opps = await db.opportunities.find({"id": {"$in": opportunity_ids}, "tenant_id": tenant_id}, {"_id": 0}).to_list(100)
             if opps:
                 df = pd.DataFrame(opps)
                 cols = ['title', 'score', 'agency', 'due_date', 'estimated_value', 'client_status', 'client_notes']
@@ -204,7 +216,7 @@ async def export_branded_excel(
         
         # Intelligence sheet
         if intelligence_ids:
-            intel = await db.intelligence.find({"id": {"$in": intelligence_ids}}, {"_id": 0}).to_list(100)
+            intel = await db.intelligence.find({"id": {"$in": intelligence_ids}, "tenant_id": tenant_id}, {"_id": 0}).to_list(100)
             if intel:
                 df = pd.DataFrame(intel)
                 cols = ['title', 'type', 'summary', 'created_at']
