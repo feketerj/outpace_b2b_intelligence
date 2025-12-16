@@ -75,16 +75,27 @@ export default function TenantDashboard() {
               {currentTenant?.name} - AI-scored government contracts
             </p>
           </div>
-          <Button
-            onClick={handleManualSync}
-            disabled={syncing}
-            className="text-white"
-            style={{background: primaryColor}}
-            data-testid="manual-sync-button"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Syncing...' : 'Sync Now'}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowExportModal(true)}
+              variant="outline"
+              className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))]"
+              disabled={opportunities.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            <Button
+              onClick={handleManualSync}
+              disabled={syncing}
+              className="text-white"
+              style={{background: primaryColor}}
+              data-testid="manual-sync-button"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing...' : 'Sync Now'}
+            </Button>
+          </div>
         </div>
 
         {/* Search Bar */}
