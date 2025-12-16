@@ -23,7 +23,9 @@ export default function OpportunityDetail() {
   const [status, setStatus] = useState('new');
 
   useEffect(() => {
-    fetchOpportunity();
+    if (id) {
+      fetchOpportunity();
+    }
   }, [id]);
 
   const fetchOpportunity = async () => {
