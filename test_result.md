@@ -111,7 +111,7 @@ backend:
     file: "backend/routes/exports.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "user"
@@ -119,6 +119,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Fixed by adding tenant_id parameter to request body. Super admins can now pass tenant_id explicitly for exports."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: PDF export working correctly. Tested with tenant_id bd78ce2b-4e6f-43d2-8580-98bf8cba35f8 and opportunity 06a4381e-72b2-48c1-bed8-43c9d19b5252. Returns 200 with PDF content. Correctly rejects requests without tenant_id (400 error) and empty selections (404 error)."
         
   - task: "Excel Export API"
     implemented: true
@@ -126,7 +129,7 @@ backend:
     file: "backend/routes/exports.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "user"
@@ -134,6 +137,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Fixed by adding tenant_id parameter to request body. Super admins can now pass tenant_id explicitly for exports."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Excel export working correctly. Tested with tenant_id bd78ce2b-4e6f-43d2-8580-98bf8cba35f8 and opportunity 06a4381e-72b2-48c1-bed8-43c9d19b5252. Returns 200 with Excel content. Correctly rejects requests without tenant_id (400 error)."
 
 frontend:
   - task: "Export Modal - Pass tenant_id"
