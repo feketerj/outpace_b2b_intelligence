@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { TrendingUp, ExternalLink, Calendar } from 'lucide-react';
+import { TrendingUp, ExternalLink, Calendar, Trash2 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
