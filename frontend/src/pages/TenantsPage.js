@@ -1161,6 +1161,47 @@ export default function TenantsPage() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteConfirm.open} onOpenChange={(open) => !deleting && setDeleteConfirm({ open, tenant: open ? deleteConfirm.tenant : null })}>
+          <DialogContent className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))] max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-[hsl(var(--foreground))] text-xl">
+                Delete Tenant
+              </DialogTitle>
+              <DialogDescription className="text-[hsl(var(--foreground-secondary))]">
+                Are you sure you want to delete <strong>"{deleteConfirm.tenant?.name}"</strong>?
+                <br /><br />
+                <span className="text-[hsl(var(--accent-danger))]">
+                  This will permanently delete ALL associated data including:
+                </span>
+                <ul className="list-disc ml-5 mt-2 text-[hsl(var(--foreground-muted))]">
+                  <li>All opportunities</li>
+                  <li>All intelligence reports</li>
+                  <li>All chat history</li>
+                  <li>All users associated with this tenant</li>
+                </ul>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-3 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteConfirm({ open: false, tenant: null })}
+                disabled={deleting}
+                className="flex-1 border-[hsl(var(--border))]"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex-1 bg-[hsl(var(--accent-danger))] hover:bg-[hsl(var(--accent-danger))]/90 text-white"
+              >
+                {deleting ? 'Deleting...' : 'Delete Tenant'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </SuperAdminLayout>
   );
