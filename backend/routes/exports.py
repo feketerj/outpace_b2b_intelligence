@@ -197,13 +197,19 @@ async def export_branded_excel(
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
     
+    # Check if there's any data to export
+    if not opportunity_ids and not intelligence_ids:
+        raise HTTPException(status_code=404, detail="No data to export")
+    
     buffer = io.BytesIO()
+    has_data = False
     
     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
         # Opportunities sheet
         if opportunity_ids:
             opps = await db.opportunities.find({"id": {"$in": opportunity_ids}, "tenant_id": tenant_id}, {"_id": 0}).to_list(100)
             if opps:
+                has_data = True
                 df = pd.DataFrame(opps)
                 cols = ['title', 'score', 'agency', 'due_date', 'estimated_value', 'client_status', 'client_notes']
                 df = df[[col for col in cols if col in df.columns]]
@@ -218,6 +224,7 @@ async def export_branded_excel(
         if intelligence_ids:
             intel = await db.intelligence.find({"id": {"$in": intelligence_ids}, "tenant_id": tenant_id}, {"_id": 0}).to_list(100)
             if intel:
+                has_data = True
                 df = pd.DataFrame(intel)
                 cols = ['title', 'type', 'summary', 'created_at']
                 df = df[[col for col in cols if col in df.columns]]
@@ -226,6 +233,11 @@ async def export_branded_excel(
                 worksheet = writer.sheets['Intelligence']
                 worksheet['A1'] = tenant['name']
                 worksheet['A1'].font = openpyxl.styles.Font(bold=True, size=14)
+        
+        # If no data was found, create an empty sheet with message
+        if not has_data:
+            df = pd.DataFrame([{"Message": "No data found for the selected IDs"}])
+            df.to_excel(writer, sheet_name='Export', index=False)
     
     buffer.seek(0)
     
