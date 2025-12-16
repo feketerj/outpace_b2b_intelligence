@@ -61,63 +61,34 @@ Provide a structured analysis following the schema above.
         
         client = Mistral(api_key=MISTRAL_API_KEY)
         
-        # Use agent ID if provided, otherwise use instructions
+        # Use standard chat.complete API (not beta conversations)
         if agent_id:
             logger.info(f"Using Mistral agent ID: {agent_id}")
-            response = client.agents.complete(
-                agent_id=agent_id,
-                messages=[{"role": "user", "content": prompt}]
+            # For now, use chat.complete with instructions in system message
+            # Agent ID functionality would require different SDK method
+            response = client.chat.complete(
+                model="mistral-small-latest",
+                messages=[
+                    {"role": "system", "content": instructions},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=1000
             )
         else:
             logger.info(f"Using dynamic instructions for scoring")
-            response = client.beta.conversations.start(
-                inputs=[{"role": "user", "content": prompt}],
+            response = client.chat.complete(
                 model="mistral-small-latest",
-                instructions=instructions,
-                completion_args={
-                    "temperature": 0.3,
-                    "max_tokens": 1000,
-                    "top_p": 1
-                }
+                messages=[
+                    {"role": "system", "content": instructions},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=1000
             )
         
-        # Extract content properly from Mistral response
-        content = None
-        if hasattr(response, 'choices') and response.choices:
-            content = response.choices[0].message.content
-        elif hasattr(response, 'outputs') and response.outputs:
-            # Handle conversations API response
-            content = response.outputs[0].content
-        elif hasattr(response, 'content'):
-            content = response.content
-        else:
-            # Last resort - try to convert to string and extract
-            response_str = str(response)
-            if 'content=' in response_str:
-                # Extract content from string representation
-                import re
-                match = re.search(r"content='([^']+)'", response_str) or re.search(r'content="([^"]+)"', response_str)
-                if match:
-                    content = match.group(1)
-                else:
-                    content = response_str
-            else:
-                content = response_str
-        
-        # Clean up the content - remove conversation metadata
-        if content and 'conversation_id=' in content:
-            # This is still raw API response, extract just the message
-            import re
-            match = re.search(r'"relevance_summary":\s*"([^"]+)"', content)
-            if match:
-                content = match.group(1)
-            else:
-                # Try to find any quoted text that looks like analysis
-                match = re.search(r'The contract opportunity[^"]*', content)
-                if match:
-                    content = match.group(0)
-                else:
-                    content = "AI analysis pending"
+        # Extract content - standard format
+        content = response.choices[0].message.content
         
         # Parse JSON response
         try:
