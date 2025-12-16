@@ -341,6 +341,9 @@ backend:
       - working: true
         agent: "main"
         comment: "✅ PDF export working. Fixed error handling for empty data."
+      - working: true
+        agent: "testing"
+        comment: "✅ RETESTED: PDF export working perfectly. Proper error handling - returns 400 when tenant_id missing, 404 when no data to export."
 
   - task: "Excel Export API"
     implemented: true
