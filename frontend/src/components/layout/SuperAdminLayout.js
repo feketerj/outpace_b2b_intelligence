@@ -13,6 +13,7 @@ export const SuperAdminLayout = ({ children }) => {
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/tenants', icon: Building2, label: 'Tenants' },
     { path: '/admin/users', icon: Users, label: 'Users' },
+    { path: '/admin/database', icon: Settings, label: 'Database' },
   ];
 
   const handleLogout = () => {
