@@ -34,6 +34,8 @@ export default function TenantsPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingTenant, setEditingTenant] = useState(null);
   const [formData, setFormData] = useState(getEmptyFormData());
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, tenant: null });
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchTenants();
