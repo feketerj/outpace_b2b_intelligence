@@ -420,7 +420,8 @@ class OutPaceAPITester:
             data={
                 "email": test_email,
                 "password": "TestPassword123!",
-                "role": "user",
+                "full_name": "Test User",
+                "role": "tenant_user",
                 "tenant_id": self.test_tenant_id if self.test_tenant_id else "bec8a414-b00d-4a58-9539-5f732db23b35"
             },
             headers={"Authorization": f"Bearer {self.super_admin_token}"}
