@@ -211,7 +211,7 @@ class OpportunityCreate(OpportunityBase):
 class Opportunity(OpportunityBase):
     id: str
     tenant_id: str
-    score: int = 0
+    score: float = 0  # Changed to float to handle decimal scores
     ai_relevance_summary: Optional[str] = None
     captured_date: datetime
     created_at: datetime
