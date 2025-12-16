@@ -64,8 +64,18 @@ export default function TenantPreview() {
     const effectiveBranding = masterBranding || branding || {};
     const root = document.documentElement;
     
+    // Apply all brand colors as CSS variables
     if (effectiveBranding.primary_color) {
       root.style.setProperty('--tenant-primary', effectiveBranding.primary_color.replace('hsl(', '').replace(')', ''));
+    }
+    if (effectiveBranding.secondary_color) {
+      root.style.setProperty('--tenant-secondary', effectiveBranding.secondary_color.replace('hsl(', '').replace(')', ''));
+    }
+    if (effectiveBranding.accent_color) {
+      root.style.setProperty('--tenant-accent', effectiveBranding.accent_color.replace('hsl(', '').replace(')', ''));
+    }
+    if (effectiveBranding.text_color) {
+      root.style.setProperty('--tenant-text', effectiveBranding.text_color.replace('hsl(', '').replace(')', ''));
     }
   };
 
@@ -75,8 +85,13 @@ export default function TenantPreview() {
     return 'bg-[hsl(var(--foreground-muted))]';
   };
 
-  const primaryColor = (tenant?.master_branding || tenant?.branding)?.primary_color || 'hsl(210, 85%, 52%)';
-  const logo = (tenant?.master_branding || tenant?.branding)?.logo_base64 || (tenant?.master_branding || tenant?.branding)?.logo_url;
+  // Get branding values
+  const effectiveBranding = tenant?.master_branding || tenant?.branding || {};
+  const primaryColor = effectiveBranding.primary_color || 'hsl(210, 85%, 52%)';
+  const secondaryColor = effectiveBranding.secondary_color || 'hsl(265, 60%, 55%)';
+  const accentColor = effectiveBranding.accent_color || 'hsl(142, 70%, 45%)';
+  const textColor = effectiveBranding.text_color || 'hsl(0, 0%, 98%)';
+  const logo = effectiveBranding.logo_base64 || effectiveBranding.logo_url;
 
   if (loading) {
     return (
