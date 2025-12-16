@@ -401,6 +401,116 @@ class OutPaceAPITester:
         
         return success
     
+    def test_export_functionality(self):
+        """Test export functionality (PDF and Excel) with specific test data"""
+        self.log("\n=== EXPORT FUNCTIONALITY TESTING ===", "INFO")
+        
+        if not self.super_admin_token:
+            self.log("Skipping export tests - no super admin token", "WARNING")
+            return False
+        
+        # Test data from the review request
+        test_tenant_id = "bd78ce2b-4e6f-43d2-8580-98bf8cba35f8"
+        test_opportunity_id = "06a4381e-72b2-48c1-bed8-43c9d19b5252"
+        
+        # Test 1: PDF Export with tenant_id parameter (should succeed)
+        success1, data1, status1 = self.run_test(
+            "PDF Export with tenant_id",
+            "POST",
+            "exports/pdf",
+            200,
+            data={
+                "opportunity_ids": [test_opportunity_id],
+                "intelligence_ids": [],
+                "tenant_id": test_tenant_id
+            },
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
+        )
+        
+        if success1:
+            self.log("PDF export successful - received PDF content", "SUCCESS")
+        
+        # Test 2: Excel Export with tenant_id parameter (should succeed)
+        success2, data2, status2 = self.run_test(
+            "Excel Export with tenant_id",
+            "POST",
+            "exports/excel",
+            200,
+            data={
+                "opportunity_ids": [test_opportunity_id],
+                "intelligence_ids": [],
+                "tenant_id": test_tenant_id
+            },
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
+        )
+        
+        if success2:
+            self.log("Excel export successful - received Excel content", "SUCCESS")
+        
+        # Test 3: Export without tenant_id (should fail with 400)
+        success3, data3, status3 = self.run_test(
+            "PDF Export without tenant_id (should fail)",
+            "POST",
+            "exports/pdf",
+            400,
+            data={
+                "opportunity_ids": [test_opportunity_id],
+                "intelligence_ids": []
+            },
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
+        )
+        
+        if success3:
+            error_msg = data3.get('detail', '')
+            if "Tenant ID is required for export" in error_msg:
+                self.log("Correctly rejected export without tenant_id", "SUCCESS")
+            else:
+                self.log(f"Unexpected error message: {error_msg}", "WARNING")
+        
+        # Test 4: Export with empty selection (should fail with 404)
+        success4, data4, status4 = self.run_test(
+            "Export with empty selection (should fail)",
+            "POST",
+            "exports/pdf",
+            404,
+            data={
+                "opportunity_ids": [],
+                "intelligence_ids": [],
+                "tenant_id": test_tenant_id
+            },
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
+        )
+        
+        if success4:
+            error_msg = data4.get('detail', '')
+            if "No data to export" in error_msg:
+                self.log("Correctly rejected export with empty selection", "SUCCESS")
+            else:
+                self.log(f"Unexpected error message: {error_msg}", "WARNING")
+        
+        # Test 5: Excel Export without tenant_id (should also fail with 400)
+        success5, data5, status5 = self.run_test(
+            "Excel Export without tenant_id (should fail)",
+            "POST",
+            "exports/excel",
+            400,
+            data={
+                "opportunity_ids": [test_opportunity_id],
+                "intelligence_ids": []
+            },
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
+        )
+        
+        if success5:
+            error_msg = data5.get('detail', '')
+            if "Tenant ID is required for export" in error_msg:
+                self.log("Correctly rejected Excel export without tenant_id", "SUCCESS")
+            else:
+                self.log(f"Unexpected error message: {error_msg}", "WARNING")
+        
+        # Return overall success
+        return success1 and success2 and success3 and success4 and success5
+    
     def run_all_tests(self):
         """Run all backend tests"""
         self.log("=" * 60, "INFO")
