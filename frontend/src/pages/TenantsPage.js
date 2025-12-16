@@ -24,6 +24,7 @@ import { Badge } from '../components/ui/badge';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Plus, Edit2, Trash2, Building2, Save, Palette, Code, Calendar, Zap } from 'lucide-react';
+import { ColorPicker } from '../components/custom/ColorPicker';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
