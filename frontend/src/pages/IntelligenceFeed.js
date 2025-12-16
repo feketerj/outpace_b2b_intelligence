@@ -34,6 +34,30 @@ export default function IntelligenceFeed() {
     }
   };
 
+  const handleDeleteReport = async (reportId, reportTitle) => {
+    if (!window.confirm(`Delete "${reportTitle}"?`)) return;
+    
+    try {
+      await axios.delete(`${API_URL}/api/intelligence/${reportId}`);
+      toast.success('Report deleted');
+      fetchIntelligence();
+    } catch (error) {
+      toast.error('Failed to delete');
+    }
+  };
+
+  const handleArchiveReport = async (reportId) => {
+    try {
+      await axios.patch(`${API_URL}/api/intelligence/${reportId}`, {
+        is_archived: true
+      });
+      toast.success('Report archived');
+      fetchIntelligence();
+    } catch (error) {
+      toast.error('Failed to archive');
+    }
+  };
+
   const primaryColor = brandingStyles?.primary_color || 'hsl(210, 85%, 52%)';
 
   return (
