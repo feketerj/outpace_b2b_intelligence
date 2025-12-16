@@ -81,13 +81,43 @@ Provide a structured analysis following the schema above.
                 }
             )
         
-        # Extract content
+        # Extract content properly from Mistral response
+        content = None
         if hasattr(response, 'choices') and response.choices:
             content = response.choices[0].message.content
+        elif hasattr(response, 'outputs') and response.outputs:
+            # Handle conversations API response
+            content = response.outputs[0].content
         elif hasattr(response, 'content'):
             content = response.content
         else:
-            content = str(response)
+            # Last resort - try to convert to string and extract
+            response_str = str(response)
+            if 'content=' in response_str:
+                # Extract content from string representation
+                import re
+                match = re.search(r"content='([^']+)'", response_str) or re.search(r'content="([^"]+)"', response_str)
+                if match:
+                    content = match.group(1)
+                else:
+                    content = response_str
+            else:
+                content = response_str
+        
+        # Clean up the content - remove conversation metadata
+        if content and 'conversation_id=' in content:
+            # This is still raw API response, extract just the message
+            import re
+            match = re.search(r'"relevance_summary":\s*"([^"]+)"', content)
+            if match:
+                content = match.group(1)
+            else:
+                # Try to find any quoted text that looks like analysis
+                match = re.search(r'The contract opportunity[^"]*', content)
+                if match:
+                    content = match.group(0)
+                else:
+                    content = "AI analysis pending"
         
         # Parse JSON response
         try:
