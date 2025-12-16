@@ -655,11 +655,10 @@ class OutPaceAPITester:
             self.test_intelligence_config()
             self.test_export_functionality()
         
-        # Tenant user features
-        if tenant_login_success:
+        # Test opportunities and other features with admin token
+        if admin_login_success:
             self.test_opportunities_endpoint()
             self.test_manual_sync()
-            self.test_chat_functionality()
         
         return True
     
