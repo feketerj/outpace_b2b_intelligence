@@ -102,6 +102,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/preview"
+        element={
+          <ProtectedRoute requireSuperAdmin>
+            <TenantPreview />
+          </ProtectedRoute>
+        }
+      />
       
       {/* Default Route */}
       <Route path="/" element={<Navigate to="/login" replace />} />
