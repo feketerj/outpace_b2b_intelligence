@@ -180,6 +180,14 @@ export default function IntelligenceFeed() {
           </div>
         )}
       </div>
+      
+      <ExportModal
+        open={showExportModal}
+        onOpenChange={setShowExportModal}
+        opportunities={[]}
+        intelligence={intelligence}
+        primaryColor={primaryColor}
+      />
     </TenantLayout>
   );
 }
