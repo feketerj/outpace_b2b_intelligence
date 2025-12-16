@@ -47,11 +47,12 @@ async def sync_highergov_opportunities(db, tenant: dict) -> int:
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             # Poll saved search endpoint
+            # HigherGov search endpoints can vary - try multiple formats
             params = {
                 "api_key": highergov_api_key,
-                "search_id": search_id,
+                "searchID": search_id,  # Note: capital ID
                 "page_size": 100,
-                "page_number": 1
+                "page": 1
             }
             
             if fetch_full_docs:
@@ -59,11 +60,27 @@ async def sync_highergov_opportunities(db, tenant: dict) -> int:
             if fetch_nsn:
                 params["include_nsn"] = "true"
             
-            response = await client.get(
-                f"{HIGHERGOV_BASE_URL}/search/",
-                params=params
-            )
-            response.raise_for_status()
+            # Try the contract-opportunity endpoint with searchID parameter
+            try:
+                response = await client.get(
+                    f"{HIGHERGOV_BASE_URL}/contract-opportunity/",
+                    params=params
+                )
+                response.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                # If that fails, try without the search endpoint
+                logger.warning(f"Trying alternative endpoint format: {e}")
+                params_alt = {
+                    "api_key": highergov_api_key,
+                    "search_id": search_id,
+                    "limit": 100
+                }
+                response = await client.get(
+                    f"{HIGHERGOV_BASE_URL}/opportunity/",
+                    params=params_alt
+                )
+                response.raise_for_status()
+            
             data = response.json()
             
             opportunities_list = data.get("results", []) or data.get("data", [])
