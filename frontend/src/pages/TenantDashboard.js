@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { ExportModal } from '../components/custom/ExportModal';
+import { ChatAssistant } from '../components/custom/ChatAssistant';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { FileText, RefreshCw, Search, Filter, Download } from 'lucide-react';
