@@ -93,43 +93,69 @@ Provide a structured analysis following the schema above.
         # Parse JSON response
         try:
             import json
-            # Try to parse as JSON
-            parsed = json.loads(content)
+            import re
             
-            # Extract relevance_summary
-            relevance_summary = parsed.get("relevance_summary")
-            if not relevance_summary and "analysis" in parsed:
-                # Nested structure
-                relevance_summary = parsed["analysis"].get("relevance_summary", {}).get("description")
-            
-            if not relevance_summary:
-                # Just use first 200 chars of content as summary
-                relevance_summary = content[:200]
-            
-            # Ensure backward compatibility
-            if "suggested_score_adjustment" not in parsed and "score_adjustment" in parsed:
-                parsed["suggested_score_adjustment"] = parsed["score_adjustment"]
-            elif "suggested_score_adjustment" not in parsed:
-                parsed["suggested_score_adjustment"] = 0
-            
-            # Store clean summary
-            parsed["relevance_summary"] = relevance_summary
-            
-            return parsed
-        except Exception as parse_error:
-            # Not JSON - use content as-is (but clean it up)
-            logger.warning(f"Failed to parse JSON, using raw content: {parse_error}")
-            
-            # Try to extract just the summary sentence
-            if "The contract opportunity" in content:
-                # Find the first complete sentence
-                import re
-                match = re.search(r'The contract opportunity[^.]*\.', content)
+            # Clean content first - remove markdown code blocks
+            clean_content = content
+            if '```json' in content:
+                # Extract JSON from markdown code block
+                match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
                 if match:
-                    content = match.group(0)
+                    clean_content = match.group(1)
+            elif '```' in content:
+                # Remove any code block markers
+                clean_content = content.replace('```json', '').replace('```', '').strip()
+            
+            # Try to parse as JSON
+            parsed = json.loads(clean_content)
+            
+            # Extract relevance_summary from various possible structures
+            relevance_summary = None
+            
+            # Direct field
+            if "relevance_summary" in parsed:
+                relevance_summary = parsed["relevance_summary"]
+            # Nested in analysis
+            elif "analysis" in parsed and isinstance(parsed["analysis"], dict):
+                if "relevance_summary" in parsed["analysis"]:
+                    rel_sum = parsed["analysis"]["relevance_summary"]
+                    if isinstance(rel_sum, dict) and "description" in rel_sum:
+                        relevance_summary = rel_sum["description"]
+                    elif isinstance(rel_sum, str):
+                        relevance_summary = rel_sum
+            
+            # If still no summary, use the whole content but clean it
+            if not relevance_summary:
+                relevance_summary = clean_content[:300]
+            
+            # Get score adjustment
+            score_adj = parsed.get("score_adjustment", 0)
+            if not score_adj and "analysis" in parsed:
+                # Might be nested
+                score_adj = parsed["analysis"].get("score_adjustment", 0)
             
             return {
-                "relevance_summary": content[:300] if len(content) > 300 else content,
+                "relevance_summary": relevance_summary,
+                "suggested_score_adjustment": score_adj
+            }
+            
+        except Exception as parse_error:
+            # Not JSON - use content as-is (but clean it up)
+            logger.warning(f"Failed to parse JSON: {parse_error}")
+            
+            # Remove markdown if present
+            clean = content.replace('```json', '').replace('```', '').strip()
+            
+            # Try to extract just a readable sentence
+            if "The contract opportunity" in clean:
+                # Find the first complete sentence
+                import re
+                match = re.search(r'The contract opportunity[^.]*\.', clean)
+                if match:
+                    clean = match.group(0)
+            
+            return {
+                "relevance_summary": clean[:300] if len(clean) > 300 else clean,
                 "suggested_score_adjustment": 0
             }
     
