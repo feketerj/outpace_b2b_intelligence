@@ -295,7 +295,7 @@ class OutPaceAPITester:
         """Test manual sync functionality"""
         self.log("\n=== MANUAL SYNC TESTING ===", "INFO")
         
-        if not self.tenant_user_token or not self.test_tenant_id:
+        if not self.super_admin_token or not self.test_tenant_id:
             self.log("Skipping sync test - missing token or tenant_id", "WARNING")
             return False
         
@@ -306,7 +306,7 @@ class OutPaceAPITester:
             "POST",
             f"sync/manual/{self.test_tenant_id}",
             200,
-            headers={"Authorization": f"Bearer {self.tenant_user_token}"}
+            headers={"Authorization": f"Bearer {self.super_admin_token}"}
         )
         
         if success:
