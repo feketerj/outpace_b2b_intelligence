@@ -93,6 +93,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/database"
+        element={
+          <ProtectedRoute requireSuperAdmin>
+            <DatabaseManager />
+          </ProtectedRoute>
+        }
+      />
       
       {/* Default Route */}
       <Route path="/" element={<Navigate to="/login" replace />} />
