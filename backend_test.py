@@ -104,7 +104,7 @@ class OutPaceAPITester:
             200,
             data={
                 "email": "admin@example.com",
-                "password": "REDACTED_BOOTSTRAP_PASSWORD"
+                "password": "REDACTED_ADMIN_PASSWORD"
             }
         )
         
