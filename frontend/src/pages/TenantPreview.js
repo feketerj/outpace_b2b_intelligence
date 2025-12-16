@@ -232,9 +232,9 @@ export default function TenantPreview() {
             </div>
           </TabsContent>
         </Tabs>
-          </div>
-        </div>
       </div>
+    </div>
+  </div>
 
       <ExportModal
         open={showExportModal}
