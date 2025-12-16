@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
+import { ExportModal } from '../components/custom/ExportModal';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { FileText, RefreshCw, Search, Filter } from 'lucide-react';
+import { FileText, RefreshCw, Search, Filter, Download } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -17,6 +18,7 @@ export default function TenantDashboard() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showExportModal, setShowExportModal] = useState(false);
 
   useEffect(() => {
     if (currentTenant) {
