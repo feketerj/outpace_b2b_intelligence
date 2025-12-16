@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { ExportModal } from '../components/custom/ExportModal';
+import { ChatAssistant } from '../components/custom/ChatAssistant';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { TrendingUp, ExternalLink, Calendar, Trash2, Download } from 'lucide-react';
