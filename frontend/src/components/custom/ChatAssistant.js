@@ -64,14 +64,17 @@ export const ChatAssistant = ({ agentType = 'opportunities', primaryColor }) => 
     <>
       {/* Chat Bubble */}
       {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg flex items-center justify-center text-white hover:scale-110 transition-transform duration-200 z-[9999]"
-          style={{ background: primaryColor }}
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(true);
+          }}
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg flex items-center justify-center text-white hover:scale-110 transition-transform duration-200 p-0"
+          style={{ background: primaryColor, zIndex: 9999 }}
           data-testid="chat-assistant-toggle"
         >
           <MessageCircle className="h-6 w-6" />
-        </button>
+        </Button>
       )}
 
       {/* Chat Panel */}
