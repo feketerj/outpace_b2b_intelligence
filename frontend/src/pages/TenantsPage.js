@@ -368,7 +368,7 @@ export default function TenantsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
+                      onClick={() => handleDeleteTenant(tenant)}
                       className="border-[hsl(var(--accent-danger))] text-[hsl(var(--accent-danger))] hover:bg-[hsl(var(--accent-danger))]/10"
                       data-testid={`delete-tenant-${tenant.slug}`}
                     >
