@@ -121,7 +121,7 @@ async def delete_intelligence(
     intel_id: str,
     current_user: TokenData = Depends(get_current_user)
 ):
-    """Delete intelligence item"""
+    """Delete intelligence item - tenant users can delete their own reports"""
     db = get_db()
     
     # Check exists and access control
@@ -132,7 +132,7 @@ async def delete_intelligence(
             detail="Intelligence item not found"
         )
     
-    if current_user.role != "super_admin" and intel_doc.get("tenant_id") != current_user.tenant_id:
+    if intel_doc.get("tenant_id") != current_user.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
@@ -140,3 +140,38 @@ async def delete_intelligence(
     
     await db.intelligence.delete_one({"id": intel_id})
     return None
+
+@router.patch("/{intel_id}")
+async def update_intelligence(
+    intel_id: str,
+    update_data: dict = Body(...),
+    current_user: TokenData = Depends(get_current_user)
+):
+    """Update intelligence item (archive, add notes)"""
+    db = get_db()
+    
+    intel_doc = await db.intelligence.find_one({"id": intel_id})
+    if not intel_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Intelligence item not found"
+        )
+    
+    if intel_doc.get("tenant_id") != current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    # Only allow updating client-editable fields
+    allowed_fields = ["is_archived", "client_notes"]
+    update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
+    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.intelligence.update_one(
+        {"id": intel_id},
+        {"$set": update_dict}
+    )
+    
+    updated = await db.intelligence.find_one({"id": intel_id}, {"_id": 0})
+    return Intelligence(**updated)
