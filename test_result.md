@@ -101,3 +101,103 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Export functionality (PDF and Excel) not working - downloads fail"
+
+backend:
+  - task: "PDF Export API"
+    implemented: true
+    working: true
+    file: "backend/routes/exports.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Export was failing with 'Tenant not found' error"
+      - working: true
+        agent: "main"
+        comment: "Fixed by adding tenant_id parameter to request body. Super admins can now pass tenant_id explicitly for exports."
+        
+  - task: "Excel Export API"
+    implemented: true
+    working: true
+    file: "backend/routes/exports.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Export was failing with 'Tenant not found' error"
+      - working: true
+        agent: "main"
+        comment: "Fixed by adding tenant_id parameter to request body. Super admins can now pass tenant_id explicitly for exports."
+
+frontend:
+  - task: "Export Modal - Pass tenant_id"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/custom/ExportModal.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated ExportModal to accept tenantId prop and pass it to the API"
+        
+  - task: "TenantDashboard - Export tenant_id"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/TenantDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added tenantId prop to ExportModal"
+
+  - task: "IntelligenceFeed - Export tenant_id"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/IntelligenceFeed.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added tenantId prop to ExportModal"
+
+  - task: "TenantPreview - Export tenant_id"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/TenantPreview.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added tenantId prop to ExportModal"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "PDF Export API"
+    - "Excel Export API"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Fixed export functionality. The issue was that the backend was using current_user.tenant_id from the token, but super_admins have null tenant_id. Fixed by accepting tenant_id in request body and updating all frontend components to pass it. Backend tested with curl - both PDF and Excel exports work. Need to test via frontend UI."
