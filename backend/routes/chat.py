@@ -90,33 +90,18 @@ async def send_chat_message(
     try:
         client = Mistral(api_key=MISTRAL_API_KEY)
         
-        # Use agent ID if provided, otherwise use instructions
-        if agent_id:
-            # Call specific agent
-            response = client.agents.complete(
-                agent_id=agent_id,
-                messages=inputs
-            )
-        else:
-            # Use dynamic instructions
-            response = client.beta.conversations.start(
-                inputs=inputs,
-                model="mistral-small-latest",
-                instructions=instructions,
-                completion_args={
-                    "temperature": 0.7,
-                    "max_tokens": 2000,
-                    "top_p": 1
-                }
-            )
+        # Use standard chat.complete API
+        response = client.chat.complete(
+            model="mistral-small-latest",
+            messages=[
+                {"role": "system", "content": instructions}
+            ] + inputs,
+            temperature=0.7,
+            max_tokens=2000
+        )
         
         # Extract content
-        if hasattr(response, 'choices') and response.choices:
-            assistant_content = response.choices[0].message.content
-        elif hasattr(response, 'content'):
-            assistant_content = response.content
-        else:
-            assistant_content = str(response)
+        assistant_content = response.choices[0].message.content
             
     except Exception as e:
         logger.error(f"Mistral API error: {e}")
