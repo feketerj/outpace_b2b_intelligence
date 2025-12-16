@@ -243,6 +243,11 @@ export default function TenantPreview() {
         intelligence={intelligence}
         primaryColor={primaryColor}
       />
+      
+      <ChatAssistant
+        agentType="opportunities"
+        primaryColor={primaryColor}
+      />
     </div>
   );
 }
