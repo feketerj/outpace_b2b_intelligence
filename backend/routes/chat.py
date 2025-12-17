@@ -152,7 +152,17 @@ async def send_chat_message(
     
     # === ATOMIC SECTION END ===
     
-    return ChatTurn(**chat_turn_doc)
+    # Return ChatMessage (assistant) for frontend compatibility
+    return ChatMessage(
+        id=f"{chat_turn_doc['id']}-assistant",
+        conversation_id=chat_turn_doc["conversation_id"],
+        tenant_id=chat_turn_doc["tenant_id"],
+        user_id=chat_turn_doc["user_id"],
+        role="assistant",
+        content=chat_turn_doc["assistant"]["content"],
+        agent_id=chat_turn_doc["agent_type"],
+        created_at=_to_dt(chat_turn_doc["assistant"]["timestamp"])
+    )
 
 
 def _to_dt(x):
