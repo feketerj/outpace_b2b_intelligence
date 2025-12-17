@@ -127,10 +127,13 @@ async def _build_knowledge_context(db, tenant: dict, user_message: str) -> tuple
     return knowledge_context, snippet_ids_used
 
 
-@router.post("/message", response_model=ChatMessage)
+from fastapi import Header
+
+@router.post("/message")
 async def send_chat_message(
     message_data: dict = Body(...),
-    current_user: TokenData = Depends(get_current_user)
+    current_user: TokenData = Depends(get_current_user),
+    x_debug_knowledge: Optional[str] = Header(None, alias="X-Debug-Knowledge")
 ):
     """
     Send message to Mistral agent (ATOMIC).
@@ -145,8 +148,12 @@ async def send_chat_message(
     Storage: ChatTurn (atomic single-document).
     
     Expects: {"conversation_id": str, "message": str, "agent_type": "opportunities" | "intelligence"}
+    Optional Header: X-Debug-Knowledge: true (super admin only) - returns knowledge debug info
     """
     db = get_db()
+    
+    # Debug mode only for super admins
+    debug_knowledge = x_debug_knowledge == "true" and current_user.role == "super_admin"
     
     conversation_id = message_data.get("conversation_id")
     user_message = message_data.get("message")
