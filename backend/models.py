@@ -167,6 +167,32 @@ class ChatUsage(MongoModel):
     messages_used: int = 0
 
 
+class TenantKnowledge(MongoModel):
+    """Tenant knowledge base for Mini-RAG injection into chat"""
+    enabled: bool = False
+    company_profile: str = ""
+    key_facts: List[str] = []
+    offerings: List[str] = []
+    differentiators: List[str] = []
+    prohibited_claims: List[str] = []
+    tone_guidelines: str = ""
+    updated_at: Optional[str] = None  # ISO string
+    max_context_chars: int = 2000
+    retrieval_mode: str = "keyword"  # "none" | "keyword"
+    max_snippets: int = 5
+
+
+class KnowledgeSnippet(MongoModel):
+    """Individual knowledge snippet for retrieval"""
+    id: str
+    tenant_id: str
+    title: str
+    content: str
+    tags: List[str] = []
+    created_at: str
+    updated_at: str
+
+
 class TenantBase(MongoModel):
     name: str
     slug: str
