@@ -152,6 +152,15 @@ class MistralAgentConfig(MongoModel):
         "recommended_action": "string"
     }
 
+class ChatPolicy(MongoModel):
+    """Tenant chat access policy (super-admin controlled)"""
+    enabled: bool = False
+    monthly_message_limit: Optional[int] = None  # None = unlimited
+    max_user_chars: int = 2000
+    max_assistant_tokens: int = 1000
+    max_turns_history: int = 10
+
+
 class TenantBase(MongoModel):
     name: str
     slug: str
@@ -163,6 +172,7 @@ class TenantBase(MongoModel):
     scoring_weights: ScoringWeights = Field(default_factory=ScoringWeights)
     agent_config: MistralAgentConfig = Field(default_factory=MistralAgentConfig)
     intelligence_config: IntelligenceConfig = Field(default_factory=IntelligenceConfig)
+    chat_policy: ChatPolicy = Field(default_factory=ChatPolicy)
     status: TenantStatus = TenantStatus.ACTIVE
 
 class TenantCreate(TenantBase):
