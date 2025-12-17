@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import uuid
 import logging
 import os
+import re
 from mistralai import Mistral
 
 from models import ChatMessage, ChatTurn
@@ -12,6 +13,10 @@ from database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# Input validation constants
+CONVERSATION_ID_PATTERN = re.compile(r'^[A-Za-z0-9._-]+$')
+MAX_CONVERSATION_ID_LENGTH = 128
 
 def get_db():
     return get_database()
