@@ -128,6 +128,7 @@ export default function TenantsPage() {
         branding: tenant.branding || getEmptyFormData().branding,
         search_profile: tenant.search_profile || getEmptyFormData().search_profile,
         intelligence_config: tenant.intelligence_config || getEmptyFormData().intelligence_config,
+        chat_policy: tenant.chat_policy || getEmptyFormData().chat_policy,
         agent_config: tenant.agent_config || getEmptyFormData().agent_config,
         scoring_weights: tenant.scoring_weights || getEmptyFormData().scoring_weights
       });
