@@ -416,13 +416,14 @@ export default function TenantsPage() {
             
             <form onSubmit={handleSaveTenant}>
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className={`grid w-full ${formData.is_master_client ? 'grid-cols-6' : 'grid-cols-7'} bg-[hsl(var(--background-tertiary))]`}>
+                <TabsList className={`grid w-full ${formData.is_master_client ? 'grid-cols-6' : 'grid-cols-8'} bg-[hsl(var(--background-tertiary))]`}>
                   <TabsTrigger value="basic">Basic</TabsTrigger>
                   <TabsTrigger value="master">Master WL</TabsTrigger>
                   <TabsTrigger value="branding"><Palette className="h-4 w-4 mr-1" />Branding</TabsTrigger>
                   <TabsTrigger value="search">Search</TabsTrigger>
                   <TabsTrigger value="intelligence"><Code className="h-4 w-4 mr-1" />Intelligence</TabsTrigger>
                   {!formData.is_master_client && <TabsTrigger value="chat">Chat</TabsTrigger>}
+                  {!formData.is_master_client && <TabsTrigger value="knowledge">Knowledge</TabsTrigger>}
                   <TabsTrigger value="agents"><Zap className="h-4 w-4 mr-1" />Agents</TabsTrigger>
                 </TabsList>
 
