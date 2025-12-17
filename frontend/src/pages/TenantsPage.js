@@ -1113,7 +1113,7 @@ export default function TenantsPage() {
                       </div>
                     </div>
                   </div>
-                </TabsContent>
+                </TabsContent>}
 
                 {/* Agent Config Tab (Mistral) */}
                 <TabsContent value="agents" className="space-y-4 mt-4">
