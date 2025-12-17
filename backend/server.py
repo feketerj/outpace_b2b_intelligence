@@ -61,6 +61,7 @@ api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])
 api_router.include_router(config.router, prefix="/config", tags=["Configuration"])
 api_router.include_router(upload.router, prefix="/upload", tags=["Upload"])
 api_router.include_router(sync.router, prefix="/sync", tags=["Sync"])
+api_router.include_router(rag.router, prefix="/tenants", tags=["RAG"])
 
 app.include_router(api_router)
 
