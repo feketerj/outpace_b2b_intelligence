@@ -89,6 +89,18 @@ export default function TenantsPage() {
         max_assistant_tokens: 1000,
         max_turns_history: 10
       },
+      tenant_knowledge: {
+        enabled: false,
+        company_profile: '',
+        key_facts: [],
+        offerings: [],
+        differentiators: [],
+        prohibited_claims: [],
+        tone_guidelines: '',
+        max_context_chars: 2000,
+        retrieval_mode: 'keyword',
+        max_snippets: 5
+      },
       agent_config: {
         scoring_agent_id: '',
         opportunities_chat_agent_id: '',
