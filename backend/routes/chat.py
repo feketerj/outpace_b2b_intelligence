@@ -174,15 +174,6 @@ async def send_chat_message(
     )
 
 
-def _to_dt(x):
-    """Convert timestamp to datetime, handling str and datetime inputs."""
-    if isinstance(x, datetime):
-        return x
-    if isinstance(x, str):
-        return datetime.fromisoformat(x.replace("Z", "+00:00"))
-    return datetime.now(timezone.utc)
-
-
 @router.get("/history/{conversation_id}", response_model=List[ChatMessage])
 async def get_chat_history(
     conversation_id: str,
