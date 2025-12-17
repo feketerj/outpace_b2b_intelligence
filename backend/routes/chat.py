@@ -77,6 +77,40 @@ async def send_chat_message(
             detail="Tenant not found"
         )
     
+    # === CHAT POLICY ENFORCEMENT (before any LLM call) ===
+    chat_policy = tenant.get("chat_policy", {})
+    
+    # Check if chat is enabled for tenant
+    if not chat_policy.get("enabled", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chat not enabled for tenant"
+        )
+    
+    # Validate conversation_id format
+    if len(conversation_id) > MAX_CONVERSATION_ID_LENGTH:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"conversation_id exceeds {MAX_CONVERSATION_ID_LENGTH} characters"
+        )
+    if not CONVERSATION_ID_PATTERN.match(conversation_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="conversation_id must contain only alphanumeric, dots, underscores, hyphens"
+        )
+    
+    # Validate message length
+    max_user_chars = chat_policy.get("max_user_chars", 2000)
+    if len(user_message) > max_user_chars:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"message exceeds {max_user_chars} characters"
+        )
+    
+    # Get policy values for LLM call
+    max_assistant_tokens = chat_policy.get("max_assistant_tokens", 1000)
+    max_turns_history = chat_policy.get("max_turns_history", 10)
+    
     agent_config = tenant.get("agent_config", {})
     
     # Determine instructions based on agent type
