@@ -1047,6 +1047,74 @@ export default function TenantsPage() {
                   </div>
                 </TabsContent>
 
+                {/* Chat Policy Tab (Super Admin Only) */}
+                <TabsContent value="chat" className="space-y-4 mt-4">
+                  <div className="bg-[hsl(var(--accent-warning))]/10 p-4 rounded border border-[hsl(var(--accent-warning))]/30 mb-4">
+                    <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-2">Chat Access Policy</p>
+                    <p className="text-xs text-[hsl(var(--foreground-secondary))]">Control tenant chat access and usage limits. Changes take effect immediately.</p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="chat_enabled"
+                        checked={formData.chat_policy?.enabled || false}
+                        onChange={(e) => setFormData({...formData, chat_policy: {...formData.chat_policy, enabled: e.target.checked}})}
+                        className="h-4 w-4"
+                      />
+                      <Label htmlFor="chat_enabled" className="text-[hsl(var(--foreground))]">Enable Chat for Tenant</Label>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Monthly Message Limit</Label>
+                        <Input
+                          type="number"
+                          placeholder="Unlimited"
+                          value={formData.chat_policy?.monthly_message_limit || ''}
+                          onChange={(e) => setFormData({...formData, chat_policy: {...formData.chat_policy, monthly_message_limit: e.target.value ? parseInt(e.target.value) : null}})}
+                          className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Leave empty for unlimited</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Max User Message Length</Label>
+                        <Input
+                          type="number"
+                          value={formData.chat_policy?.max_user_chars || 2000}
+                          onChange={(e) => setFormData({...formData, chat_policy: {...formData.chat_policy, max_user_chars: parseInt(e.target.value)}})}
+                          className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Characters (default: 2000)</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Max Assistant Response Tokens</Label>
+                        <Input
+                          type="number"
+                          value={formData.chat_policy?.max_assistant_tokens || 1000}
+                          onChange={(e) => setFormData({...formData, chat_policy: {...formData.chat_policy, max_assistant_tokens: parseInt(e.target.value)}})}
+                          className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">LLM output tokens (default: 1000)</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Max History Turns</Label>
+                        <Input
+                          type="number"
+                          value={formData.chat_policy?.max_turns_history || 10}
+                          onChange={(e) => setFormData({...formData, chat_policy: {...formData.chat_policy, max_turns_history: parseInt(e.target.value)}})}
+                          className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                        />
+                        <p className="text-xs text-[hsl(var(--foreground-muted))]">Turns sent to LLM for context (default: 10)</p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
                 {/* Agent Config Tab (Mistral) */}
                 <TabsContent value="agents" className="space-y-4 mt-4">
                   <div className="bg-[hsl(var(--accent-info))]/10 p-4 rounded border border-[hsl(var(--accent-info))]/30 mb-4">
