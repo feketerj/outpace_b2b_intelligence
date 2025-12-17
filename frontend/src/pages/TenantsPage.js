@@ -82,6 +82,13 @@ export default function TenantsPage() {
         lookback_days: 14,
         deadline_window_days: 120
       },
+      chat_policy: {
+        enabled: false,
+        monthly_message_limit: null,
+        max_user_chars: 2000,
+        max_assistant_tokens: 1000,
+        max_turns_history: 10
+      },
       agent_config: {
         scoring_agent_id: '',
         opportunities_chat_agent_id: '',
