@@ -238,7 +238,7 @@ async def create_knowledge_snippet(
     }
     
     await db.knowledge_snippets.insert_one(snippet_doc)
-    del snippet_doc["_id"] if "_id" in snippet_doc else None
+    snippet_doc.pop("_id", None)
     return snippet_doc
 
 
