@@ -156,7 +156,7 @@ async def send_chat_message(
                 {"role": "system", "content": instructions}
             ] + inputs,
             temperature=0.7,
-            max_tokens=2000
+            max_tokens=max_assistant_tokens
         )
         assistant_content = response.choices[0].message.content
         
