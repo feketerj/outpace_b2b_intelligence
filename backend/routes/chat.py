@@ -150,6 +150,15 @@ async def send_chat_message(
     return ChatTurn(**chat_turn_doc)
 
 
+def _to_dt(x):
+    """Convert timestamp to datetime, handling str and datetime inputs."""
+    if isinstance(x, datetime):
+        return x
+    if isinstance(x, str):
+        return datetime.fromisoformat(x.replace("Z", "+00:00"))
+    return datetime.now(timezone.utc)
+
+
 @router.get("/history/{conversation_id}", response_model=List[ChatMessage])
 async def get_chat_history(
     conversation_id: str,
@@ -157,22 +166,20 @@ async def get_chat_history(
 ):
     """
     Get chat history for a conversation.
-    DUAL-READ: Checks both chat_turns (new) and chat_messages (legacy) collections.
-    Returns flattened list of messages (user, assistant, user, assistant...) for compatibility.
+    DUAL-READ: Merges chat_turns (new) and chat_messages (legacy), sorted by created_at.
     """
     db = get_db()
-    messages = []
-    
-    # === SOURCE 1: New chat_turns collection ===
+    messages: List[ChatMessage] = []
+
+    # --- SOURCE 1: chat_turns ---
     turns_cursor = db.chat_turns.find(
         {"tenant_id": current_user.tenant_id, "conversation_id": conversation_id},
         {"_id": 0}
     ).sort("created_at", 1)
-    
+
     turns = await turns_cursor.to_list(length=100)
-    
+
     for turn in turns:
-        # User message
         messages.append(ChatMessage(
             id=f"{turn['id']}-user",
             conversation_id=turn["conversation_id"],
@@ -181,9 +188,8 @@ async def get_chat_history(
             role="user",
             content=turn["user"]["content"],
             agent_id=turn.get("agent_type"),
-            created_at=datetime.fromisoformat(turn["user"]["timestamp"].replace('Z', '+00:00'))
+            created_at=_to_dt(turn["user"]["timestamp"]),
         ))
-        # Assistant message
         messages.append(ChatMessage(
             id=f"{turn['id']}-assistant",
             conversation_id=turn["conversation_id"],
@@ -192,31 +198,42 @@ async def get_chat_history(
             role="assistant",
             content=turn["assistant"]["content"],
             agent_id=turn.get("agent_type"),
-            created_at=datetime.fromisoformat(turn["assistant"]["timestamp"].replace('Z', '+00:00'))
+            created_at=_to_dt(turn["assistant"]["timestamp"]),
         ))
-    
-    # === SOURCE 2: Legacy chat_messages collection (if no turns found) ===
-    if not messages:
-        legacy_cursor = db.chat_messages.find(
-            {"tenant_id": current_user.tenant_id, "conversation_id": conversation_id},
-            {"_id": 0}
-        ).sort("created_at", 1)
-        
-        legacy_msgs = await legacy_cursor.to_list(length=100)
-        
-        for msg in legacy_msgs:
-            messages.append(ChatMessage(
-                id=msg["id"],
-                conversation_id=msg["conversation_id"],
-                tenant_id=msg["tenant_id"],
-                user_id=msg["user_id"],
-                role=msg["role"],
-                content=msg["content"],
-                agent_id=msg.get("agent_id"),
-                created_at=datetime.fromisoformat(msg["created_at"].replace('Z', '+00:00')) if isinstance(msg["created_at"], str) else msg["created_at"]
-            ))
-    
-    return messages
+
+    # --- SOURCE 2: legacy chat_messages (always) ---
+    legacy_cursor = db.chat_messages.find(
+        {"tenant_id": current_user.tenant_id, "conversation_id": conversation_id},
+        {"_id": 0}
+    ).sort("created_at", 1)
+
+    legacy_msgs = await legacy_cursor.to_list(length=100)
+
+    for msg in legacy_msgs:
+        messages.append(ChatMessage(
+            id=msg["id"],
+            conversation_id=msg["conversation_id"],
+            tenant_id=msg["tenant_id"],
+            user_id=msg["user_id"],
+            role=msg["role"],
+            content=msg["content"],
+            agent_id=msg.get("agent_id"),
+            created_at=_to_dt(msg["created_at"]),
+        ))
+
+    # Sort by created_at for determinism
+    messages.sort(key=lambda m: m.created_at)
+
+    # De-dupe by id (in case same message exists in both sources)
+    seen = set()
+    deduped = []
+    for m in messages:
+        if m.id in seen:
+            continue
+        seen.add(m.id)
+        deduped.append(m)
+
+    return deduped
 
 
 @router.get("/turns/{conversation_id}", response_model=List[ChatTurn])
