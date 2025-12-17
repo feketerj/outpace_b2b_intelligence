@@ -141,13 +141,19 @@ async def update_tenant(
     # Update tenant
     update_data = {k: v for k, v in tenant_data.model_dump(exclude_unset=True).items() if v is not None}
     
-    # SECURITY: Block chat_policy updates for master tenants
-    # Master tenants do not use chat; this aligns with the UI hiding the Chat tab
-    if existing_tenant.get("is_master_client") and "chat_policy" in update_data:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="chat_policy cannot be modified for master tenants"
-        )
+    # SECURITY: Block chat_policy and tenant_knowledge updates for master tenants
+    # Master tenants do not use chat or knowledge base; aligns with UI hiding these tabs
+    if existing_tenant.get("is_master_client"):
+        if "chat_policy" in update_data:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="chat_policy cannot be modified for master tenants"
+            )
+        if "tenant_knowledge" in update_data:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="tenant_knowledge cannot be modified for master tenants"
+            )
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.tenants.update_one(
