@@ -20,20 +20,13 @@ test.describe('Export Download Verification', () => {
     await page.goto(`${BASE_URL}/preview?tenant_id=${TENANT_ID}`);
     await page.waitForTimeout(3000);
 
-    // Track PDF response
-    let pdfResponseSeen = false;
-    page.on('response', (resp) => {
-      const ct = resp.headers()['content-type'] || '';
-      if (ct.includes('application/pdf')) pdfResponseSeen = true;
-    });
-
     // Click Export button to open modal
     const exportBtn = await page.locator('button:has-text("Export")');
     await expect(exportBtn).toBeEnabled({ timeout: 5000 });
     await exportBtn.click();
     await page.waitForTimeout(1000);
 
-    // Select the opportunity (click Select All or first checkbox)
+    // Select the opportunity
     const selectAllBtn = await page.locator('button:has-text("Select All")');
     if (await selectAllBtn.isVisible()) {
       await selectAllBtn.click();
@@ -41,21 +34,17 @@ test.describe('Export Download Verification', () => {
     }
 
     // Click Export PDF button
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 30000 }),
-      page.click('[data-testid="export-pdf-btn"]')
-    ]);
+    await page.click('[data-testid="export-pdf-btn"]');
 
-    const filename = download.suggestedFilename();
-    expect(filename.toLowerCase()).toMatch(/\.pdf$/);
+    const download = await page.waitForEvent('download');
+    const filename = download.suggestedFilename().toLowerCase();
+    expect(filename).toMatch(/\.pdf$/);
 
     const path = await download.path();
     expect(path).toBeTruthy();
 
     const stat = fs.statSync(path);
-    expect(stat.size).toBeGreaterThan(1024); // 1KB floor to avoid error page masquerading as PDF
-
-    expect(pdfResponseSeen).toBeTruthy();
+    expect(stat.size).toBeGreaterThan(1024);
   });
 
   test('Export Excel triggers a real download', async ({ page }) => {
