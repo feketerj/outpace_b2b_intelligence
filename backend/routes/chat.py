@@ -410,12 +410,14 @@ Use these snippets to answer the user's question accurately."""
         "created_at": chat_turn_doc["assistant"]["timestamp"]
     }
     
-    # Add debug info for super admins with X-Debug-Knowledge header
-    if debug_knowledge:
-        response_data["_debug"] = {
-            "knowledge_injected_chars": knowledge_injected_chars,
-            "snippet_ids_used": snippet_ids_used
-        }
+    # Add debug info for super admins with X-Debug-Knowledge or X-Debug-Rag headers
+    if debug_knowledge or debug_rag:
+        response_data["_debug"] = {}
+        if debug_knowledge:
+            response_data["_debug"]["knowledge_injected_chars"] = knowledge_injected_chars
+            response_data["_debug"]["snippet_ids_used"] = snippet_ids_used
+        if debug_rag:
+            response_data["_debug"]["rag"] = rag_debug_info
     
     return response_data
 
