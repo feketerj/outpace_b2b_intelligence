@@ -380,17 +380,26 @@ Rules:
     
     # === ATOMIC SECTION END ===
     
-    # Return ChatMessage (assistant) for frontend compatibility
-    return ChatMessage(
-        id=f"{chat_turn_doc['id']}-assistant",
-        conversation_id=chat_turn_doc["conversation_id"],
-        tenant_id=chat_turn_doc["tenant_id"],
-        user_id=chat_turn_doc["user_id"],
-        role="assistant",
-        content=chat_turn_doc["assistant"]["content"],
-        agent_id=chat_turn_doc["agent_type"],
-        created_at=_to_dt(chat_turn_doc["assistant"]["timestamp"])
-    )
+    # Build response
+    response_data = {
+        "id": f"{chat_turn_doc['id']}-assistant",
+        "conversation_id": chat_turn_doc["conversation_id"],
+        "tenant_id": chat_turn_doc["tenant_id"],
+        "user_id": chat_turn_doc["user_id"],
+        "role": "assistant",
+        "content": chat_turn_doc["assistant"]["content"],
+        "agent_id": chat_turn_doc["agent_type"],
+        "created_at": chat_turn_doc["assistant"]["timestamp"]
+    }
+    
+    # Add debug info for super admins with X-Debug-Knowledge header
+    if debug_knowledge:
+        response_data["_debug"] = {
+            "knowledge_injected_chars": knowledge_injected_chars,
+            "snippet_ids_used": snippet_ids_used
+        }
+    
+    return response_data
 
 
 @router.get("/history/{conversation_id}", response_model=List[ChatMessage])
