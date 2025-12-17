@@ -1047,8 +1047,8 @@ export default function TenantsPage() {
                   </div>
                 </TabsContent>
 
-                {/* Chat Policy Tab (Super Admin Only) */}
-                <TabsContent value="chat" className="space-y-4 mt-4">
+                {/* Chat Policy Tab (Super Admin Only, Not Master Tenants) */}
+                {!formData.is_master_client && <TabsContent value="chat" className="space-y-4 mt-4">
                   <div className="bg-[hsl(var(--accent-warning))]/10 p-4 rounded border border-[hsl(var(--accent-warning))]/30 mb-4">
                     <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-2">Chat Access Policy</p>
                     <p className="text-xs text-[hsl(var(--foreground-secondary))]">Control tenant chat access and usage limits. Changes take effect immediately.</p>
