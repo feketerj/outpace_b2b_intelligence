@@ -233,6 +233,7 @@ class TenantUpdate(MongoModel):
     agent_config: Optional[MistralAgentConfig] = None
     chat_policy: Optional[ChatPolicy] = None
     tenant_knowledge: Optional[TenantKnowledge] = None
+    rag_policy: Optional[RAGPolicy] = None
     status: Optional[TenantStatus] = None
 
 class Tenant(TenantBase):
