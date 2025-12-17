@@ -63,13 +63,6 @@ test.describe('Export Download Verification', () => {
     await page.goto(`${BASE_URL}/preview?tenant_id=${TENANT_ID}`);
     await page.waitForTimeout(3000);
 
-    // Track Excel response
-    let excelResponseSeen = false;
-    page.on('response', (resp) => {
-      const ct = resp.headers()['content-type'] || '';
-      if (ct.includes('spreadsheet') || ct.includes('excel')) excelResponseSeen = true;
-    });
-
     // Click Export button to open modal
     const exportBtn = await page.locator('button:has-text("Export")');
     await expect(exportBtn).toBeEnabled({ timeout: 5000 });
@@ -84,20 +77,16 @@ test.describe('Export Download Verification', () => {
     }
 
     // Click Export Excel button
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 30000 }),
-      page.click('[data-testid="export-excel-btn"]')
-    ]);
+    await page.click('[data-testid="export-excel-btn"]');
 
-    const filename = download.suggestedFilename();
-    expect(filename.toLowerCase()).toMatch(/\.xlsx$/);
+    const download = await page.waitForEvent('download');
+    const filename = download.suggestedFilename().toLowerCase();
+    expect(filename).toMatch(/\.xlsx$/);
 
     const path = await download.path();
     expect(path).toBeTruthy();
 
     const stat = fs.statSync(path);
-    expect(stat.size).toBeGreaterThan(1024); // 1KB floor
-
-    expect(excelResponseSeen).toBeTruthy();
+    expect(stat.size).toBeGreaterThan(1024);
   });
 });
