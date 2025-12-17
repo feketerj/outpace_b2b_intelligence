@@ -153,6 +153,7 @@ async def send_chat_message(
     
     # Debug mode only for super admins
     debug_knowledge = x_debug_knowledge == "true" and current_user.role == "super_admin"
+    debug_rag = x_debug_rag == "true" and current_user.role == "super_admin"
     
     conversation_id = message_data.get("conversation_id")
     user_message = message_data.get("message")
