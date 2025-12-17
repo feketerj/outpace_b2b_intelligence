@@ -141,6 +141,7 @@ export default function TenantsPage() {
         search_profile: tenant.search_profile || getEmptyFormData().search_profile,
         intelligence_config: tenant.intelligence_config || getEmptyFormData().intelligence_config,
         chat_policy: tenant.chat_policy || getEmptyFormData().chat_policy,
+        tenant_knowledge: tenant.tenant_knowledge || getEmptyFormData().tenant_knowledge,
         agent_config: tenant.agent_config || getEmptyFormData().agent_config,
         scoring_weights: tenant.scoring_weights || getEmptyFormData().scoring_weights
       });
