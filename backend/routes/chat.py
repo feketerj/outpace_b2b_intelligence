@@ -107,6 +107,58 @@ async def send_chat_message(
             detail=f"message exceeds {max_user_chars} characters"
         )
     
+    # === QUOTA RESERVATION (before LLM call to avoid wasting tokens) ===
+    monthly_limit = chat_policy.get("monthly_message_limit")
+    quota_reserved = False
+    
+    if monthly_limit is not None:
+        month_key = datetime.now(timezone.utc).strftime("%Y-%m")
+        
+        # Atomic reservation: try to reset month OR increment within limit
+        # Strategy: Two-phase attempt for Mongo standalone (no transactions)
+        
+        # Phase 1: Try resetting if month changed (new month = fresh quota)
+        reset_result = await db.tenants.update_one(
+            {
+                "id": current_user.tenant_id,
+                "$or": [
+                    {"chat_usage": None},
+                    {"chat_usage.month": {"$ne": month_key}}
+                ]
+            },
+            {
+                "$set": {
+                    "chat_usage": {"month": month_key, "messages_used": 1}
+                }
+            }
+        )
+        
+        if reset_result.modified_count > 0:
+            quota_reserved = True
+            logger.info(f"[quota] New month reservation for tenant {current_user.tenant_id}: month={month_key}")
+        else:
+            # Phase 2: Same month - try incrementing if under limit
+            inc_result = await db.tenants.update_one(
+                {
+                    "id": current_user.tenant_id,
+                    "chat_usage.month": month_key,
+                    "chat_usage.messages_used": {"$lt": monthly_limit}
+                },
+                {
+                    "$inc": {"chat_usage.messages_used": 1}
+                }
+            )
+            
+            if inc_result.modified_count > 0:
+                quota_reserved = True
+                logger.info(f"[quota] Incremented usage for tenant {current_user.tenant_id}")
+            else:
+                # Quota exceeded
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Monthly chat limit exceeded"
+                )
+    
     # Get policy values for LLM call
     max_assistant_tokens = chat_policy.get("max_assistant_tokens", 1000)
     max_turns_history = chat_policy.get("max_turns_history", 10)
