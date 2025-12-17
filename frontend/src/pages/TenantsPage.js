@@ -1129,6 +1129,140 @@ export default function TenantsPage() {
                   </div>
                 </TabsContent>}
 
+                {/* Knowledge Base Tab (Mini-RAG, Not Master Tenants) */}
+                {!formData.is_master_client && <TabsContent value="knowledge" className="space-y-4 mt-4">
+                  <div className="bg-[hsl(var(--accent-info))]/10 p-4 rounded border border-[hsl(var(--accent-info))]/30 mb-4">
+                    <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-2">Tenant Knowledge Base (Mini-RAG)</p>
+                    <p className="text-xs text-[hsl(var(--foreground-secondary))]">
+                      Configure knowledge that will be injected into chat context. The assistant will use this to answer questions about the tenant/company.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="knowledge_enabled"
+                        checked={formData.tenant_knowledge?.enabled || false}
+                        onChange={(e) => setFormData({...formData, tenant_knowledge: {...formData.tenant_knowledge, enabled: e.target.checked}})}
+                        className="h-4 w-4"
+                      />
+                      <Label htmlFor="knowledge_enabled" className="text-[hsl(var(--foreground))]">Enable Tenant Knowledge</Label>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[hsl(var(--foreground))]">Company Profile</Label>
+                      <Textarea
+                        placeholder="Enter company profile, mission, and key background information..."
+                        value={formData.tenant_knowledge?.company_profile || ''}
+                        onChange={(e) => setFormData({...formData, tenant_knowledge: {...formData.tenant_knowledge, company_profile: e.target.value}})}
+                        rows={4}
+                        className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Key Facts (one per line)</Label>
+                        <Textarea
+                          placeholder="Founded in 2010&#10;Headquartered in DC&#10;500+ employees"
+                          value={(formData.tenant_knowledge?.key_facts || []).join('\n')}
+                          onChange={(e) => setFormData({...formData, tenant_knowledge: {...formData.tenant_knowledge, key_facts: e.target.value.split('\n').filter(x => x.trim())}})}
+                          rows={4}
+                          className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Offerings (one per line)</Label>
+                        <Textarea
+                          placeholder="Cloud migration services&#10;Cybersecurity consulting&#10;AI/ML solutions"
+                          value={(formData.tenant_knowledge?.offerings || []).join('\n')}
+                          onChange={(e) => setFormData({...formData, tenant_knowledge: {...formData.tenant_knowledge, offerings: e.target.value.split('\n').filter(x => x.trim())}})}
+                          rows={4}
+                          className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Differentiators (one per line)</Label>
+                        <Textarea
+                          placeholder="FedRAMP High authorized&#10;CMMC Level 3 certified&#10;24/7 SOC operations"
+                          value={(formData.tenant_knowledge?.differentiators || []).join('\n')}
+                          onChange={(e) => setFormData({...formData, tenant_knowledge: {...formData.tenant_knowledge, differentiators: e.target.value.split('\n').filter(x => x.trim())}})}
+                          rows={4}
+                          className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[hsl(var(--foreground))]">Prohibited Claims (one per line)</Label>
+                        <Textarea
+                          placeholder="Do not claim Top Secret clearance&#10;Do not mention competitor names&#10;Do not promise specific timelines"
+                          value={(formData.tenant_knowledge?.prohibited_claims || []).join('\n')}
+                          onChange={(e) => setFormData({...formData, tenant_knowledge: {...formData.tenant_knowledge, prohibited_claims: e.target.value.split('\n').filter(x => x.trim())}})}
+                          rows={4}
+                          className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[hsl(var(--foreground))]">Tone Guidelines</Label>
+                      <Textarea
+                        placeholder="Be professional and concise. Use technical terms when appropriate. Avoid jargon with non-technical audiences."
+                        value={formData.tenant_knowledge?.tone_guidelines || ''}
+                        onChange={(e) => setFormData({...formData, tenant_knowledge: {...formData.tenant_knowledge, tone_guidelines: e.target.value}})}
+                        rows={2}
+                        className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                      />
+                    </div>
+
+                    <div className="border-t border-[hsl(var(--border))] pt-4">
+                      <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">Retrieval Settings</h4>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[hsl(var(--foreground))]">Max Context Characters</Label>
+                          <Input
+                            type="number"
+                            value={formData.tenant_knowledge?.max_context_chars || 2000}
+                            onChange={(e) => setFormData({...formData, tenant_knowledge: {...formData.tenant_knowledge, max_context_chars: parseInt(e.target.value)}})}
+                            className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                          />
+                          <p className="text-xs text-[hsl(var(--foreground-muted))]">Hard limit on injected context</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[hsl(var(--foreground))]">Retrieval Mode</Label>
+                          <Select 
+                            value={formData.tenant_knowledge?.retrieval_mode || 'keyword'} 
+                            onValueChange={(value) => setFormData({...formData, tenant_knowledge: {...formData.tenant_knowledge, retrieval_mode: value}})}
+                          >
+                            <SelectTrigger className="bg-[hsl(var(--background))] border-[hsl(var(--border))]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]">
+                              <SelectItem value="none">None (base context only)</SelectItem>
+                              <SelectItem value="keyword">Keyword (match snippets)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[hsl(var(--foreground))]">Max Snippets</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            max="20"
+                            value={formData.tenant_knowledge?.max_snippets || 5}
+                            onChange={(e) => setFormData({...formData, tenant_knowledge: {...formData.tenant_knowledge, max_snippets: parseInt(e.target.value)}})}
+                            className="bg-[hsl(var(--background))] border-[hsl(var(--border))] text-[hsl(var(--foreground))]"
+                          />
+                          <p className="text-xs text-[hsl(var(--foreground-muted))]">Top N snippets to include</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>}
+
                 {/* Agent Config Tab (Mistral) */}
                 <TabsContent value="agents" className="space-y-4 mt-4">
                   <div className="bg-[hsl(var(--accent-info))]/10 p-4 rounded border border-[hsl(var(--accent-info))]/30 mb-4">
