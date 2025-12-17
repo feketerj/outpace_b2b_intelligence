@@ -254,11 +254,30 @@ async def send_chat_message(
     
     agent_config = tenant.get("agent_config", {})
     
-    # Determine instructions based on agent type
+    # Determine base instructions based on agent type
     if agent_type == "opportunities":
-        instructions = agent_config.get("opportunities_chat_instructions", "You are a helpful assistant.")
+        base_instructions = agent_config.get("opportunities_chat_instructions", "You are a helpful assistant.")
     else:
-        instructions = agent_config.get("intelligence_chat_instructions", "You are a business intelligence analyst.")
+        base_instructions = agent_config.get("intelligence_chat_instructions", "You are a business intelligence analyst.")
+    
+    # === MINI-RAG: Build and inject tenant knowledge ===
+    knowledge_context, snippet_ids_used = await _build_knowledge_context(db, tenant, user_message)
+    knowledge_injected_chars = len(knowledge_context)
+    
+    if knowledge_context:
+        instructions = f"""{base_instructions}
+
+Tenant Knowledge (authoritative, do not contradict):
+{knowledge_context}
+
+Rules:
+- If the user asks something that conflicts with the Tenant Knowledge above, prefer the knowledge and say so.
+- Do not invent facts beyond what is in Tenant Knowledge.
+- Do not claim any items listed under Prohibited Claims."""
+        logger.info(f"[knowledge] Injected {knowledge_injected_chars} chars, snippets={snippet_ids_used}")
+    else:
+        instructions = base_instructions
+        logger.debug("[knowledge] No knowledge context (disabled or empty)")
     
     # Get conversation history from chat_turns collection (last N turns per policy)
     history_cursor = db.chat_turns.find(
