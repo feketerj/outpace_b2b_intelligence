@@ -192,6 +192,7 @@ export const ExportModal = ({
 
         <div className="flex gap-2 pt-4 border-t border-[hsl(var(--border))]">
           <Button
+            data-testid="export-pdf-btn"
             onClick={() => handleExport('pdf')}
             disabled={exporting}
             className="flex-1 text-white"
@@ -201,6 +202,7 @@ export const ExportModal = ({
             {exporting ? 'Exporting...' : 'Export PDF'}
           </Button>
           <Button
+            data-testid="export-excel-btn"
             onClick={() => handleExport('excel')}
             disabled={exporting}
             className="flex-1 text-white"
