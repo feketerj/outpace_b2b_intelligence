@@ -206,6 +206,7 @@ class TenantBase(MongoModel):
     intelligence_config: IntelligenceConfig = Field(default_factory=IntelligenceConfig)
     chat_policy: ChatPolicy = Field(default_factory=ChatPolicy)
     chat_usage: Optional[ChatUsage] = None  # Lazily initialized on first chat
+    tenant_knowledge: Optional[TenantKnowledge] = None  # Mini-RAG knowledge base
     status: TenantStatus = TenantStatus.ACTIVE
 
 class TenantCreate(TenantBase):
