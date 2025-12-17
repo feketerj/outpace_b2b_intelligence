@@ -71,7 +71,7 @@ async def send_chat_message(
     else:
         instructions = agent_config.get("intelligence_chat_instructions", "You are a business intelligence analyst.")
     
-    # Get conversation history from chat_turns collection
+    # Get conversation history from chat_turns collection (last 10 turns)
     history_cursor = db.chat_turns.find(
         {"tenant_id": current_user.tenant_id, "conversation_id": conversation_id},
         {"_id": 0}
