@@ -218,6 +218,7 @@ class TenantBase(MongoModel):
     chat_policy: ChatPolicy = Field(default_factory=ChatPolicy)
     chat_usage: Optional[ChatUsage] = None  # Lazily initialized on first chat
     tenant_knowledge: Optional[TenantKnowledge] = None  # Mini-RAG knowledge base
+    rag_policy: Optional[RAGPolicy] = None  # Real embeddings RAG (super-admin only)
     status: TenantStatus = TenantStatus.ACTIVE
 
 class TenantCreate(TenantBase):
