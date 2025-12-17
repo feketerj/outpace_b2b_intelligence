@@ -220,6 +220,7 @@ class TenantUpdate(MongoModel):
     scoring_weights: Optional[ScoringWeights] = None
     agent_config: Optional[MistralAgentConfig] = None
     chat_policy: Optional[ChatPolicy] = None
+    tenant_knowledge: Optional[TenantKnowledge] = None
     status: Optional[TenantStatus] = None
 
 class Tenant(TenantBase):
