@@ -127,8 +127,6 @@ async def _build_knowledge_context(db, tenant: dict, user_message: str) -> tuple
     return knowledge_context, snippet_ids_used
 
 
-from fastapi import Header
-
 @router.post("/message")
 async def send_chat_message(
     message_data: dict = Body(...),
