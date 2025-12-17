@@ -193,8 +193,21 @@ async def send_chat_message(
     # INVARIANT: ChatTurn insert is single-operation atomic persistence.
     # Any failure returns 5xx and persists nothing.
     
+    # Helper to release quota reservation on failure (best-effort)
+    async def release_quota():
+        if quota_reserved and monthly_limit is not None:
+            try:
+                await db.tenants.update_one(
+                    {"id": current_user.tenant_id, "chat_usage.messages_used": {"$gt": 0}},
+                    {"$inc": {"chat_usage.messages_used": -1}}
+                )
+                logger.info(f"[quota] Released reservation for tenant {current_user.tenant_id}")
+            except Exception as release_err:
+                logger.warning(f"[quota] Failed to release reservation: {release_err}")
+    
     if not MISTRAL_API_KEY:
         logger.error("MISTRAL_API_KEY not configured")
+        await release_quota()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="LLM service not configured"
@@ -215,6 +228,7 @@ async def send_chat_message(
     except Exception as e:
         err_id = str(uuid.uuid4())
         logger.exception(f"[chat_llm_error:{err_id}] Mistral API error")
+        await release_quota()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"LLM service unavailable (error_id={err_id})"
@@ -245,6 +259,7 @@ async def send_chat_message(
         await db.chat_turns.insert_one(chat_turn_doc)
     except Exception as e:
         logger.error(f"Database insert error: {e}")
+        await release_quota()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to save chat turn"
