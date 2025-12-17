@@ -86,7 +86,9 @@ async def send_chat_message(
     user_timestamp = datetime.now(timezone.utc).isoformat()
     
     # === ATOMIC SECTION START ===
-    # Call LLM FIRST - if this fails, no DB write occurs
+    # INVARIANT: LLM must succeed before any DB write.
+    # INVARIANT: ChatTurn insert is single-operation atomic persistence.
+    # Any failure returns 5xx and persists nothing.
     
     if not MISTRAL_API_KEY:
         logger.error("MISTRAL_API_KEY not configured")
