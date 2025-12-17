@@ -186,5 +186,104 @@ async def delete_tenant(
     await db.opportunities.delete_many({"tenant_id": tenant_id})
     await db.intelligence.delete_many({"tenant_id": tenant_id})
     await db.chat_messages.delete_many({"tenant_id": tenant_id})
+    await db.knowledge_snippets.delete_many({"tenant_id": tenant_id})
+    
+    return None
+
+
+# ==================== KNOWLEDGE SNIPPETS (SUPER ADMIN ONLY) ====================
+
+@router.get("/{tenant_id}/knowledge-snippets")
+async def list_knowledge_snippets(
+    tenant_id: str,
+    current_user: TokenData = Depends(get_current_super_admin)
+):
+    """List all knowledge snippets for a tenant (Super Admin only)"""
+    db = get_db()
+    
+    cursor = db.knowledge_snippets.find(
+        {"tenant_id": tenant_id},
+        {"_id": 0}
+    ).sort("created_at", -1)
+    
+    snippets = await cursor.to_list(length=100)
+    return snippets
+
+
+@router.post("/{tenant_id}/knowledge-snippets")
+async def create_knowledge_snippet(
+    tenant_id: str,
+    snippet_data: dict,
+    current_user: TokenData = Depends(get_current_super_admin)
+):
+    """Create a knowledge snippet (Super Admin only, not for master tenants)"""
+    db = get_db()
+    
+    # Check tenant exists and is not master
+    tenant = await db.tenants.find_one({"id": tenant_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    if tenant.get("is_master_client"):
+        raise HTTPException(status_code=403, detail="Knowledge snippets not allowed for master tenants")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    snippet_doc = {
+        "id": str(uuid.uuid4()),
+        "tenant_id": tenant_id,
+        "title": snippet_data.get("title", ""),
+        "content": snippet_data.get("content", ""),
+        "tags": snippet_data.get("tags", []),
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.knowledge_snippets.insert_one(snippet_doc)
+    del snippet_doc["_id"] if "_id" in snippet_doc else None
+    return snippet_doc
+
+
+@router.put("/{tenant_id}/knowledge-snippets/{snippet_id}")
+async def update_knowledge_snippet(
+    tenant_id: str,
+    snippet_id: str,
+    snippet_data: dict,
+    current_user: TokenData = Depends(get_current_super_admin)
+):
+    """Update a knowledge snippet (Super Admin only)"""
+    db = get_db()
+    
+    # Find existing snippet
+    existing = await db.knowledge_snippets.find_one({"id": snippet_id, "tenant_id": tenant_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Snippet not found")
+    
+    update_data = {
+        "title": snippet_data.get("title", existing.get("title", "")),
+        "content": snippet_data.get("content", existing.get("content", "")),
+        "tags": snippet_data.get("tags", existing.get("tags", [])),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.knowledge_snippets.update_one(
+        {"id": snippet_id, "tenant_id": tenant_id},
+        {"$set": update_data}
+    )
+    
+    updated = await db.knowledge_snippets.find_one({"id": snippet_id}, {"_id": 0})
+    return updated
+
+
+@router.delete("/{tenant_id}/knowledge-snippets/{snippet_id}", status_code=204)
+async def delete_knowledge_snippet(
+    tenant_id: str,
+    snippet_id: str,
+    current_user: TokenData = Depends(get_current_super_admin)
+):
+    """Delete a knowledge snippet (Super Admin only)"""
+    db = get_db()
+    
+    result = await db.knowledge_snippets.delete_one({"id": snippet_id, "tenant_id": tenant_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Snippet not found")
     
     return None
