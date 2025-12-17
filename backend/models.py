@@ -161,6 +161,12 @@ class ChatPolicy(MongoModel):
     max_turns_history: int = 10
 
 
+class ChatUsage(MongoModel):
+    """Tracks monthly chat usage for quota enforcement"""
+    month: str = ""  # Format: "YYYY-MM"
+    messages_used: int = 0
+
+
 class TenantBase(MongoModel):
     name: str
     slug: str
