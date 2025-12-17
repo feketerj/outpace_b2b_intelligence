@@ -179,6 +179,7 @@ class TenantBase(MongoModel):
     agent_config: MistralAgentConfig = Field(default_factory=MistralAgentConfig)
     intelligence_config: IntelligenceConfig = Field(default_factory=IntelligenceConfig)
     chat_policy: ChatPolicy = Field(default_factory=ChatPolicy)
+    chat_usage: Optional[ChatUsage] = None  # Lazily initialized on first chat
     status: TenantStatus = TenantStatus.ACTIVE
 
 class TenantCreate(TenantBase):
