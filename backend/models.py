@@ -182,6 +182,17 @@ class TenantKnowledge(MongoModel):
     max_snippets: int = 5
 
 
+class RAGPolicy(MongoModel):
+    """Tenant RAG policy for real embeddings-based retrieval (super-admin only)"""
+    enabled: bool = False
+    max_documents: int = 0
+    max_chunks: int = 0
+    top_k: int = 5
+    min_score: float = 0.25
+    max_context_chars: int = 2000
+    embed_model: str = "mistral-embed"
+
+
 class KnowledgeSnippet(MongoModel):
     """Individual knowledge snippet for retrieval"""
     id: str
