@@ -131,7 +131,8 @@ async def _build_knowledge_context(db, tenant: dict, user_message: str) -> tuple
 async def send_chat_message(
     message_data: dict = Body(...),
     current_user: TokenData = Depends(get_current_user),
-    x_debug_knowledge: Optional[str] = Header(None, alias="X-Debug-Knowledge")
+    x_debug_knowledge: Optional[str] = Header(None, alias="X-Debug-Knowledge"),
+    x_debug_rag: Optional[str] = Header(None, alias="X-Debug-Rag")
 ):
     """
     Send message to Mistral agent (ATOMIC).
