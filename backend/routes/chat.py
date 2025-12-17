@@ -286,6 +286,22 @@ Rules:
         instructions = base_instructions
         logger.debug("[knowledge] No knowledge context (disabled or empty)")
     
+    # === REAL RAG: Embeddings-based retrieval ===
+    from routes.rag import retrieve_rag_context
+    rag_policy = tenant.get("rag_policy") or {}
+    rag_context, rag_debug_info = await retrieve_rag_context(
+        db, current_user.tenant_id, user_message, rag_policy, debug=debug_rag
+    )
+    
+    if rag_context:
+        instructions = f"""{instructions}
+
+Tenant Knowledge Snippets (retrieved via semantic search):
+{rag_context}
+
+Use these snippets to answer the user's question accurately."""
+        logger.info(f"[rag] Injected {len(rag_context)} chars, chunks={rag_debug_info.get('chunks_used', 0)}")
+    
     # Get conversation history from chat_turns collection (last N turns per policy)
     history_cursor = db.chat_turns.find(
         {"tenant_id": current_user.tenant_id, "conversation_id": conversation_id},
