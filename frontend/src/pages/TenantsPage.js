@@ -409,7 +409,7 @@ export default function TenantsPage() {
                   <TabsTrigger value="branding"><Palette className="h-4 w-4 mr-1" />Branding</TabsTrigger>
                   <TabsTrigger value="search">Search</TabsTrigger>
                   <TabsTrigger value="intelligence"><Code className="h-4 w-4 mr-1" />Intelligence</TabsTrigger>
-                  <TabsTrigger value="chat">Chat</TabsTrigger>
+                  {!formData.is_master_client && <TabsTrigger value="chat">Chat</TabsTrigger>}
                   <TabsTrigger value="agents"><Zap className="h-4 w-4 mr-1" />Agents</TabsTrigger>
                 </TabsList>
 
