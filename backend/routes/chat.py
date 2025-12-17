@@ -38,6 +38,95 @@ def _to_dt(x):
     return datetime.now(timezone.utc)
 
 
+def _tokenize(text: str) -> set:
+    """Simple tokenizer for keyword matching."""
+    return set(re.findall(r'[a-z0-9]+', text.lower()))
+
+
+async def _build_knowledge_context(db, tenant: dict, user_message: str) -> tuple:
+    """
+    Build knowledge context for Mini-RAG injection.
+    Returns: (knowledge_context: str, snippet_ids_used: list)
+    """
+    knowledge = tenant.get("tenant_knowledge") or {}
+    
+    if not knowledge.get("enabled", False):
+        return "", []
+    
+    max_chars = knowledge.get("max_context_chars", 2000)
+    retrieval_mode = knowledge.get("retrieval_mode", "keyword")
+    max_snippets = knowledge.get("max_snippets", 5)
+    
+    # Build base context from structured fields
+    sections = []
+    
+    if knowledge.get("company_profile"):
+        sections.append(f"Company Profile:\n{knowledge['company_profile']}")
+    
+    if knowledge.get("key_facts"):
+        facts = "\n".join(f"• {f}" for f in knowledge["key_facts"] if f)
+        if facts:
+            sections.append(f"Key Facts:\n{facts}")
+    
+    if knowledge.get("offerings"):
+        offerings = "\n".join(f"• {o}" for o in knowledge["offerings"] if o)
+        if offerings:
+            sections.append(f"Offerings:\n{offerings}")
+    
+    if knowledge.get("differentiators"):
+        diffs = "\n".join(f"• {d}" for d in knowledge["differentiators"] if d)
+        if diffs:
+            sections.append(f"Differentiators:\n{diffs}")
+    
+    if knowledge.get("prohibited_claims"):
+        prohibited = "\n".join(f"• {p}" for p in knowledge["prohibited_claims"] if p)
+        if prohibited:
+            sections.append(f"Prohibited Claims (do NOT make these claims):\n{prohibited}")
+    
+    if knowledge.get("tone_guidelines"):
+        sections.append(f"Tone Guidelines:\n{knowledge['tone_guidelines']}")
+    
+    # Snippet retrieval (keyword mode)
+    snippet_ids_used = []
+    if retrieval_mode == "keyword" and max_snippets > 0:
+        tenant_id = tenant.get("id")
+        snippets_cursor = db.knowledge_snippets.find(
+            {"tenant_id": tenant_id},
+            {"_id": 0}
+        )
+        snippets = await snippets_cursor.to_list(length=100)
+        
+        if snippets:
+            user_tokens = _tokenize(user_message)
+            scored_snippets = []
+            
+            for snip in snippets:
+                # Score by token overlap with content + tags
+                snip_text = f"{snip.get('title', '')} {snip.get('content', '')} {' '.join(snip.get('tags', []))}"
+                snip_tokens = _tokenize(snip_text)
+                overlap = len(user_tokens & snip_tokens)
+                if overlap > 0:
+                    scored_snippets.append((overlap, snip))
+            
+            # Sort by score descending, take top N
+            scored_snippets.sort(key=lambda x: x[0], reverse=True)
+            top_snippets = scored_snippets[:max_snippets]
+            
+            if top_snippets:
+                snip_texts = []
+                for _, snip in top_snippets:
+                    snip_texts.append(f"[{snip.get('title', 'Snippet')}]: {snip.get('content', '')}")
+                    snippet_ids_used.append(snip.get("id"))
+                sections.append(f"Relevant Snippets:\n" + "\n".join(snip_texts))
+    
+    # Combine and enforce max_context_chars
+    knowledge_context = "\n\n".join(sections)
+    if len(knowledge_context) > max_chars:
+        knowledge_context = knowledge_context[:max_chars]
+    
+    return knowledge_context, snippet_ids_used
+
+
 @router.post("/message", response_model=ChatMessage)
 async def send_chat_message(
     message_data: dict = Body(...),
