@@ -156,20 +156,20 @@ async def get_chat_history(
 ):
     """
     Get chat history for a conversation.
+    DUAL-READ: Checks both chat_turns (new) and chat_messages (legacy) collections.
     Returns flattened list of messages (user, assistant, user, assistant...) for compatibility.
     """
     db = get_db()
+    messages = []
     
-    # Query chat_turns collection
-    cursor = db.chat_turns.find(
+    # === SOURCE 1: New chat_turns collection ===
+    turns_cursor = db.chat_turns.find(
         {"tenant_id": current_user.tenant_id, "conversation_id": conversation_id},
         {"_id": 0}
     ).sort("created_at", 1)
     
-    turns = await cursor.to_list(length=100)
+    turns = await turns_cursor.to_list(length=100)
     
-    # Flatten turns into message list for backward compatibility
-    messages = []
     for turn in turns:
         # User message
         messages.append(ChatMessage(
@@ -193,6 +193,27 @@ async def get_chat_history(
             agent_id=turn.get("agent_type"),
             created_at=datetime.fromisoformat(turn["assistant"]["timestamp"].replace('Z', '+00:00'))
         ))
+    
+    # === SOURCE 2: Legacy chat_messages collection (if no turns found) ===
+    if not messages:
+        legacy_cursor = db.chat_messages.find(
+            {"tenant_id": current_user.tenant_id, "conversation_id": conversation_id},
+            {"_id": 0}
+        ).sort("created_at", 1)
+        
+        legacy_msgs = await legacy_cursor.to_list(length=100)
+        
+        for msg in legacy_msgs:
+            messages.append(ChatMessage(
+                id=msg["id"],
+                conversation_id=msg["conversation_id"],
+                tenant_id=msg["tenant_id"],
+                user_id=msg["user_id"],
+                role=msg["role"],
+                content=msg["content"],
+                agent_id=msg.get("agent_id"),
+                created_at=datetime.fromisoformat(msg["created_at"].replace('Z', '+00:00')) if isinstance(msg["created_at"], str) else msg["created_at"]
+            ))
     
     return messages
 
