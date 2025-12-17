@@ -24,7 +24,7 @@ class LLMServiceError(Exception):
     pass
 
 
-@router.post("/message", response_model=ChatTurn)
+@router.post("/message", response_model=ChatMessage)
 async def send_chat_message(
     message_data: dict = Body(...),
     current_user: TokenData = Depends(get_current_user)
@@ -37,6 +37,9 @@ async def send_chat_message(
     - Single document contains both user and assistant messages
     - If LLM fails, nothing is persisted
     - HTTP 503 returned on LLM failure (not 200 with fallback)
+    
+    Returns: ChatMessage (assistant) for frontend compatibility.
+    Storage: ChatTurn (atomic single-document).
     
     Expects: {"conversation_id": str, "message": str, "agent_type": "opportunities" | "intelligence"}
     """
