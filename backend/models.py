@@ -256,6 +256,21 @@ class ChatMessage(ChatMessageBase):
     user_id: str
     created_at: datetime
 
+# Atomic Chat Turn Model (single document for atomicity)
+class ChatTurnMessage(MongoModel):
+    content: str
+    timestamp: str
+
+class ChatTurn(MongoModel):
+    id: str
+    conversation_id: str
+    tenant_id: str
+    user_id: str
+    user: ChatTurnMessage
+    assistant: ChatTurnMessage
+    agent_type: str
+    created_at: str
+
 # Sync Log Models
 class SyncLog(MongoModel):
     id: str
