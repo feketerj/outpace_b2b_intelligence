@@ -108,10 +108,11 @@ async def send_chat_message(
         assistant_content = response.choices[0].message.content
         
     except Exception as e:
-        logger.error(f"Mistral API error: {e}")
+        err_id = str(uuid.uuid4())
+        logger.exception(f"[chat_llm_error:{err_id}] Mistral API error")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"LLM service unavailable: {str(e)[:100]}"
+            detail=f"LLM service unavailable (error_id={err_id})"
         )
     
     assistant_timestamp = datetime.now(timezone.utc).isoformat()
