@@ -1,623 +1,296 @@
 {
   "app": "OutPace Intelligence Platform",
-  "version": "1.0.0",
-  "generated": "2025-12-18",
-  "total_endpoints": 46,
-  "feature_groups": [
+  "as_of": "2025-12-18",
+  "inventory_source": {
+    "backend_routes_runtime": "python3 from server import app; print(app.routes)",
+    "backend_grep": "grep -RIn (HigherGov|Perplexity|Mistral|sync|scheduler|upload|branding|logo|master_branding)",
+    "frontend_pages": "frontend/src/pages/*.js"
+  },
+  "roles": {
+    "super_admin": {
+      "description": "Control plane. Can manage tenants/users/config and trigger sync. Can view tenant data via tenant_id parameter where supported."
+    },
+    "tenant_user": {
+      "description": "Consumption plane. Tenant-scoped access to opps/intel/chat/exports/preview."
+    }
+  },
+  "global_invariants": [
     {
-      "id": "FG-AUTH",
-      "name": "Authentication",
-      "description": "User authentication and session management",
+      "id": "INV-1",
+      "name": "tenant_isolation",
+      "statement": "Tenant cannot read/patch/export/chat/RAG other tenant data. Cross-tenant attempts return 403 or equivalent."
+    },
+    {
+      "id": "INV-2",
+      "name": "chat_atomicity",
+      "statement": "On any failure (LLM/embeddings/DB/quota), no ChatTurn persists."
+    },
+    {
+      "id": "INV-3",
+      "name": "paid_chat_enforcement",
+      "statement": "chat_policy.enabled=false => 403 and no persistence."
+    },
+    {
+      "id": "INV-4",
+      "name": "master_tenant_restriction",
+      "statement": "is_master_client=true cannot update chat_policy, rag_policy, tenant_knowledge."
+    },
+    {
+      "id": "INV-5",
+      "name": "export_determinism",
+      "statement": "Export returns valid file OR loud failure (400/403/404). No silent corrupt output."
+    }
+  ],
+  "observability": {
+    "log_tags": [
+      "[rag.audit]",
+      "[tenant.audit]",
+      "[audit.patch_ignored]",
+      "[quota]",
+      "[knowledge]",
+      "[rag.cleanup]",
+      "[rag.indexes]"
+    ],
+    "runbook": "/app/FAILURE_MODES_RUNBOOK.md"
+  },
+  "backend_endpoints": [
+    {
+      "domain": "auth",
       "endpoints": [
         {
-          "id": "AUTH-001",
           "method": "POST",
           "path": "/api/auth/login",
-          "name": "User Login",
-          "roles": ["public"],
-          "description": "Authenticate user with email/password, returns JWT token",
-          "request_body": {"email": "string", "password": "string"},
-          "success_response": {"status": 200, "returns": ["access_token", "user"]},
-          "error_responses": [{"status": 401, "when": "invalid_credentials"}]
+          "name": "login",
+          "roles_allowed": ["super_admin", "tenant_user"],
+          "success": { "status": 200, "returns": ["access_token"] },
+          "failures": [{ "status": 401, "when": "invalid_credentials" }]
         },
         {
-          "id": "AUTH-002",
-          "method": "GET",
-          "path": "/api/auth/me",
-          "name": "Get Current User",
-          "roles": ["super_admin", "tenant_admin", "tenant_user"],
-          "description": "Get authenticated user profile from JWT token",
-          "success_response": {"status": 200, "returns": ["id", "email", "role", "tenant_id"]},
-          "error_responses": [{"status": 401, "when": "invalid_or_missing_token"}]
-        },
-        {
-          "id": "AUTH-003",
           "method": "POST",
           "path": "/api/auth/register",
-          "name": "User Registration",
-          "roles": ["public"],
-          "description": "Register a new user account",
-          "request_body": {"email": "string", "password": "string", "full_name": "string"},
-          "success_response": {"status": 200},
-          "error_responses": [{"status": 400, "when": "validation_error_or_email_exists"}]
+          "name": "register",
+          "roles_allowed": ["super_admin", "tenant_user"],
+          "notes": "Present in route inventory; validate intended access policy.",
+          "success": { "status": 200 },
+          "failures": [{ "status": 400, "when": "validation_or_duplicate" }]
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/me",
+          "name": "get_current_user_info",
+          "roles_allowed": ["super_admin", "tenant_user"],
+          "success": { "status": 200, "returns": ["role", "tenant_id"] },
+          "failures": [{ "status": 401, "when": "missing_or_invalid_token" }]
         }
       ]
     },
     {
-      "id": "FG-TENANTS",
-      "name": "Tenant Management",
-      "description": "Multi-tenant CRUD operations with branding, search profiles, and policies",
-      "invariants": ["INV-4: Master tenants cannot modify chat_policy, rag_policy, tenant_knowledge"],
+      "domain": "admin",
       "endpoints": [
         {
-          "id": "TENANT-001",
-          "method": "GET",
-          "path": "/api/tenants",
-          "name": "List Tenants",
-          "roles": ["super_admin"],
-          "description": "List all tenants with pagination",
-          "query_params": ["page", "per_page"],
-          "success_response": {"status": 200, "returns": ["data[]", "pagination"]}
-        },
-        {
-          "id": "TENANT-002",
-          "method": "GET",
-          "path": "/api/tenants/{tenant_id}",
-          "name": "Get Tenant by ID",
-          "roles": ["super_admin"],
-          "description": "Get single tenant details",
-          "success_response": {"status": 200},
-          "error_responses": [{"status": 404, "when": "not_found"}]
-        },
-        {
-          "id": "TENANT-003",
-          "method": "POST",
-          "path": "/api/tenants",
-          "name": "Create Tenant",
-          "roles": ["super_admin"],
-          "description": "Create new tenant with branding and search profile",
-          "request_body": {"name": "string", "branding": "object", "search_profile": "object"},
-          "success_response": {"status": 200, "returns": ["id", "name"]}
-        },
-        {
-          "id": "TENANT-004",
-          "method": "PUT",
-          "path": "/api/tenants/{tenant_id}",
-          "name": "Update Tenant",
-          "roles": ["super_admin"],
-          "description": "Update tenant configuration (master tenant restrictions apply)",
-          "audit_log": "[audit.patch_ignored]",
-          "success_response": {"status": 200},
-          "error_responses": [
-            {"status": 403, "when": "master_tenant_forbidden_fields"},
-            {"status": 404, "when": "not_found"}
-          ]
-        },
-        {
-          "id": "TENANT-005",
-          "method": "DELETE",
-          "path": "/api/tenants/{tenant_id}",
-          "name": "Delete Tenant",
-          "roles": ["super_admin"],
-          "description": "Delete tenant and all associated data",
-          "success_response": {"status": 204},
-          "error_responses": [{"status": 404, "when": "not_found"}]
-        }
-      ]
-    },
-    {
-      "id": "FG-USERS",
-      "name": "User Management",
-      "description": "User CRUD operations for super admins",
-      "endpoints": [
-        {
-          "id": "USER-001",
-          "method": "GET",
-          "path": "/api/users",
-          "name": "List Users",
-          "roles": ["super_admin"],
-          "description": "List all users with pagination",
-          "success_response": {"status": 200, "returns": ["data[]", "pagination"]}
-        },
-        {
-          "id": "USER-002",
-          "method": "GET",
-          "path": "/api/users/{user_id}",
-          "name": "Get User by ID",
-          "roles": ["super_admin"],
-          "description": "Get single user details",
-          "success_response": {"status": 200},
-          "error_responses": [{"status": 404, "when": "not_found"}]
-        },
-        {
-          "id": "USER-003",
-          "method": "POST",
-          "path": "/api/users",
-          "name": "Create User",
-          "roles": ["super_admin"],
-          "description": "Create new user with role assignment",
-          "request_body": {"email": "string", "password": "string", "full_name": "string", "role": "string", "tenant_id": "string|null"},
-          "success_response": {"status": 200}
-        },
-        {
-          "id": "USER-004",
-          "method": "PUT",
-          "path": "/api/users/{user_id}",
-          "name": "Update User",
-          "roles": ["super_admin"],
-          "description": "Update user details",
-          "success_response": {"status": 200},
-          "error_responses": [{"status": 404, "when": "not_found"}]
-        },
-        {
-          "id": "USER-005",
-          "method": "DELETE",
-          "path": "/api/users/{user_id}",
-          "name": "Delete User",
-          "roles": ["super_admin"],
-          "description": "Delete user account",
-          "success_response": {"status": 204},
-          "error_responses": [{"status": 404, "when": "not_found"}]
-        }
-      ]
-    },
-    {
-      "id": "FG-OPPORTUNITIES",
-      "name": "Opportunities",
-      "description": "Government contract opportunity management with tenant isolation",
-      "invariants": ["INV-1: Strict tenant isolation on all operations"],
-      "endpoints": [
-        {
-          "id": "OPP-001",
-          "method": "GET",
-          "path": "/api/opportunities",
-          "name": "List Opportunities",
-          "roles": ["super_admin", "tenant_admin", "tenant_user"],
-          "description": "List opportunities with tenant-scoped filtering",
-          "audit_log": "[tenant.audit]",
-          "query_params": ["tenant_id", "page", "per_page", "status", "search"],
-          "success_response": {"status": 200, "returns": ["data[]", "pagination"]}
-        },
-        {
-          "id": "OPP-002",
-          "method": "GET",
-          "path": "/api/opportunities/{opp_id}",
-          "name": "Get Opportunity by ID",
-          "roles": ["super_admin", "tenant_admin", "tenant_user"],
-          "description": "Get single opportunity with tenant validation",
-          "audit_log": "[tenant.audit]",
-          "success_response": {"status": 200},
-          "error_responses": [
-            {"status": 403, "when": "cross_tenant_access"},
-            {"status": 404, "when": "not_found"}
-          ]
-        },
-        {
-          "id": "OPP-003",
-          "method": "POST",
-          "path": "/api/opportunities",
-          "name": "Create Opportunity",
-          "roles": ["super_admin"],
-          "description": "Create new opportunity (usually via sync)",
-          "success_response": {"status": 200}
-        },
-        {
-          "id": "OPP-004",
-          "method": "PATCH",
-          "path": "/api/opportunities/{opp_id}",
-          "name": "Update Opportunity Client Fields",
-          "roles": ["tenant_user", "tenant_admin"],
-          "description": "Update client-editable fields only (status, notes, tags, archived)",
-          "allowed_fields": ["client_status", "client_notes", "client_tags", "is_archived"],
-          "audit_log": "[tenant.audit], [audit.patch_ignored]",
-          "success_response": {"status": 200},
-          "error_responses": [
-            {"status": 403, "when": "cross_tenant_access"},
-            {"status": 404, "when": "not_found"}
-          ]
-        },
-        {
-          "id": "OPP-005",
-          "method": "DELETE",
-          "path": "/api/opportunities/{opp_id}",
-          "name": "Delete Opportunity",
-          "roles": ["super_admin"],
-          "description": "Delete opportunity record",
-          "success_response": {"status": 204}
-        },
-        {
-          "id": "OPP-006",
-          "method": "GET",
-          "path": "/api/opportunities/stats/{tenant_id}",
-          "name": "Get Opportunity Stats",
-          "roles": ["super_admin", "tenant_admin", "tenant_user"],
-          "description": "Get aggregated opportunity statistics for tenant",
-          "success_response": {"status": 200, "returns": ["total", "by_status", "by_agency"]}
-        }
-      ]
-    },
-    {
-      "id": "FG-INTELLIGENCE",
-      "name": "Intelligence Reports",
-      "description": "AI-generated intelligence reports with tenant isolation",
-      "invariants": ["INV-1: Strict tenant isolation on all operations"],
-      "endpoints": [
-        {
-          "id": "INTEL-001",
-          "method": "GET",
-          "path": "/api/intelligence",
-          "name": "List Intelligence Reports",
-          "roles": ["super_admin", "tenant_admin", "tenant_user"],
-          "description": "List intelligence reports with tenant-scoped filtering",
-          "audit_log": "[tenant.audit]",
-          "success_response": {"status": 200, "returns": ["data[]", "pagination"]}
-        },
-        {
-          "id": "INTEL-002",
-          "method": "GET",
-          "path": "/api/intelligence/{intel_id}",
-          "name": "Get Intelligence Report by ID",
-          "roles": ["super_admin", "tenant_admin", "tenant_user"],
-          "description": "Get single intelligence report with tenant validation",
-          "audit_log": "[tenant.audit]",
-          "success_response": {"status": 200},
-          "error_responses": [
-            {"status": 403, "when": "cross_tenant_access"},
-            {"status": 404, "when": "not_found"}
-          ]
-        },
-        {
-          "id": "INTEL-003",
-          "method": "POST",
-          "path": "/api/intelligence",
-          "name": "Create Intelligence Report",
-          "roles": ["super_admin"],
-          "description": "Create new intelligence report (usually via Perplexity sync)",
-          "success_response": {"status": 200}
-        },
-        {
-          "id": "INTEL-004",
-          "method": "PATCH",
-          "path": "/api/intelligence/{intel_id}",
-          "name": "Update Intelligence Client Fields",
-          "roles": ["tenant_user", "tenant_admin"],
-          "description": "Update client-editable fields only (archived, notes)",
-          "allowed_fields": ["is_archived", "client_notes"],
-          "audit_log": "[tenant.audit], [audit.patch_ignored]",
-          "success_response": {"status": 200},
-          "error_responses": [
-            {"status": 403, "when": "cross_tenant_access"},
-            {"status": 404, "when": "not_found"}
-          ]
-        },
-        {
-          "id": "INTEL-005",
-          "method": "DELETE",
-          "path": "/api/intelligence/{intel_id}",
-          "name": "Delete Intelligence Report",
-          "roles": ["super_admin"],
-          "description": "Delete intelligence report",
-          "success_response": {"status": 204}
-        }
-      ]
-    },
-    {
-      "id": "FG-CHAT",
-      "name": "AI Chat",
-      "description": "Conversational AI with RAG, quotas, and atomic persistence",
-      "invariants": [
-        "INV-1: Tenant isolation",
-        "INV-2: Atomic chat persistence (no partial writes)",
-        "INV-3: Paid chat enforcement"
-      ],
-      "endpoints": [
-        {
-          "id": "CHAT-001",
-          "method": "POST",
-          "path": "/api/chat/message",
-          "name": "Send Chat Message",
-          "roles": ["tenant_user"],
-          "description": "Send message to AI agent with RAG retrieval",
-          "audit_log": "[quota], [rag.audit]",
-          "request_body": {"conversation_id": "string", "message": "string", "agent_type": "opportunities|intelligence"},
-          "success_response": {"status": 200, "returns": ["content", "conversation_id"]},
-          "error_responses": [
-            {"status": 400, "when": "invalid_conversation_id_or_message_too_long"},
-            {"status": 403, "when": "chat_policy_disabled"},
-            {"status": 429, "when": "monthly_message_limit_exceeded"},
-            {"status": 520, "when": "llm_unavailable"}
-          ]
-        },
-        {
-          "id": "CHAT-002",
-          "method": "GET",
-          "path": "/api/chat/history/{conversation_id}",
-          "name": "Get Chat History",
-          "roles": ["tenant_user"],
-          "description": "Get conversation history for a specific conversation",
-          "success_response": {"status": 200, "returns": ["messages[]"]}
-        },
-        {
-          "id": "CHAT-003",
-          "method": "GET",
-          "path": "/api/chat/turns/{conversation_id}",
-          "name": "Get Chat Turns",
-          "roles": ["tenant_user"],
-          "description": "Get raw chat turns for conversation",
-          "success_response": {"status": 200, "returns": ["turns[]"]}
-        }
-      ]
-    },
-    {
-      "id": "FG-RAG",
-      "name": "RAG Knowledge Base",
-      "description": "Vector-based retrieval augmented generation with tenant isolation",
-      "invariants": ["INV-1: Tenant isolation", "INV-4: Master tenant restrictions"],
-      "endpoints": [
-        {
-          "id": "RAG-001",
-          "method": "GET",
-          "path": "/api/tenants/{tenant_id}/rag/status",
-          "name": "Get RAG Status",
-          "roles": ["super_admin"],
-          "description": "Get RAG configuration and usage stats for tenant",
-          "success_response": {"status": 200, "returns": ["enabled", "documents", "chunks", "max_chunks", "embed_model"]}
-        },
-        {
-          "id": "RAG-002",
-          "method": "GET",
-          "path": "/api/tenants/{tenant_id}/rag/documents",
-          "name": "List RAG Documents",
-          "roles": ["super_admin"],
-          "description": "List all ingested documents for tenant",
-          "success_response": {"status": 200, "returns": ["documents[]"]}
-        },
-        {
-          "id": "RAG-003",
-          "method": "POST",
-          "path": "/api/tenants/{tenant_id}/rag/documents",
-          "name": "Ingest RAG Document",
-          "roles": ["super_admin"],
-          "description": "Ingest document, chunk, and create embeddings",
-          "request_body": {"title": "string", "content": "string"},
-          "success_response": {"status": 200, "returns": ["document_id", "chunks_created", "status"]},
-          "error_responses": [
-            {"status": 403, "when": "rag_disabled_or_master_tenant"},
-            {"status": 409, "when": "capacity_limit_exceeded"}
-          ]
-        },
-        {
-          "id": "RAG-004",
-          "method": "DELETE",
-          "path": "/api/tenants/{tenant_id}/rag/documents/{doc_id}",
-          "name": "Delete RAG Document",
-          "roles": ["super_admin"],
-          "description": "Delete document and all associated chunks",
-          "success_response": {"status": 204}
-        }
-      ]
-    },
-    {
-      "id": "FG-KNOWLEDGE",
-      "name": "Static Knowledge Base (Mini-RAG)",
-      "description": "Tenant-specific static knowledge snippets for chat context",
-      "endpoints": [
-        {
-          "id": "KB-001",
-          "method": "GET",
-          "path": "/api/tenants/{tenant_id}/knowledge-snippets",
-          "name": "List Knowledge Snippets",
-          "roles": ["super_admin"],
-          "description": "List all static knowledge snippets for tenant",
-          "success_response": {"status": 200, "returns": ["snippets[]"]}
-        },
-        {
-          "id": "KB-002",
-          "method": "POST",
-          "path": "/api/tenants/{tenant_id}/knowledge-snippets",
-          "name": "Create Knowledge Snippet",
-          "roles": ["super_admin"],
-          "description": "Add static knowledge snippet to tenant",
-          "success_response": {"status": 200}
-        },
-        {
-          "id": "KB-003",
-          "method": "PUT",
-          "path": "/api/tenants/{tenant_id}/knowledge-snippets/{snippet_id}",
-          "name": "Update Knowledge Snippet",
-          "roles": ["super_admin"],
-          "description": "Update existing knowledge snippet",
-          "success_response": {"status": 200}
-        },
-        {
-          "id": "KB-004",
-          "method": "DELETE",
-          "path": "/api/tenants/{tenant_id}/knowledge-snippets/{snippet_id}",
-          "name": "Delete Knowledge Snippet",
-          "roles": ["super_admin"],
-          "description": "Delete knowledge snippet",
-          "success_response": {"status": 204}
-        }
-      ]
-    },
-    {
-      "id": "FG-EXPORTS",
-      "name": "Data Exports",
-      "description": "Branded PDF and Excel exports with tenant isolation",
-      "invariants": ["INV-1: Tenant isolation", "INV-5: Export determinism"],
-      "endpoints": [
-        {
-          "id": "EXPORT-001",
-          "method": "POST",
-          "path": "/api/exports/pdf",
-          "name": "Export PDF",
-          "roles": ["super_admin", "tenant_admin", "tenant_user"],
-          "description": "Generate branded PDF export of opportunities/intelligence",
-          "audit_log": "[tenant.audit]",
-          "request_body": {"tenant_id": "string", "opportunity_ids": "string[]", "intelligence_ids": "string[]"},
-          "success_response": {"status": 200, "content_type": "application/pdf"},
-          "error_responses": [
-            {"status": 400, "when": "missing_tenant_id_for_super_admin"},
-            {"status": 403, "when": "cross_tenant_access"},
-            {"status": 404, "when": "empty_selection_or_no_data"}
-          ]
-        },
-        {
-          "id": "EXPORT-002",
-          "method": "POST",
-          "path": "/api/exports/excel",
-          "name": "Export Excel",
-          "roles": ["super_admin", "tenant_admin", "tenant_user"],
-          "description": "Generate branded Excel export of opportunities/intelligence",
-          "audit_log": "[tenant.audit]",
-          "request_body": {"tenant_id": "string", "opportunity_ids": "string[]", "intelligence_ids": "string[]"},
-          "success_response": {"status": 200, "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
-          "error_responses": [
-            {"status": 400, "when": "missing_tenant_id_for_super_admin"},
-            {"status": 403, "when": "cross_tenant_access"},
-            {"status": 404, "when": "empty_selection_or_no_data"}
-          ]
-        }
-      ]
-    },
-    {
-      "id": "FG-ADMIN",
-      "name": "Administration",
-      "description": "System administration and monitoring",
-      "endpoints": [
-        {
-          "id": "ADMIN-001",
           "method": "GET",
           "path": "/api/admin/dashboard",
-          "name": "Admin Dashboard",
-          "roles": ["super_admin"],
-          "description": "Get system-wide dashboard statistics",
-          "success_response": {"status": 200, "returns": ["total_tenants", "total_users", "total_opportunities", "total_intelligence"]}
+          "name": "get_admin_dashboard",
+          "roles_allowed": ["super_admin"]
         },
         {
-          "id": "ADMIN-002",
           "method": "GET",
           "path": "/api/admin/system/health",
-          "name": "System Health Check",
-          "roles": ["super_admin"],
-          "description": "Check system health status",
-          "success_response": {"status": 200, "returns": ["status", "database", "services"]}
+          "name": "check_system_health",
+          "roles_allowed": ["super_admin"]
         },
         {
-          "id": "ADMIN-003",
           "method": "POST",
           "path": "/api/admin/sync/{tenant_id}",
-          "name": "Admin Sync Trigger",
-          "roles": ["super_admin"],
-          "description": "Trigger data sync for specific tenant",
-          "success_response": {"status": 200}
+          "name": "trigger_manual_sync",
+          "roles_allowed": ["super_admin"]
         }
       ]
     },
     {
-      "id": "FG-SYNC",
-      "name": "Data Synchronization",
-      "description": "External data sync from HigherGov and Perplexity",
+      "domain": "tenants",
       "endpoints": [
+        { "method": "GET", "path": "/api/tenants", "name": "list_tenants", "roles_allowed": ["super_admin"] },
+        { "method": "POST", "path": "/api/tenants", "name": "create_tenant", "roles_allowed": ["super_admin"] },
+        { "method": "GET", "path": "/api/tenants/{tenant_id}", "name": "get_tenant", "roles_allowed": ["super_admin"] },
         {
-          "id": "SYNC-001",
-          "method": "POST",
-          "path": "/api/sync/manual/{tenant_id}",
-          "name": "Manual Full Sync",
-          "roles": ["super_admin"],
-          "description": "Trigger manual full sync for tenant",
-          "success_response": {"status": 200}
+          "method": "PUT",
+          "path": "/api/tenants/{tenant_id}",
+          "name": "update_tenant",
+          "roles_allowed": ["super_admin"],
+          "constraints": [
+            { "if": "tenant.is_master_client==true", "forbid_fields": ["chat_policy", "rag_policy", "tenant_knowledge"], "status": 403 }
+          ],
+          "invariants": ["INV-4"]
         },
-        {
-          "id": "SYNC-002",
-          "method": "POST",
-          "path": "/api/sync/opportunity/{tenant_id}",
-          "name": "Sync Single Opportunity",
-          "roles": ["super_admin"],
-          "description": "Sync specific opportunity data",
-          "success_response": {"status": 200}
-        }
+        { "method": "DELETE", "path": "/api/tenants/{tenant_id}", "name": "delete_tenant", "roles_allowed": ["super_admin"], "success": { "status": 204 } }
       ]
     },
     {
-      "id": "FG-CONFIG",
-      "name": "Configuration",
-      "description": "Tenant configuration management",
+      "domain": "users",
+      "endpoints": [
+        { "method": "GET", "path": "/api/users", "name": "list_users", "roles_allowed": ["super_admin"] },
+        { "method": "POST", "path": "/api/users", "name": "create_user", "roles_allowed": ["super_admin"] },
+        { "method": "GET", "path": "/api/users/{user_id}", "name": "get_user", "roles_allowed": ["super_admin"] },
+        { "method": "PUT", "path": "/api/users/{user_id}", "name": "update_user", "roles_allowed": ["super_admin"] },
+        { "method": "DELETE", "path": "/api/users/{user_id}", "name": "delete_user", "roles_allowed": ["super_admin"], "success": { "status": 204 } }
+      ]
+    },
+    {
+      "domain": "opportunities",
+      "endpoints": [
+        { "method": "GET", "path": "/api/opportunities", "name": "list_opportunities", "roles_allowed": ["tenant_user", "super_admin"], "invariants": ["INV-1"] },
+        { "method": "POST", "path": "/api/opportunities", "name": "create_opportunity", "roles_allowed": ["tenant_user", "super_admin"], "invariants": ["INV-1"] },
+        { "method": "GET", "path": "/api/opportunities/{opp_id}", "name": "get_opportunity", "roles_allowed": ["tenant_user", "super_admin"], "failures": [{ "status": 403, "when": "cross_tenant" }], "invariants": ["INV-1"] },
+        {
+          "method": "PATCH",
+          "path": "/api/opportunities/{opp_id}",
+          "name": "update_opportunity_status",
+          "roles_allowed": ["tenant_user"],
+          "allowed_fields": ["client_status", "client_notes", "client_tags", "is_archived"],
+          "ignored_fields_behavior": "silently_ignored_and_logged",
+          "logs": ["[audit.patch_ignored]", "[tenant.audit]"],
+          "invariants": ["INV-1"]
+        },
+        { "method": "DELETE", "path": "/api/opportunities/{opp_id}", "name": "delete_opportunity", "roles_allowed": ["tenant_user", "super_admin"], "invariants": ["INV-1"] },
+        { "method": "GET", "path": "/api/opportunities/stats/{tenant_id}", "name": "get_opportunity_stats", "roles_allowed": ["tenant_user", "super_admin"], "invariants": ["INV-1"] }
+      ]
+    },
+    {
+      "domain": "intelligence",
+      "endpoints": [
+        { "method": "GET", "path": "/api/intelligence", "name": "list_intelligence", "roles_allowed": ["tenant_user", "super_admin"], "invariants": ["INV-1"] },
+        { "method": "POST", "path": "/api/intelligence", "name": "create_intelligence", "roles_allowed": ["tenant_user", "super_admin"], "invariants": ["INV-1"] },
+        { "method": "GET", "path": "/api/intelligence/{intel_id}", "name": "get_intelligence", "roles_allowed": ["tenant_user", "super_admin"], "failures": [{ "status": 403, "when": "cross_tenant" }], "invariants": ["INV-1"] },
+        {
+          "method": "PATCH",
+          "path": "/api/intelligence/{intel_id}",
+          "name": "update_intelligence",
+          "roles_allowed": ["tenant_user"],
+          "allowed_fields": ["is_archived", "client_notes"],
+          "ignored_fields_behavior": "silently_ignored_and_logged",
+          "logs": ["[audit.patch_ignored]", "[tenant.audit]"],
+          "invariants": ["INV-1"]
+        },
+        { "method": "DELETE", "path": "/api/intelligence/{intel_id}", "name": "delete_intelligence", "roles_allowed": ["tenant_user", "super_admin"], "invariants": ["INV-1"] }
+      ]
+    },
+    {
+      "domain": "config",
       "endpoints": [
         {
-          "id": "CONFIG-001",
           "method": "GET",
           "path": "/api/config/tenants/{tenant_id}/intelligence-config",
-          "name": "Get Intelligence Config",
-          "roles": ["super_admin"],
-          "description": "Get intelligence generation configuration for tenant",
-          "success_response": {"status": 200}
+          "name": "get_intelligence_config",
+          "roles_allowed": ["super_admin"]
         },
         {
-          "id": "CONFIG-002",
           "method": "PUT",
           "path": "/api/config/tenants/{tenant_id}/intelligence-config",
-          "name": "Update Intelligence Config",
-          "roles": ["super_admin"],
-          "description": "Update intelligence generation configuration",
-          "success_response": {"status": 200}
+          "name": "update_intelligence_config",
+          "roles_allowed": ["super_admin"]
         }
       ]
     },
     {
-      "id": "FG-UPLOAD",
-      "name": "File Uploads",
-      "description": "File upload handling for logos and CSV imports",
+      "domain": "exports",
+      "endpoints": [
+        { "method": "POST", "path": "/api/exports/pdf", "name": "export_branded_pdf", "roles_allowed": ["tenant_user", "super_admin"], "invariants": ["INV-1", "INV-5"] },
+        { "method": "POST", "path": "/api/exports/excel", "name": "export_branded_excel", "roles_allowed": ["tenant_user", "super_admin"], "invariants": ["INV-1", "INV-5"] }
+      ]
+    },
+    {
+      "domain": "chat",
       "endpoints": [
         {
-          "id": "UPLOAD-001",
           "method": "POST",
-          "path": "/api/upload/logo/{tenant_id}",
-          "name": "Upload Tenant Logo",
-          "roles": ["super_admin"],
-          "description": "Upload logo image for tenant branding",
-          "success_response": {"status": 200, "returns": ["logo_url"]}
+          "path": "/api/chat/message",
+          "name": "send_chat_message",
+          "roles_allowed": ["tenant_user"],
+          "gates": ["chat_policy.enabled", "monthly_message_limit", "max_user_chars", "conversation_id_regex"],
+          "logs": ["[quota]", "[rag.audit]", "[knowledge]"],
+          "invariants": ["INV-1", "INV-2", "INV-3"]
         },
-        {
-          "id": "UPLOAD-002",
-          "method": "POST",
-          "path": "/api/upload/opportunities/csv/{tenant_id}",
-          "name": "Upload Opportunities CSV",
-          "roles": ["super_admin"],
-          "description": "Bulk import opportunities from CSV file",
-          "success_response": {"status": 200, "returns": ["imported_count", "errors"]}
-        }
+        { "method": "GET", "path": "/api/chat/history/{conversation_id}", "name": "get_chat_history", "roles_allowed": ["tenant_user"], "invariants": ["INV-1"] },
+        { "method": "GET", "path": "/api/chat/turns/{conversation_id}", "name": "get_chat_turns", "roles_allowed": ["tenant_user"], "invariants": ["INV-1"] }
       ]
     },
     {
-      "id": "FG-SYSTEM",
-      "name": "System Endpoints",
-      "description": "Health checks and documentation",
+      "domain": "sync",
       "endpoints": [
-        {
-          "id": "SYS-001",
-          "method": "GET",
-          "path": "/health",
-          "name": "Health Check",
-          "roles": ["public"],
-          "description": "Basic health check endpoint",
-          "success_response": {"status": 200}
-        }
+        { "method": "POST", "path": "/api/sync/manual/{tenant_id}", "name": "manual_sync_tenant", "roles_allowed": ["super_admin"] },
+        { "method": "POST", "path": "/api/sync/opportunity/{tenant_id}", "name": "fetch_opportunity_by_id", "roles_allowed": ["super_admin"] }
+      ]
+    },
+    {
+      "domain": "upload",
+      "endpoints": [
+        { "method": "POST", "path": "/api/upload/logo/{tenant_id}", "name": "upload_tenant_logo", "roles_allowed": ["super_admin"], "invariants": ["INV-1"] },
+        { "method": "POST", "path": "/api/upload/opportunities/csv/{tenant_id}", "name": "upload_opportunities_csv", "roles_allowed": ["super_admin"], "invariants": ["INV-1"] }
+      ]
+    },
+    {
+      "domain": "knowledge_snippets",
+      "endpoints": [
+        { "method": "GET", "path": "/api/tenants/{tenant_id}/knowledge-snippets", "name": "list_knowledge_snippets", "roles_allowed": ["super_admin"], "invariants": ["INV-1", "INV-4"] },
+        { "method": "POST", "path": "/api/tenants/{tenant_id}/knowledge-snippets", "name": "create_knowledge_snippet", "roles_allowed": ["super_admin"], "invariants": ["INV-1", "INV-4"] },
+        { "method": "PUT", "path": "/api/tenants/{tenant_id}/knowledge-snippets/{snippet_id}", "name": "update_knowledge_snippet", "roles_allowed": ["super_admin"], "invariants": ["INV-1", "INV-4"] },
+        { "method": "DELETE", "path": "/api/tenants/{tenant_id}/knowledge-snippets/{snippet_id}", "name": "delete_knowledge_snippet", "roles_allowed": ["super_admin"], "invariants": ["INV-1", "INV-4"] }
+      ]
+    },
+    {
+      "domain": "rag",
+      "endpoints": [
+        { "method": "GET", "path": "/api/tenants/{tenant_id}/rag/status", "name": "get_rag_status", "roles_allowed": ["super_admin"], "invariants": ["INV-1", "INV-4"] },
+        { "method": "GET", "path": "/api/tenants/{tenant_id}/rag/documents", "name": "list_documents", "roles_allowed": ["super_admin"], "invariants": ["INV-1", "INV-4"] },
+        { "method": "POST", "path": "/api/tenants/{tenant_id}/rag/documents", "name": "ingest_document", "roles_allowed": ["super_admin"], "failures": [{ "status": 409, "when": "capacity_exceeded" }], "invariants": ["INV-1", "INV-4"] },
+        { "method": "DELETE", "path": "/api/tenants/{tenant_id}/rag/documents/{doc_id}", "name": "delete_document", "roles_allowed": ["super_admin"], "invariants": ["INV-1", "INV-4"] }
+      ]
+    },
+    {
+      "domain": "system",
+      "endpoints": [
+        { "method": "GET", "path": "/health", "name": "health_check", "roles_allowed": ["public"] }
       ]
     }
   ],
-  "frontend_pages": [
-    {"id": "PAGE-001", "path": "/login", "name": "Login Page", "roles": ["public"]},
-    {"id": "PAGE-002", "path": "/dashboard", "name": "Dashboard", "roles": ["super_admin", "tenant_admin", "tenant_user"]},
-    {"id": "PAGE-003", "path": "/tenants", "name": "Tenant Management", "roles": ["super_admin"]},
-    {"id": "PAGE-004", "path": "/users", "name": "User Management", "roles": ["super_admin"]},
-    {"id": "PAGE-005", "path": "/opportunities", "name": "Opportunities List", "roles": ["tenant_user", "tenant_admin"]},
-    {"id": "PAGE-006", "path": "/intelligence", "name": "Intelligence Reports", "roles": ["tenant_user", "tenant_admin"]},
-    {"id": "PAGE-007", "path": "/preview/:tenant_id", "name": "Tenant Preview", "roles": ["super_admin"]}
-  ],
   "integrations": [
-    {"name": "Mistral AI", "purpose": "Chat LLM and embeddings", "env_var": "MISTRAL_API_KEY"},
-    {"name": "HigherGov", "purpose": "Government contract data sync", "schedule": "Daily at 2 AM UTC"},
-    {"name": "Perplexity", "purpose": "Intelligence report generation", "env_var": "PERPLEXITY_API_KEY"}
-  ]
+    {
+      "name": "HigherGov",
+      "type": "data_ingestion",
+      "code": "services/highergov_service.py",
+      "purpose": "Sync contract opportunities from HigherGov saved search_id into opportunities.",
+      "sync_paths": ["/api/admin/sync/{tenant_id}", "/api/sync/manual/{tenant_id}", "/api/sync/opportunity/{tenant_id}"]
+    },
+    {
+      "name": "Perplexity",
+      "type": "intelligence_generation",
+      "code": "services/perplexity_service.py",
+      "purpose": "Generate intelligence reports per tenant based on tenant intelligence_config."
+    },
+    {
+      "name": "Mistral",
+      "type": "llm",
+      "code": ["services/mistral_service.py", "routes/chat.py", "routes/rag.py"],
+      "purpose": "Opportunity scoring + chat + embeddings for RAG."
+    },
+    {
+      "name": "APScheduler",
+      "type": "scheduler",
+      "code": "scheduler/sync_scheduler.py",
+      "purpose": "Daily sync default and per-tenant schedules."
+    }
+  ],
+  "frontend_pages": [
+    { "path": "pages/LoginPage.js", "name": "LoginPage", "role": "both" },
+    { "path": "pages/TenantDashboard.js", "name": "TenantDashboard", "role": "tenant_user" },
+    { "path": "pages/IntelligenceFeed.js", "name": "IntelligenceFeed", "role": "tenant_user" },
+    { "path": "pages/OpportunityDetail.js", "name": "OpportunityDetail", "role": "tenant_user" },
+    { "path": "pages/TenantPreview.js", "name": "TenantPreview", "role": "tenant_user" },
+    { "path": "pages/SuperAdminDashboard.js", "name": "SuperAdminDashboard", "role": "super_admin" },
+    { "path": "pages/TenantsPage.js", "name": "TenantsPage", "role": "super_admin" },
+    { "path": "pages/UsersPage.js", "name": "UsersPage", "role": "super_admin" },
+    { "path": "pages/DatabaseManager.js", "name": "DatabaseManager", "role": "super_admin_or_internal" }
+  ],
+  "endpoint_count": 46
 }
