@@ -2,7 +2,7 @@
   "report": "CARFAX - Comprehensive Auditable Report For Application eXecution",
   "app": "OutPace Intelligence Platform",
   "timestamp": "20251218_180424",
-  "api_url": "https://carfax-verified.preview.emergentagent.com",
+  "api_url": "https://saas-tester.preview.emergentagent.com",
   "test_plan": "TEST_PLAN.json",
   "summary": {
     "total_tests": 23,
@@ -26,6 +26,6 @@
     "S7_sync (2)",
     "S8_upload (2)"
   ],
-  "raw_evidence": ["access_token=present","access_token=present","HTTP 200","HTTP 200","HTTP 200","HTTP 200","Setup: Tenant A opp_id=2a4bdc38-1bb1-46d2-96ac-0de0ea3b7617","Tenant B GET -> HTTP 403","Setup: Tenant A intel_id=72f88649-842e-4a2b-99a4-e19a6b47a42d","Tenant B GET -> HTTP 403","Tenant B export with Tenant A id -> HTTP 403","Original chat_policy.enabled=True","Set chat_policy.enabled=false","BEFORE chat_turns count: 32","POST /api/chat/message -> HTTP 403","Response: {\"detail\":\"Chat not enabled for tenant\"}","AFTER chat_turns count: 32","Restored chat_policy.enabled=true","Set monthly_message_limit=1, messages_used=1 (quota exhausted)","BEFORE chat_turns count: 32","POST /api/chat/message -> HTTP 429","Response: {\"detail\":\"Monthly chat limit exceeded\"}","AFTER chat_turns count: 32","Reset quota","conversation_id with spaces -> HTTP 400","conversation_id > 128 chars -> HTTP 400","Master tenant ID: 5f07a3e3-cd02-49b0-b9a3-871b4547f8c7","PUT chat_policy -> HTTP 403","PUT rag_policy -> HTTP 403","PUT tenant_knowledge -> HTTP 403","Empty selection -> HTTP 404","Bogus ID -> HTTP 404","Missing tenant_id -> HTTP 400","tenant_user -> HTTP 403, super_admin -> HTTP 200","tenant_user -> HTTP 403, super_admin -> HTTP 200","tenant_user -> HTTP 403, super_admin -> HTTP 422","tenant_user -> HTTP 403, super_admin -> HTTP 200"],
+  "raw_evidence": ["access_token=present","access_token=present","HTTP 200","HTTP 200","HTTP 200","HTTP 200","Setup: Tenant A opp_id=saas-tester","Tenant B GET -> HTTP 403","Setup: Tenant A intel_id=saas-tester","Tenant B GET -> HTTP 403","Tenant B export with Tenant A id -> HTTP 403","Original chat_policy.enabled=True","Set chat_policy.enabled=false","BEFORE chat_turns count: 32","POST /api/chat/message -> HTTP 403","Response: {\"detail\":\"Chat not enabled for tenant\"}","AFTER chat_turns count: 32","Restored chat_policy.enabled=true","Set monthly_message_limit=1, messages_used=1 (quota exhausted)","BEFORE chat_turns count: 32","POST /api/chat/message -> HTTP 429","Response: {\"detail\":\"Monthly chat limit exceeded\"}","AFTER chat_turns count: 32","Reset quota","conversation_id with spaces -> HTTP 400","conversation_id > 128 chars -> HTTP 400","Master tenant ID: 5f07a3e3-cd02-49b0-b9a3-871b4547f8c7","PUT chat_policy -> HTTP 403","PUT rag_policy -> HTTP 403","PUT tenant_knowledge -> HTTP 403","Empty selection -> HTTP 404","Bogus ID -> HTTP 404","Missing tenant_id -> HTTP 400","tenant_user -> HTTP 403, super_admin -> HTTP 200","tenant_user -> HTTP 403, super_admin -> HTTP 200","tenant_user -> HTTP 403, super_admin -> HTTP 422","tenant_user -> HTTP 403, super_admin -> HTTP 200"],
   "status": "CARFAX_VERIFIED"
 }

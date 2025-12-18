@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Use public endpoint
-API_URL = "https://carfax-verified.preview.emergentagent.com/api"
+API_URL = "https://saas-tester.preview.emergentagent.com/api"
 
 class OutPaceAPITester:
     def __init__(self):
