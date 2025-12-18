@@ -300,7 +300,17 @@ Tenant Knowledge Snippets (retrieved via semantic search):
 {rag_context}
 
 Use these snippets to answer the user's question accurately."""
-        logger.info(f"[rag] Injected {len(rag_context)} chars, chunks={rag_debug_info.get('chunks_used', 0)}")
+    
+    # === RAG AUDIT LOG (always when RAG enabled, no secrets, Carfax-grade) ===
+    if rag_policy.get("enabled", False):
+        logger.info(
+            "[rag.audit] tenant_id=%s conv=%s reason=%s searched=%s used=%s chars=%s",
+            current_user.tenant_id, conversation_id,
+            rag_debug_info.get("reason"),
+            rag_debug_info.get("chunks_searched"),
+            rag_debug_info.get("chunks_used"),
+            rag_debug_info.get("context_chars"),
+        )
     
     # Get conversation history from chat_turns collection (last N turns per policy)
     history_cursor = db.chat_turns.find(
