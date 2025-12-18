@@ -26,11 +26,37 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+async def _cleanup_stuck_rag_documents():
+    """Cleanup stuck RAG documents from failed ingestions (status=processing older than 5 min)."""
+    from datetime import datetime, timezone, timedelta
+    threshold = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+    
+    stuck_docs = await db.kb_documents.find({"status": "processing", "created_at": {"$lt": threshold}}).to_list(100)
+    for doc in stuck_docs:
+        doc_id = doc.get("id")
+        await db.kb_chunks.delete_many({"document_id": doc_id})
+        await db.kb_documents.delete_one({"id": doc_id})
+        logger.warning(f"[rag.cleanup] Deleted stuck document {doc_id} and its chunks")
+    
+    if stuck_docs:
+        logger.info(f"[rag.cleanup] Cleaned up {len(stuck_docs)} stuck documents")
+
+
+async def _ensure_rag_indexes():
+    """Ensure indexes for RAG performance."""
+    await db.kb_chunks.create_index([("tenant_id", 1), ("created_at", -1)])
+    await db.kb_chunks.create_index([("tenant_id", 1), ("document_id", 1)])
+    await db.kb_documents.create_index([("tenant_id", 1), ("created_at", -1)])
+    logger.info("[rag.indexes] RAG indexes ensured")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting OutPace Intelligence Platform")
     await init_db()
+    await _cleanup_stuck_rag_documents()
+    await _ensure_rag_indexes()
     start_scheduler(db)
     logger.info("Application startup complete")
     yield
