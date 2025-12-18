@@ -92,7 +92,7 @@ export default function LoginPage() {
             </Button>
           </form>
           <div className="mt-6 text-xs text-center text-[hsl(var(--foreground-muted))]">
-            Default Super Admin: admin@example.com / REDACTED_BOOTSTRAP_PASSWORD
+            Contact your administrator for access credentials
           </div>
         </CardContent>
       </Card>
