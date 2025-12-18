@@ -204,7 +204,13 @@ async def update_opportunity_status(
         )
     
     # Only allow updating client-editable fields
-    allowed_fields = ["client_status", "client_notes", "client_tags", "is_archived"]
+    allowed_fields = {"client_status", "client_notes", "client_tags", "is_archived"}
+    requested_fields = set(update_data.keys())
+    ignored_fields = requested_fields - allowed_fields
+    
+    if ignored_fields:
+        logger.info(f"[audit.patch_ignored] endpoint=opportunities tenant_id={current_user.tenant_id} object_id={opp_id} fields={list(ignored_fields)}")
+    
     update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
     update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     
@@ -212,6 +218,8 @@ async def update_opportunity_status(
         {"id": opp_id},
         {"$set": update_dict}
     )
+    
+    _audit_access("patch_opportunity", current_user.tenant_id, object_id=opp_id)
     
     # Return updated opportunity
     updated = await db.opportunities.find_one({"id": opp_id}, {"_id": 0})
