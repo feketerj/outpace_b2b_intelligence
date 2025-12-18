@@ -171,7 +171,13 @@ async def update_intelligence(
         )
     
     # Only allow updating client-editable fields
-    allowed_fields = ["is_archived", "client_notes"]
+    allowed_fields = {"is_archived", "client_notes"}
+    requested_fields = set(update_data.keys())
+    ignored_fields = requested_fields - allowed_fields
+    
+    if ignored_fields:
+        logger.info(f"[audit.patch_ignored] endpoint=intelligence tenant_id={current_user.tenant_id} object_id={intel_id} fields={list(ignored_fields)}")
+    
     update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
     update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     
@@ -179,6 +185,8 @@ async def update_intelligence(
         {"id": intel_id},
         {"$set": update_dict}
     )
+    
+    _audit_access("patch_intelligence", current_user.tenant_id, object_id=intel_id)
     
     updated = await db.intelligence.find_one({"id": intel_id}, {"_id": 0})
     return Intelligence(**updated)
