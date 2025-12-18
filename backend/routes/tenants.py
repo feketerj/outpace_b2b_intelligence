@@ -166,6 +166,7 @@ ALLOWED_NESTED_FIELDS = {
         "text_color", "background_image_url", "background_image_base64", "visual_theme",
         "enable_glow_effects", "enable_sheen_overlay", "company_name"
     },
+    "chat_usage": {"month", "messages_used"},
 }
 
 
