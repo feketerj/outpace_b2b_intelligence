@@ -182,16 +182,41 @@ def find_all_unknown_fields(data: dict) -> list:
 @router.patch("/{tenant_id}", response_model=Tenant)
 async def patch_tenant(
     tenant_id: str,
-    payload: dict,
+    request: Request,
     current_user: TokenData = Depends(get_current_super_admin)
 ):
     """
-    PATCH tenant with deep merge. Rejects unknown fields with HTTP 400.
-    Nested objects are merged, not overwritten.
+    PATCH tenant with deep merge.
+    
+    CRITICAL: Unknown fields are REJECTED with HTTP 400.
+    The system will NEVER return success while dropping data.
     """
     db = get_db()
     
-    # Check tenant exists
+    # STEP 1: Get raw request body
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid JSON body"
+        )
+    
+    if not payload or not isinstance(payload, dict):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Request body must be a non-empty JSON object"
+        )
+    
+    # STEP 2: REJECT unknown fields BEFORE any processing
+    unknown_fields = find_all_unknown_fields(payload)
+    if unknown_fields:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown fields rejected: {', '.join(unknown_fields)}"
+        )
+    
+    # STEP 3: Check tenant exists
     existing_tenant = await db.tenants.find_one({"id": tenant_id})
     if not existing_tenant:
         raise HTTPException(
@@ -199,21 +224,7 @@ async def patch_tenant(
             detail="Tenant not found"
         )
     
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Request body required"
-        )
-    
-    # Reject unknown nested fields
-    unknown_fields = validate_no_unknown_fields(payload)
-    if unknown_fields:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unknown fields rejected: {', '.join(unknown_fields)}"
-        )
-    
-    # SECURITY: Block restricted fields for master tenants
+    # STEP 4: SECURITY - Block restricted fields for master tenants
     if existing_tenant.get("is_master_client"):
         for blocked in ["chat_policy", "tenant_knowledge", "rag_policy"]:
             if blocked in payload:
@@ -222,10 +233,10 @@ async def patch_tenant(
                     detail=f"{blocked} cannot be modified for master tenants"
                 )
     
-    # Deep merge nested objects
+    # STEP 5: Deep merge nested objects
     merged_data = {}
     for key, value in payload.items():
-        if key in KNOWN_NESTED_FIELDS and isinstance(value, dict):
+        if key in ALLOWED_NESTED_FIELDS and isinstance(value, dict):
             existing_value = existing_tenant.get(key, {}) or {}
             merged_data[key] = deep_merge(existing_value, value)
         else:
