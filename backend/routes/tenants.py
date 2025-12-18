@@ -123,25 +123,59 @@ def deep_merge(base: dict, updates: dict) -> dict:
     return result
 
 
-# Known fields for each nested config object (used to reject unknown fields)
-KNOWN_NESTED_FIELDS = {
+# COMPLETE schema of ALL allowed fields at EVERY level
+# This is the SINGLE SOURCE OF TRUTH for what the API accepts
+
+ALLOWED_TOP_LEVEL_FIELDS: Set[str] = {
+    "name", "slug", "status", "branding", "search_profile", "scoring_weights",
+    "agent_config", "intelligence_config", "chat_policy", "tenant_knowledge", "rag_policy"
+}
+
+ALLOWED_NESTED_FIELDS = {
     "scoring_weights": {"value_weight", "deadline_weight", "relevance_weight"},
     "chat_policy": {"enabled", "monthly_message_limit", "max_user_chars", "max_assistant_tokens", "max_turns_history"},
     "rag_policy": {"enabled", "max_documents", "max_chunks", "top_k", "min_score", "max_context_chars", "embed_model"},
-    "branding": {"primary_color", "logo_url", "logo_base64", "company_name"},
-    "search_profile": {"naics_codes", "keywords", "agencies", "set_asides", "competition_types"},
+    "branding": {
+        "logo_url", "logo_base64", "primary_color", "secondary_color", "accent_color",
+        "text_color", "background_image_url", "background_image_base64", "visual_theme",
+        "enable_glow_effects", "enable_sheen_overlay", "company_name"
+    },
+    "search_profile": {
+        "naics_codes", "keywords", "interest_areas", "competitors", "highergov_api_key",
+        "highergov_search_id", "fetch_full_documents", "fetch_nsn", "fetch_grants",
+        "fetch_contracts", "auto_update_enabled", "auto_update_interval_hours", "agencies", "set_asides", "competition_types"
+    },
+    "agent_config": {
+        "scoring_agent_id", "opportunities_chat_agent_id", "intelligence_chat_agent_id",
+        "scoring_instructions", "opportunities_chat_instructions", "intelligence_chat_instructions",
+        "scoring_output_schema"
+    },
+    "intelligence_config": {
+        "enabled", "perplexity_prompt_template", "schedule_cron", "lookback_days",
+        "deadline_window_days", "target_sources", "report_sections", "scoring_weights"
+    },
+    "tenant_knowledge": {"snippets", "last_updated"},
 }
 
 
-def validate_no_unknown_fields(data: dict, path: str = "") -> list:
-    """Return list of unknown field paths in the payload."""
+def find_all_unknown_fields(data: dict) -> list:
+    """
+    Recursively find ALL unknown fields in the payload.
+    Returns list of dotted paths to unknown fields.
+    """
     unknown = []
-    for key, value in data.items():
-        if key in KNOWN_NESTED_FIELDS and isinstance(value, dict):
-            allowed = KNOWN_NESTED_FIELDS[key]
-            for subkey in value.keys():
-                if subkey not in allowed:
+    
+    # Check top-level fields
+    for key in data.keys():
+        if key not in ALLOWED_TOP_LEVEL_FIELDS:
+            unknown.append(key)
+        elif key in ALLOWED_NESTED_FIELDS and isinstance(data[key], dict):
+            # Check nested fields
+            allowed_subfields = ALLOWED_NESTED_FIELDS[key]
+            for subkey in data[key].keys():
+                if subkey not in allowed_subfields:
                     unknown.append(f"{key}.{subkey}")
+    
     return unknown
 
 
