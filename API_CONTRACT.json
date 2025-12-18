@@ -1,0 +1,353 @@
+{
+  "app": "OutPace Intelligence Platform",
+  "version": "as_of_2025-12-18",
+  "roles": ["super_admin", "tenant_user"],
+  "global_invariants": [
+    {
+      "id": "INV-1",
+      "name": "tenant_isolation",
+      "statement": "A tenant cannot read/patch/export/chat/RAG against another tenant's data."
+    },
+    {
+      "id": "INV-2",
+      "name": "chat_atomicity",
+      "statement": "On any failure (LLM/embeddings/DB), no ChatTurn persists."
+    },
+    {
+      "id": "INV-3",
+      "name": "paid_chat_enforcement",
+      "statement": "chat_policy.enabled=false => 403 and no chat persistence."
+    },
+    {
+      "id": "INV-4",
+      "name": "master_tenant_restriction",
+      "statement": "is_master_client=true cannot modify chat_policy, rag_policy, tenant_knowledge via API; UI hides chat controls."
+    },
+    {
+      "id": "INV-5",
+      "name": "export_determinism",
+      "statement": "Export returns a valid file or fails loudly; no silent corrupt outputs."
+    }
+  ],
+  "observability": {
+    "logs": [
+      { "tag": "[rag.audit]", "purpose": "RAG retrieval audit (tenant_id, conv, reason, searched, used, chars)" },
+      { "tag": "[tenant.audit]", "purpose": "Tenant-scoped endpoint access audit" },
+      { "tag": "[audit.patch_ignored]", "purpose": "PATCH ignored-fields audit" },
+      { "tag": "[quota]", "purpose": "Quota reservation/increment logs" },
+      { "tag": "[rag.cleanup]", "purpose": "Startup cleanup for stuck RAG docs" },
+      { "tag": "[rag.indexes]", "purpose": "RAG index ensure at startup" }
+    ]
+  },
+  "features": [
+    {
+      "id": "F-AUTH-1",
+      "name": "login",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/auth/login",
+          "roles_allowed": ["super_admin", "tenant_user"],
+          "request_body_schema": { "email": "string", "password": "string" },
+          "success": { "status": 200, "returns": ["access_token"] },
+          "failure": [
+            { "status": 401, "when": "invalid_credentials" }
+          ],
+          "invariants": ["INV-1"]
+        }
+      ]
+    },
+    {
+      "id": "F-AUTH-2",
+      "name": "me",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/auth/me",
+          "roles_allowed": ["super_admin", "tenant_user"],
+          "success": { "status": 200, "returns": ["id", "role", "tenant_id"] },
+          "failure": [{ "status": 401, "when": "missing_or_invalid_token" }]
+        }
+      ]
+    },
+    {
+      "id": "F-TENANTS-1",
+      "name": "tenant_crud_super_admin",
+      "endpoints": [
+        { "method": "GET", "path": "/api/tenants", "roles_allowed": ["super_admin"], "success": { "status": 200 } },
+        { "method": "GET", "path": "/api/tenants/{tenant_id}", "roles_allowed": ["super_admin"], "success": { "status": 200 }, "failure": [{ "status": 404, "when": "not_found" }] },
+        { "method": "POST", "path": "/api/tenants", "roles_allowed": ["super_admin"], "success": { "status": 200 }, "failure": [{ "status": 400, "when": "validation" }] },
+        { "method": "PUT", "path": "/api/tenants/{tenant_id}", "roles_allowed": ["super_admin"], "success": { "status": 200 }, "failure": [{ "status": 403, "when": "master_tenant_forbidden_fields", "details": ["chat_policy", "rag_policy", "tenant_knowledge"] }] },
+        { "method": "DELETE", "path": "/api/tenants/{tenant_id}", "roles_allowed": ["super_admin"], "success": { "status": 204 } }
+      ],
+      "invariants": ["INV-4"]
+    },
+    {
+      "id": "F-USERS-1",
+      "name": "user_crud_super_admin",
+      "endpoints": [
+        { "method": "GET", "path": "/api/users", "roles_allowed": ["super_admin"], "success": { "status": 200 } },
+        { "method": "POST", "path": "/api/users", "roles_allowed": ["super_admin"], "success": { "status": 200 } },
+        { "method": "DELETE", "path": "/api/users/{user_id}", "roles_allowed": ["super_admin"], "success": { "status": 204 } }
+      ],
+      "invariants": ["INV-1"]
+    },
+    {
+      "id": "F-OPPS-1",
+      "name": "opportunities_list_get",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/opportunities",
+          "roles_allowed": ["tenant_user", "super_admin"],
+          "tenant_scope": {
+            "tenant_user": "implicit_from_token",
+            "super_admin": "optional_query_param_tenant_id"
+          },
+          "success": { "status": 200, "returns": ["data[]", "pagination"] },
+          "invariants": ["INV-1"]
+        },
+        {
+          "method": "GET",
+          "path": "/api/opportunities/{opp_id}",
+          "roles_allowed": ["tenant_user", "super_admin"],
+          "success": { "status": 200 },
+          "failure": [
+            { "status": 403, "when": "cross_tenant_access" },
+            { "status": 404, "when": "not_found" }
+          ],
+          "invariants": ["INV-1"]
+        }
+      ]
+    },
+    {
+      "id": "F-OPPS-2",
+      "name": "opportunities_patch_client_fields",
+      "endpoints": [
+        {
+          "method": "PATCH",
+          "path": "/api/opportunities/{opp_id}",
+          "roles_allowed": ["tenant_user"],
+          "allowed_fields": ["client_status", "client_notes", "client_tags", "is_archived"],
+          "ignored_fields_behavior": "silently_ignored_and_logged",
+          "logs": ["[audit.patch_ignored]", "[tenant.audit]"],
+          "success": { "status": 200 },
+          "failure": [
+            { "status": 403, "when": "cross_tenant_access" },
+            { "status": 404, "when": "not_found" }
+          ],
+          "invariants": ["INV-1"]
+        }
+      ]
+    },
+    {
+      "id": "F-INTEL-1",
+      "name": "intelligence_list_get",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/intelligence",
+          "roles_allowed": ["tenant_user", "super_admin"],
+          "tenant_scope": {
+            "tenant_user": "implicit_from_token",
+            "super_admin": "optional_query_param_tenant_id"
+          },
+          "success": { "status": 200, "returns": ["data[]", "pagination"] },
+          "invariants": ["INV-1"]
+        },
+        {
+          "method": "GET",
+          "path": "/api/intelligence/{intel_id}",
+          "roles_allowed": ["tenant_user", "super_admin"],
+          "success": { "status": 200 },
+          "failure": [
+            { "status": 403, "when": "cross_tenant_access" },
+            { "status": 404, "when": "not_found" }
+          ],
+          "invariants": ["INV-1"]
+        }
+      ]
+    },
+    {
+      "id": "F-INTEL-2",
+      "name": "intelligence_patch_client_fields",
+      "endpoints": [
+        {
+          "method": "PATCH",
+          "path": "/api/intelligence/{intel_id}",
+          "roles_allowed": ["tenant_user"],
+          "allowed_fields": ["is_archived", "client_notes"],
+          "ignored_fields_behavior": "silently_ignored_and_logged",
+          "logs": ["[audit.patch_ignored]", "[tenant.audit]"],
+          "success": { "status": 200 },
+          "failure": [
+            { "status": 403, "when": "cross_tenant_access" },
+            { "status": 404, "when": "not_found" }
+          ],
+          "invariants": ["INV-1"]
+        }
+      ]
+    },
+    {
+      "id": "F-EXPORTS-1",
+      "name": "branded_pdf_export",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/exports/pdf",
+          "roles_allowed": ["tenant_user", "super_admin"],
+          "request_body_schema": {
+            "tenant_id": "optional_for_tenant_user_required_for_super_admin",
+            "opportunity_ids": "list[string]",
+            "intelligence_ids": "list[string]"
+          },
+          "success": { "status": 200, "content_type": "application/pdf" },
+          "failure": [
+            { "status": 400, "when": "missing_tenant_id_for_super_admin" },
+            { "status": 403, "when": "cross_tenant_access" },
+            { "status": 404, "when": "empty_selection_or_no_data" }
+          ],
+          "invariants": ["INV-1", "INV-5"]
+        }
+      ]
+    },
+    {
+      "id": "F-EXPORTS-2",
+      "name": "branded_excel_export",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/exports/excel",
+          "roles_allowed": ["tenant_user", "super_admin"],
+          "request_body_schema": {
+            "tenant_id": "optional_for_tenant_user_required_for_super_admin",
+            "opportunity_ids": "list[string]",
+            "intelligence_ids": "list[string]"
+          },
+          "success": { "status": 200, "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+          "failure": [
+            { "status": 400, "when": "missing_tenant_id_for_super_admin" },
+            { "status": 403, "when": "cross_tenant_access" },
+            { "status": 404, "when": "empty_selection_or_no_data" }
+          ],
+          "invariants": ["INV-1", "INV-5"]
+        }
+      ]
+    },
+    {
+      "id": "F-CHAT-1",
+      "name": "chat_message",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/chat/message",
+          "roles_allowed": ["tenant_user"],
+          "request_body_schema": {
+            "conversation_id": "string<=128 regex ^[A-Za-z0-9._-]+$",
+            "message": "string<=max_user_chars(default 2000)",
+            "agent_type": "string(opportunities|intelligence)"
+          },
+          "success": { "status": 200, "returns": ["content", "conversation_id"] },
+          "failure": [
+            { "status": 400, "when": "invalid_conversation_id_or_message_too_long" },
+            { "status": 403, "when": "chat_policy_disabled" },
+            { "status": 429, "when": "monthly_message_limit_exceeded" },
+            { "status": 520, "when": "llm_unavailable" }
+          ],
+          "invariants": ["INV-1", "INV-2", "INV-3"]
+        }
+      ]
+    },
+    {
+      "id": "F-CHAT-2",
+      "name": "chat_history",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/chat/history/{conversation_id}",
+          "roles_allowed": ["tenant_user"],
+          "success": { "status": 200, "returns": ["list[ChatMessage]"] },
+          "invariants": ["INV-1"]
+        }
+      ]
+    },
+    {
+      "id": "F-RAG-1",
+      "name": "rag_admin_ingest_and_manage",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/tenants/{tenant_id}/rag/status",
+          "roles_allowed": ["super_admin"],
+          "success": { "status": 200, "returns": ["enabled", "documents", "chunks", "max_chunks", "embed_model"] }
+        },
+        {
+          "method": "POST",
+          "path": "/api/tenants/{tenant_id}/rag/documents",
+          "roles_allowed": ["super_admin"],
+          "request_body_schema": { "title": "string", "content": "plaintext string" },
+          "success": { "status": 200, "returns": ["document_id", "chunks_created", "status"] },
+          "failure": [
+            { "status": 403, "when": "rag_disabled_or_master_tenant" },
+            { "status": 409, "when": "capacity_limit_exceeded" }
+          ],
+          "invariants": ["INV-1", "INV-4"]
+        },
+        {
+          "method": "GET",
+          "path": "/api/tenants/{tenant_id}/rag/documents",
+          "roles_allowed": ["super_admin"],
+          "success": { "status": 200 }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/tenants/{tenant_id}/rag/documents/{doc_id}",
+          "roles_allowed": ["super_admin"],
+          "success": { "status": 204 }
+        }
+      ]
+    }
+  ],
+  "carfax_proofs": {
+    "INV-1": {
+      "proven": true,
+      "evidence": [
+        "Cross-tenant GET opportunities: 403",
+        "Cross-tenant GET intelligence: 403",
+        "Cross-tenant export: 403",
+        "Cross-tenant RAG: no_chunks retrieved (audit log)",
+        "[tenant.audit] logs all access"
+      ]
+    },
+    "INV-2": {
+      "proven": true,
+      "evidence": [
+        "LLM failure: BEFORE=0, AFTER=0 chat_turns",
+        "Quota release on failure"
+      ]
+    },
+    "INV-3": {
+      "proven": true,
+      "evidence": [
+        "chat_policy.enabled=false: 403"
+      ]
+    },
+    "INV-4": {
+      "proven": true,
+      "evidence": [
+        "Master tenant PUT chat_policy: 403",
+        "Master tenant PUT rag_policy: 403",
+        "Master tenant PUT tenant_knowledge: 403"
+      ]
+    },
+    "INV-5": {
+      "proven": true,
+      "evidence": [
+        "Empty selection: 404",
+        "Nonexistent ID: 404",
+        "Cross-tenant: 403",
+        "Missing tenant_id: 400"
+      ]
+    }
+  }
+}
