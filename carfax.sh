@@ -26,12 +26,13 @@ LOG_FILE="/var/log/supervisor/backend.err.log"
 # Fixtures from TEST_PLAN.json
 ADMIN_EMAIL="admin@outpace.ai"
 ADMIN_PASSWORD="Admin123!"
-TENANT_A_EMAIL="tenant-test@test.com"
+# Updated fixtures after data changes
+TENANT_A_EMAIL="tenant-b-test@test.com"
 TENANT_A_PASSWORD="Test123!"
-TENANT_B_EMAIL="tenant-b-test@test.com"
+TENANT_B_EMAIL="t1766028763@t.com"
 TENANT_B_PASSWORD="Test123!"
-TENANT_A_ID="bec8a414-b00d-4a58-9539-5f732db23b35"
-TENANT_B_ID="8aa521eb-56ad-4727-8f09-c01fc7921c21"
+TENANT_A_ID="8aa521eb-56ad-4727-8f09-c01fc7921c21"
+TENANT_B_ID="e4e0b3b4-90ec-4c32-88d8-534aa563ed5d"
 
 # Counters
 PASSED=0
