@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, status, Depends, Body
-from typing import Dict, Any
+from fastapi import APIRouter, HTTPException, status, Depends, Body, Request
+from typing import Dict, Any, Set
 import logging
 from datetime import datetime, timezone
 
@@ -12,49 +12,77 @@ logger = logging.getLogger(__name__)
 def get_db():
     return get_database()
 
+
+# ALLOWED fields for intelligence_config - SINGLE SOURCE OF TRUTH
+ALLOWED_INTELLIGENCE_CONFIG_FIELDS: Set[str] = {
+    "enabled",
+    "perplexity_prompt_template",
+    "schedule_cron",
+    "lookback_days",
+    "deadline_window_days",
+    "target_sources",
+    "report_sections",
+    "scoring_weights",
+}
+
+ALLOWED_INTELLIGENCE_SCORING_WEIGHTS: Set[str] = {
+    "relevance", "amount", "timeline", "win_probability", "strategic_fit", "partner_potential"
+}
+
+
 @router.put("/tenants/{tenant_id}/intelligence-config")
 async def update_intelligence_config(
     tenant_id: str,
-    config_data: Dict[str, Any] = Body(...),
+    request: Request,
     current_user: TokenData = Depends(get_current_tenant_admin)
 ):
     """
     Update intelligence configuration for a tenant.
     
-    Supports:
-    - Custom Perplexity prompt templates
-    - Custom sync schedules (cron expressions)
-    - Lookback window and deadline configurations
-    - Enable/disable intelligence generation
-    
-    Example config_data:
-    {
-        "enabled": true,
-        "perplexity_prompt_template": "Your custom prompt with {{COMPANY_NAME}} variables...",
-        "schedule_cron": "0 6 * * *",  # Daily at 6 AM UTC
-        "lookback_days": 14,
-        "deadline_window_days": 120,
-        "target_sources": ["site:maritime.dot.gov", "site:grants.gov"],
-        "scoring_weights": {
-            "relevance": 25,
-            "amount": 20,
-            "timeline": 15,
-            "win_probability": 15,
-            "strategic_fit": 15,
-            "partner_potential": 10
-        }
-    }
+    CRITICAL: Unknown fields are REJECTED with HTTP 400.
+    The system will NEVER return success while dropping data.
     """
     db = get_db()
     
-    # Access control
+    # STEP 1: Get raw request body
+    try:
+        config_data = await request.json()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid JSON body"
+        )
+    
+    if not config_data or not isinstance(config_data, dict):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Request body must be a non-empty JSON object"
+        )
+    
+    # STEP 2: REJECT unknown fields BEFORE any processing
+    unknown_fields = []
+    for key in config_data.keys():
+        if key not in ALLOWED_INTELLIGENCE_CONFIG_FIELDS:
+            unknown_fields.append(key)
+        elif key == "scoring_weights" and isinstance(config_data[key], dict):
+            for subkey in config_data[key].keys():
+                if subkey not in ALLOWED_INTELLIGENCE_SCORING_WEIGHTS:
+                    unknown_fields.append(f"scoring_weights.{subkey}")
+    
+    if unknown_fields:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown fields rejected: {', '.join(unknown_fields)}"
+        )
+    
+    # STEP 3: Access control
     if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
     
-    # Validate tenant exists
+    # STEP 4: Validate tenant exists
     tenant = await db.tenants.find_one({"id": tenant_id})
     if not tenant:
         raise HTTPException(
@@ -62,7 +90,7 @@ async def update_intelligence_config(
             detail="Tenant not found"
         )
     
-    # Validate cron expression if provided
+    # STEP 5: Validate cron expression if provided
     if "schedule_cron" in config_data:
         cron = config_data["schedule_cron"]
         if cron and len(cron.split()) != 5:
@@ -71,7 +99,7 @@ async def update_intelligence_config(
                 detail="Invalid cron expression. Must be in format: 'minute hour day month day_of_week'"
             )
     
-    # Update intelligence_config
+    # STEP 6: Update intelligence_config (merge, don't overwrite)
     existing_config = tenant.get("intelligence_config", {})
     updated_config = {**existing_config, **config_data}
     updated_config["updated_at"] = datetime.now(timezone.utc).isoformat()
