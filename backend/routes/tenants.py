@@ -382,16 +382,41 @@ async def list_knowledge_snippets(
     return snippets
 
 
+# ALLOWED fields for knowledge snippets - SINGLE SOURCE OF TRUTH
+ALLOWED_SNIPPET_FIELDS: Set[str] = {"title", "content", "tags"}
+
+
 @router.post("/{tenant_id}/knowledge-snippets")
 async def create_knowledge_snippet(
     tenant_id: str,
-    snippet_data: dict,
+    request: Request,
     current_user: TokenData = Depends(get_current_super_admin)
 ):
-    """Create a knowledge snippet (Super Admin only, not for master tenants)"""
+    """
+    Create a knowledge snippet (Super Admin only, not for master tenants).
+    
+    CRITICAL: Unknown fields are REJECTED with HTTP 400.
+    """
     db = get_db()
     
-    # Check tenant exists and is not master
+    # STEP 1: Get raw request body
+    try:
+        snippet_data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    
+    if not snippet_data or not isinstance(snippet_data, dict):
+        raise HTTPException(status_code=400, detail="Request body must be a non-empty JSON object")
+    
+    # STEP 2: REJECT unknown fields
+    unknown_fields = [k for k in snippet_data.keys() if k not in ALLOWED_SNIPPET_FIELDS]
+    if unknown_fields:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown fields rejected: {', '.join(unknown_fields)}"
+        )
+    
+    # STEP 3: Check tenant exists and is not master
     tenant = await db.tenants.find_one({"id": tenant_id})
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
@@ -418,13 +443,34 @@ async def create_knowledge_snippet(
 async def update_knowledge_snippet(
     tenant_id: str,
     snippet_id: str,
-    snippet_data: dict,
+    request: Request,
     current_user: TokenData = Depends(get_current_super_admin)
 ):
-    """Update a knowledge snippet (Super Admin only)"""
+    """
+    Update a knowledge snippet (Super Admin only).
+    
+    CRITICAL: Unknown fields are REJECTED with HTTP 400.
+    """
     db = get_db()
     
-    # Find existing snippet
+    # STEP 1: Get raw request body
+    try:
+        snippet_data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    
+    if not snippet_data or not isinstance(snippet_data, dict):
+        raise HTTPException(status_code=400, detail="Request body must be a non-empty JSON object")
+    
+    # STEP 2: REJECT unknown fields
+    unknown_fields = [k for k in snippet_data.keys() if k not in ALLOWED_SNIPPET_FIELDS]
+    if unknown_fields:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown fields rejected: {', '.join(unknown_fields)}"
+        )
+    
+    # STEP 3: Find existing snippet
     existing = await db.knowledge_snippets.find_one({"id": snippet_id, "tenant_id": tenant_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Snippet not found")
