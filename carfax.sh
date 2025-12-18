@@ -267,7 +267,7 @@ test_S2_chat_atomicity() {
     curl -s -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
         -H "Authorization: Bearer $ADMIN_TOKEN" \
         -H "Content-Type: application/json" \
-        -d '{"chat_policy":{"enabled":true,"monthly_message_limit":100},"chat_usage":{"current_month":"2025-12","messages_used":0}}' > /dev/null
+        -d '{"chat_policy":{"enabled":true,"monthly_message_limit":100},"chat_usage":{"month":"2025-12","messages_used":0}}' > /dev/null
     evidence "Reset quota"
     
     if [ "$status" = "429" ] && [ "$before_count" = "$after_count" ]; then
