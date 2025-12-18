@@ -245,17 +245,42 @@ async def patch_tenant(
 @router.put("/{tenant_id}", response_model=Tenant)
 async def update_tenant(
     tenant_id: str,
-    tenant_data: TenantUpdate,
+    request: Request,
     current_user: TokenData = Depends(get_current_super_admin)
 ):
     """
     Update tenant (Super Admin only).
-    PUT performs deep merge on nested config objects (same as PATCH).
-    Unknown fields in nested objects are rejected with HTTP 400.
+    PUT performs deep merge on nested config objects.
+    
+    CRITICAL: Unknown fields are REJECTED with HTTP 400.
+    The system will NEVER return success while dropping data.
     """
     db = get_db()
     
-    # Check tenant exists
+    # STEP 1: Get raw request body BEFORE Pydantic strips unknown fields
+    try:
+        raw_body = await request.json()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid JSON body"
+        )
+    
+    if not raw_body or not isinstance(raw_body, dict):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Request body must be a non-empty JSON object"
+        )
+    
+    # STEP 2: REJECT unknown fields BEFORE any processing
+    unknown_fields = find_all_unknown_fields(raw_body)
+    if unknown_fields:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown fields rejected: {', '.join(unknown_fields)}"
+        )
+    
+    # STEP 3: Check tenant exists
     existing_tenant = await db.tenants.find_one({"id": tenant_id})
     if not existing_tenant:
         raise HTTPException(
@@ -263,48 +288,28 @@ async def update_tenant(
             detail="Tenant not found"
         )
     
-    # Check slug uniqueness if updating
-    if tenant_data.slug and tenant_data.slug != existing_tenant.get("slug"):
-        slug_exists = await db.tenants.find_one({"slug": tenant_data.slug})
+    # STEP 4: Check slug uniqueness if updating
+    if raw_body.get("slug") and raw_body.get("slug") != existing_tenant.get("slug"):
+        slug_exists = await db.tenants.find_one({"slug": raw_body.get("slug")})
         if slug_exists:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Tenant slug already exists"
             )
     
-    # Get raw update data
-    update_data = {k: v for k, v in tenant_data.model_dump(exclude_unset=True).items() if v is not None}
-    
-    # Reject unknown nested fields
-    unknown_fields = validate_no_unknown_fields(update_data)
-    if unknown_fields:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unknown fields rejected: {', '.join(unknown_fields)}"
-        )
-    
-    # SECURITY: Block chat_policy, tenant_knowledge, and rag_policy updates for master tenants
+    # STEP 5: SECURITY - Block restricted fields for master tenants
     if existing_tenant.get("is_master_client"):
-        if "chat_policy" in update_data:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="chat_policy cannot be modified for master tenants"
-            )
-        if "tenant_knowledge" in update_data:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="tenant_knowledge cannot be modified for master tenants"
-            )
-        if "rag_policy" in update_data:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="rag_policy cannot be modified for master tenants"
-            )
+        for blocked in ["chat_policy", "tenant_knowledge", "rag_policy"]:
+            if blocked in raw_body:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"{blocked} cannot be modified for master tenants"
+                )
     
-    # Deep merge nested objects (prevent sibling loss)
+    # STEP 6: Deep merge nested objects (prevent sibling loss)
     merged_data = {}
-    for key, value in update_data.items():
-        if key in KNOWN_NESTED_FIELDS and isinstance(value, dict):
+    for key, value in raw_body.items():
+        if key in ALLOWED_NESTED_FIELDS and isinstance(value, dict):
             existing_value = existing_tenant.get(key, {}) or {}
             merged_data[key] = deep_merge(existing_value, value)
         else:
