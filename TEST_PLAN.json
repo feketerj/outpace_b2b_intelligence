@@ -1,0 +1,442 @@
+{
+  "app": "OutPace Intelligence Platform",
+  "version": "1.0.0",
+  "generated": "2025-12-18",
+  "test_strategy": {
+    "approach": "Invariant-Based Testing",
+    "philosophy": "Prove system invariants hold under normal and adversarial conditions",
+    "coverage_goal": "100% of critical paths, all 5 invariants proven"
+  },
+  "invariants": [
+    {
+      "id": "INV-1",
+      "name": "Tenant Isolation",
+      "statement": "A tenant cannot read/patch/export/chat/RAG against another tenant's data",
+      "criticality": "CRITICAL",
+      "test_approach": "Cross-tenant access attempts must return 403 or empty results"
+    },
+    {
+      "id": "INV-2",
+      "name": "Chat Atomicity",
+      "statement": "On any failure (LLM/embeddings/DB), no ChatTurn persists",
+      "criticality": "CRITICAL",
+      "test_approach": "Count chat_turns before/after failed operations, must be equal"
+    },
+    {
+      "id": "INV-3",
+      "name": "Paid Chat Enforcement",
+      "statement": "chat_policy.enabled=false => 403 and no chat persistence",
+      "criticality": "HIGH",
+      "test_approach": "Disable chat, attempt message, verify 403 and no new turns"
+    },
+    {
+      "id": "INV-4",
+      "name": "Master Tenant Restriction",
+      "statement": "is_master_client=true cannot modify chat_policy, rag_policy, tenant_knowledge via API",
+      "criticality": "HIGH",
+      "test_approach": "PUT master tenant with forbidden fields, verify 403"
+    },
+    {
+      "id": "INV-5",
+      "name": "Export Determinism",
+      "statement": "Export returns a valid file or fails loudly; no silent corrupt outputs",
+      "criticality": "MEDIUM",
+      "test_approach": "Export with invalid/empty data, verify appropriate error codes"
+    }
+  ],
+  "test_suites": [
+    {
+      "id": "TS-AUTH",
+      "name": "Authentication Tests",
+      "feature_group": "FG-AUTH",
+      "tests": [
+        {
+          "id": "T-AUTH-001",
+          "name": "Valid Login Returns Token",
+          "type": "positive",
+          "endpoint": "POST /api/auth/login",
+          "input": {"email": "admin@outpace.ai", "password": "Admin123!"},
+          "expected": {"status": 200, "has_field": "access_token"}
+        },
+        {
+          "id": "T-AUTH-002",
+          "name": "Invalid Password Returns 401",
+          "type": "negative",
+          "endpoint": "POST /api/auth/login",
+          "input": {"email": "admin@outpace.ai", "password": "wrong"},
+          "expected": {"status": 401}
+        },
+        {
+          "id": "T-AUTH-003",
+          "name": "Get Me Without Token Returns 401",
+          "type": "negative",
+          "endpoint": "GET /api/auth/me",
+          "headers": {},
+          "expected": {"status": 401}
+        },
+        {
+          "id": "T-AUTH-004",
+          "name": "Get Me With Valid Token Returns User",
+          "type": "positive",
+          "endpoint": "GET /api/auth/me",
+          "requires_auth": "super_admin",
+          "expected": {"status": 200, "has_fields": ["id", "email", "role"]}
+        }
+      ]
+    },
+    {
+      "id": "TS-TENANT",
+      "name": "Tenant Management Tests",
+      "feature_group": "FG-TENANTS",
+      "tests": [
+        {
+          "id": "T-TENANT-001",
+          "name": "List Tenants as Super Admin",
+          "type": "positive",
+          "endpoint": "GET /api/tenants",
+          "requires_auth": "super_admin",
+          "expected": {"status": 200, "is_array": true}
+        },
+        {
+          "id": "T-TENANT-002",
+          "name": "Create Tenant",
+          "type": "positive",
+          "endpoint": "POST /api/tenants",
+          "requires_auth": "super_admin",
+          "input": {"name": "Test Tenant"},
+          "expected": {"status": 200, "has_field": "id"},
+          "cleanup": "DELETE /api/tenants/{created_id}"
+        },
+        {
+          "id": "T-TENANT-003",
+          "name": "Update Tenant",
+          "type": "positive",
+          "endpoint": "PUT /api/tenants/{tenant_id}",
+          "requires_auth": "super_admin",
+          "setup": "Create test tenant",
+          "input": {"name": "Updated Name"},
+          "expected": {"status": 200}
+        },
+        {
+          "id": "T-TENANT-004",
+          "name": "Delete Tenant",
+          "type": "positive",
+          "endpoint": "DELETE /api/tenants/{tenant_id}",
+          "requires_auth": "super_admin",
+          "setup": "Create test tenant",
+          "expected": {"status": 204}
+        },
+        {
+          "id": "T-TENANT-005",
+          "name": "Master Tenant Cannot Update chat_policy (INV-4)",
+          "type": "invariant",
+          "invariant": "INV-4",
+          "endpoint": "PUT /api/tenants/{master_tenant_id}",
+          "requires_auth": "super_admin",
+          "input": {"chat_policy": {"enabled": true}},
+          "expected": {"status": 403, "message_contains": "cannot be modified for master tenants"}
+        },
+        {
+          "id": "T-TENANT-006",
+          "name": "Master Tenant Cannot Update rag_policy (INV-4)",
+          "type": "invariant",
+          "invariant": "INV-4",
+          "endpoint": "PUT /api/tenants/{master_tenant_id}",
+          "requires_auth": "super_admin",
+          "input": {"rag_policy": {"enabled": true}},
+          "expected": {"status": 403}
+        }
+      ]
+    },
+    {
+      "id": "TS-ISOLATION",
+      "name": "Tenant Isolation Tests (INV-1)",
+      "invariant": "INV-1",
+      "tests": [
+        {
+          "id": "T-ISO-001",
+          "name": "Cross-Tenant Opportunity Access Returns 403",
+          "type": "invariant",
+          "invariant": "INV-1",
+          "setup": "Login as Tenant A user, get Tenant B opportunity ID",
+          "endpoint": "GET /api/opportunities/{tenant_b_opp_id}",
+          "requires_auth": "tenant_user_a",
+          "expected": {"status": 403}
+        },
+        {
+          "id": "T-ISO-002",
+          "name": "Cross-Tenant Intelligence Access Returns 403",
+          "type": "invariant",
+          "invariant": "INV-1",
+          "setup": "Login as Tenant A user, get Tenant B intelligence ID",
+          "endpoint": "GET /api/intelligence/{tenant_b_intel_id}",
+          "requires_auth": "tenant_user_a",
+          "expected": {"status": 403}
+        },
+        {
+          "id": "T-ISO-003",
+          "name": "Cross-Tenant Export Returns 403",
+          "type": "invariant",
+          "invariant": "INV-1",
+          "endpoint": "POST /api/exports/pdf",
+          "requires_auth": "tenant_user_a",
+          "input": {"tenant_id": "tenant_b_id", "opportunity_ids": []},
+          "expected": {"status": 403}
+        },
+        {
+          "id": "T-ISO-004",
+          "name": "Cross-Tenant PATCH Returns 403",
+          "type": "invariant",
+          "invariant": "INV-1",
+          "endpoint": "PATCH /api/opportunities/{tenant_b_opp_id}",
+          "requires_auth": "tenant_user_a",
+          "input": {"client_notes": "hacked"},
+          "expected": {"status": 403}
+        },
+        {
+          "id": "T-ISO-005",
+          "name": "Tenant Audit Log Generated",
+          "type": "audit",
+          "invariant": "INV-1",
+          "endpoint": "GET /api/opportunities",
+          "requires_auth": "tenant_user_a",
+          "expected": {"status": 200},
+          "verify_log": "[tenant.audit]"
+        }
+      ]
+    },
+    {
+      "id": "TS-CHAT",
+      "name": "Chat Tests",
+      "feature_group": "FG-CHAT",
+      "tests": [
+        {
+          "id": "T-CHAT-001",
+          "name": "Chat Message With Enabled Policy",
+          "type": "positive",
+          "endpoint": "POST /api/chat/message",
+          "requires_auth": "tenant_user",
+          "setup": "Ensure chat_policy.enabled=true",
+          "input": {"conversation_id": "test-conv-001", "message": "Hello", "agent_type": "opportunities"},
+          "expected": {"status": 200, "has_field": "content"}
+        },
+        {
+          "id": "T-CHAT-002",
+          "name": "Chat Message With Disabled Policy Returns 403 (INV-3)",
+          "type": "invariant",
+          "invariant": "INV-3",
+          "endpoint": "POST /api/chat/message",
+          "requires_auth": "tenant_user",
+          "setup": "Set chat_policy.enabled=false",
+          "input": {"conversation_id": "test-conv-002", "message": "Hello", "agent_type": "opportunities"},
+          "expected": {"status": 403}
+        },
+        {
+          "id": "T-CHAT-003",
+          "name": "Chat Quota Enforcement Returns 429",
+          "type": "negative",
+          "endpoint": "POST /api/chat/message",
+          "requires_auth": "tenant_user",
+          "setup": "Set monthly_message_limit=1, send 1 message",
+          "input": {"conversation_id": "test-conv-003", "message": "Second message", "agent_type": "opportunities"},
+          "expected": {"status": 429}
+        },
+        {
+          "id": "T-CHAT-004",
+          "name": "Get Chat History",
+          "type": "positive",
+          "endpoint": "GET /api/chat/history/{conversation_id}",
+          "requires_auth": "tenant_user",
+          "expected": {"status": 200}
+        }
+      ]
+    },
+    {
+      "id": "TS-EXPORTS",
+      "name": "Export Tests",
+      "feature_group": "FG-EXPORTS",
+      "tests": [
+        {
+          "id": "T-EXPORT-001",
+          "name": "PDF Export With Valid Data",
+          "type": "positive",
+          "endpoint": "POST /api/exports/pdf",
+          "requires_auth": "super_admin",
+          "input": {"tenant_id": "valid_tenant_id", "opportunity_ids": [], "intelligence_ids": []},
+          "expected": {"status_one_of": [200, 404]}
+        },
+        {
+          "id": "T-EXPORT-002",
+          "name": "PDF Export Missing tenant_id Returns 400 (INV-5)",
+          "type": "invariant",
+          "invariant": "INV-5",
+          "endpoint": "POST /api/exports/pdf",
+          "requires_auth": "super_admin",
+          "input": {"opportunity_ids": []},
+          "expected": {"status": 400}
+        },
+        {
+          "id": "T-EXPORT-003",
+          "name": "Excel Export With Valid Data",
+          "type": "positive",
+          "endpoint": "POST /api/exports/excel",
+          "requires_auth": "super_admin",
+          "input": {"tenant_id": "valid_tenant_id", "opportunity_ids": [], "intelligence_ids": []},
+          "expected": {"status_one_of": [200, 404]}
+        },
+        {
+          "id": "T-EXPORT-004",
+          "name": "Cross-Tenant Export Returns 403 (INV-1)",
+          "type": "invariant",
+          "invariant": "INV-1",
+          "endpoint": "POST /api/exports/pdf",
+          "requires_auth": "tenant_user_a",
+          "input": {"tenant_id": "tenant_b_id", "opportunity_ids": []},
+          "expected": {"status": 403}
+        }
+      ]
+    },
+    {
+      "id": "TS-RAG",
+      "name": "RAG Tests",
+      "feature_group": "FG-RAG",
+      "tests": [
+        {
+          "id": "T-RAG-001",
+          "name": "Get RAG Status",
+          "type": "positive",
+          "endpoint": "GET /api/tenants/{tenant_id}/rag/status",
+          "requires_auth": "super_admin",
+          "expected": {"status": 200, "has_fields": ["enabled", "documents", "chunks"]}
+        },
+        {
+          "id": "T-RAG-002",
+          "name": "Ingest RAG Document",
+          "type": "positive",
+          "endpoint": "POST /api/tenants/{tenant_id}/rag/documents",
+          "requires_auth": "super_admin",
+          "setup": "Ensure rag_policy.enabled=true",
+          "input": {"title": "Test Doc", "content": "Test content for RAG"},
+          "expected": {"status": 200, "has_fields": ["document_id", "chunks_created"]}
+        },
+        {
+          "id": "T-RAG-003",
+          "name": "Master Tenant RAG Ingest Returns 403 (INV-4)",
+          "type": "invariant",
+          "invariant": "INV-4",
+          "endpoint": "POST /api/tenants/{master_tenant_id}/rag/documents",
+          "requires_auth": "super_admin",
+          "input": {"title": "Test", "content": "Test"},
+          "expected": {"status": 403}
+        },
+        {
+          "id": "T-RAG-004",
+          "name": "RAG Retrieval Tenant Isolated (INV-1)",
+          "type": "invariant",
+          "invariant": "INV-1",
+          "description": "Chat with RAG should only retrieve tenant's own chunks",
+          "setup": "Ingest docs for Tenant A, chat as Tenant B",
+          "verify_log": "[rag.audit] ... used=0"
+        }
+      ]
+    },
+    {
+      "id": "TS-USERS",
+      "name": "User Management Tests",
+      "feature_group": "FG-USERS",
+      "tests": [
+        {
+          "id": "T-USER-001",
+          "name": "List Users",
+          "type": "positive",
+          "endpoint": "GET /api/users",
+          "requires_auth": "super_admin",
+          "expected": {"status": 200}
+        },
+        {
+          "id": "T-USER-002",
+          "name": "Create User",
+          "type": "positive",
+          "endpoint": "POST /api/users",
+          "requires_auth": "super_admin",
+          "input": {"email": "test@test.com", "password": "Test123!", "full_name": "Test User", "role": "tenant_user"},
+          "expected": {"status": 200},
+          "cleanup": "DELETE /api/users/{created_id}"
+        },
+        {
+          "id": "T-USER-003",
+          "name": "Delete User",
+          "type": "positive",
+          "endpoint": "DELETE /api/users/{user_id}",
+          "requires_auth": "super_admin",
+          "setup": "Create test user",
+          "expected": {"status": 204}
+        }
+      ]
+    },
+    {
+      "id": "TS-ADMIN",
+      "name": "Admin Tests",
+      "feature_group": "FG-ADMIN",
+      "tests": [
+        {
+          "id": "T-ADMIN-001",
+          "name": "Admin Dashboard",
+          "type": "positive",
+          "endpoint": "GET /api/admin/dashboard",
+          "requires_auth": "super_admin",
+          "expected": {"status": 200}
+        },
+        {
+          "id": "T-ADMIN-002",
+          "name": "System Health",
+          "type": "positive",
+          "endpoint": "GET /api/admin/system/health",
+          "requires_auth": "super_admin",
+          "expected": {"status": 200}
+        }
+      ]
+    },
+    {
+      "id": "TS-CONCURRENCY",
+      "name": "Concurrency Tests",
+      "description": "Race condition and atomicity proofs",
+      "tests": [
+        {
+          "id": "T-CONC-001",
+          "name": "Concurrent Chat Quota Enforcement",
+          "type": "concurrency",
+          "description": "10 concurrent chat messages with limit=5 should result in exactly 5 successes and 5 429s",
+          "invariant": "INV-2",
+          "method": "parallel_curl",
+          "expected": {"success_count": 5, "rejection_count": 5}
+        },
+        {
+          "id": "T-CONC-002",
+          "name": "Chat Atomicity Under LLM Failure (INV-2)",
+          "type": "invariant",
+          "invariant": "INV-2",
+          "description": "If LLM fails, chat_turns count must remain unchanged",
+          "method": "count_before_after",
+          "expected": {"delta": 0}
+        }
+      ]
+    }
+  ],
+  "test_credentials": {
+    "super_admin": {"email": "admin@outpace.ai", "password": "Admin123!"},
+    "tenant_user_a": {"email": "tenant-test@test.com", "password": "Test123!"},
+    "tenant_user_b": {"email": "tenant-b-test@test.com", "password": "Test123!"}
+  },
+  "execution_order": [
+    "TS-AUTH",
+    "TS-ADMIN",
+    "TS-TENANT",
+    "TS-USERS",
+    "TS-ISOLATION",
+    "TS-CHAT",
+    "TS-RAG",
+    "TS-EXPORTS",
+    "TS-CONCURRENCY"
+  ]
+}
