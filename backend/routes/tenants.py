@@ -214,7 +214,11 @@ async def update_tenant(
     tenant_data: TenantUpdate,
     current_user: TokenData = Depends(get_current_super_admin)
 ):
-    """Update tenant (Super Admin only) - Full replacement, use PATCH for partial updates"""
+    """
+    Update tenant (Super Admin only).
+    PUT performs deep merge on nested config objects (same as PATCH).
+    Unknown fields in nested objects are rejected with HTTP 400.
+    """
     db = get_db()
     
     # Check tenant exists
@@ -234,11 +238,18 @@ async def update_tenant(
                 detail="Tenant slug already exists"
             )
     
-    # Update tenant
+    # Get raw update data
     update_data = {k: v for k, v in tenant_data.model_dump(exclude_unset=True).items() if v is not None}
     
+    # Reject unknown nested fields
+    unknown_fields = validate_no_unknown_fields(update_data)
+    if unknown_fields:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown fields rejected: {', '.join(unknown_fields)}"
+        )
+    
     # SECURITY: Block chat_policy, tenant_knowledge, and rag_policy updates for master tenants
-    # Master tenants do not use chat or knowledge base; aligns with UI hiding these tabs
     if existing_tenant.get("is_master_client"):
         if "chat_policy" in update_data:
             raise HTTPException(
@@ -255,11 +266,21 @@ async def update_tenant(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="rag_policy cannot be modified for master tenants"
             )
-    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Deep merge nested objects (prevent sibling loss)
+    merged_data = {}
+    for key, value in update_data.items():
+        if key in KNOWN_NESTED_FIELDS and isinstance(value, dict):
+            existing_value = existing_tenant.get(key, {}) or {}
+            merged_data[key] = deep_merge(existing_value, value)
+        else:
+            merged_data[key] = value
+    
+    merged_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.tenants.update_one(
         {"id": tenant_id},
-        {"$set": update_data}
+        {"$set": merged_data}
     )
     
     # Return updated tenant
