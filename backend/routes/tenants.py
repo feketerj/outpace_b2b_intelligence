@@ -154,7 +154,15 @@ ALLOWED_NESTED_FIELDS = {
         "enabled", "perplexity_prompt_template", "schedule_cron", "lookback_days",
         "deadline_window_days", "target_sources", "report_sections", "scoring_weights"
     },
-    "tenant_knowledge": {"snippets", "last_updated"},
+    "tenant_knowledge": {
+        "enabled", "company_profile", "key_facts", "offerings", "differentiators",
+        "prohibited_claims", "tone_guidelines", "updated_at", "max_context_chars",
+        "retrieval_mode", "max_snippets", "snippets", "last_updated"
+    },
+    "rag_policy": {
+        "enabled", "max_documents", "max_chunks", "top_k", "min_score",
+        "max_context_chars", "embed_model"
+    },
 }
 
 
