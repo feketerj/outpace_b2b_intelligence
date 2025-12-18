@@ -114,6 +114,8 @@ async def list_opportunities(
     
     pages = (total + per_page - 1) // per_page
     
+    _audit_access("list_opportunities", query.get("tenant_id", "all"), count=len(opportunities))
+    
     return PaginatedResponse(
         data=[Opportunity(**o) for o in opportunities],
         pagination=PaginationMetadata(
