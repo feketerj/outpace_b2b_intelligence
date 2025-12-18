@@ -1,0 +1,18 @@
+{
+  "report": "CARFAX - Comprehensive Auditable Report For Application eXecution",
+  "app": "OutPace Intelligence Platform",
+  "timestamp": "20251218_023220",
+  "api_url": "https://carfax-verified.preview.emergentagent.com",
+  "summary": {
+    "total_tests": 26,
+    "passed": 25,
+    "failed": 1,
+    "pass_rate": "96.2%"
+  },
+  "invariants_proven": {
+    "INV-1_tenant_isolation": true,
+    "INV-4_master_tenant_restriction": true,
+    "INV-5_export_determinism": true
+  },
+  "status": "REVIEW_REQUIRED"
+}
