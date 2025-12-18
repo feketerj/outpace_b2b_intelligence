@@ -62,10 +62,13 @@ def _get_embeddings(texts: List[str], model: str = "mistral-embed") -> List[List
 
 
 def _cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
-    """Compute cosine similarity between two vectors."""
+    """Compute cosine similarity between two vectors. Zero-norm safe."""
     a = np.array(vec1)
     b = np.array(vec2)
-    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+    denom = np.linalg.norm(a) * np.linalg.norm(b)
+    if denom == 0:
+        return 0.0
+    return float(np.dot(a, b) / denom)
 
 
 @router.get("/{tenant_id}/rag/status")
@@ -332,9 +335,12 @@ async def retrieve_rag_context(
         debug_info["reason"] = "no_chunks"
         return "", debug_info
     
-    # Get document titles for provenance
+    # Get document titles for provenance (tenant-scoped for defense-in-depth)
     doc_ids = list(set(c.get("document_id") for c in chunks))
-    docs_cursor = db.kb_documents.find({"id": {"$in": doc_ids}}, {"_id": 0, "id": 1, "title": 1})
+    docs_cursor = db.kb_documents.find(
+        {"tenant_id": tenant_id, "id": {"$in": doc_ids}},
+        {"_id": 0, "id": 1, "title": 1}
+    )
     docs = await docs_cursor.to_list(length=len(doc_ids))
     doc_titles = {d["id"]: d.get("title", "Unknown") for d in docs}
     
