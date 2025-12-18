@@ -157,11 +157,7 @@ ALLOWED_NESTED_FIELDS = {
     "tenant_knowledge": {
         "enabled", "company_profile", "key_facts", "offerings", "differentiators",
         "prohibited_claims", "tone_guidelines", "updated_at", "max_context_chars",
-        "retrieval_mode", "max_snippets", "snippets", "last_updated"
-    },
-    "rag_policy": {
-        "enabled", "max_documents", "max_chunks", "top_k", "min_score",
-        "max_context_chars", "embed_model"
+        "retrieval_mode", "max_snippets"
     },
 }
 
