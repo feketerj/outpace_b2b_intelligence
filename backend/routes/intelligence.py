@@ -85,6 +85,8 @@ async def list_intelligence(
     
     pages = (total + per_page - 1) // per_page
     
+    _audit_access("list_intelligence", query.get("tenant_id", "all"), count=len(intelligence_items))
+    
     return PaginatedResponse(
         data=[Intelligence(**i) for i in intelligence_items],
         pagination=PaginationMetadata(
@@ -118,6 +120,7 @@ async def get_intelligence(
             detail="Access denied"
         )
     
+    _audit_access("get_intelligence", intel_doc.get("tenant_id"), object_id=intel_id)
     return Intelligence(**intel_doc)
 
 @router.delete("/{intel_id}", status_code=status.HTTP_204_NO_CONTENT)
