@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 def get_db():
     return get_database()
 
+def _audit_access(action: str, tenant_id: str, object_id: str = None, count: int = None):
+    """Audit log for tenant-scoped access."""
+    logger.info(f"[tenant.audit] action={action} tenant_id={tenant_id} object_id={object_id} count={count}")
+
 @router.post("", response_model=Intelligence)
 async def create_intelligence(
     intel_data: IntelligenceCreate,
