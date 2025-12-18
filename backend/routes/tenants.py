@@ -112,13 +112,113 @@ async def get_tenant(tenant_id: str, current_user: TokenData = Depends(get_curre
     
     return Tenant(**tenant_doc)
 
+def deep_merge(base: dict, updates: dict) -> dict:
+    """Deep merge updates into base, preserving unspecified nested fields."""
+    result = base.copy()
+    for key, value in updates.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+# Known fields for each nested config object (used to reject unknown fields)
+KNOWN_NESTED_FIELDS = {
+    "scoring_weights": {"value_weight", "deadline_weight", "relevance_weight"},
+    "chat_policy": {"enabled", "monthly_message_limit", "max_user_chars", "max_assistant_tokens", "max_turns_history"},
+    "rag_policy": {"enabled", "max_documents", "max_chunks", "top_k", "min_score", "max_context_chars", "embed_model"},
+    "branding": {"primary_color", "logo_url", "logo_base64", "company_name"},
+    "search_profile": {"naics_codes", "keywords", "agencies", "set_asides", "competition_types"},
+}
+
+
+def validate_no_unknown_fields(data: dict, path: str = "") -> list:
+    """Return list of unknown field paths in the payload."""
+    unknown = []
+    for key, value in data.items():
+        if key in KNOWN_NESTED_FIELDS and isinstance(value, dict):
+            allowed = KNOWN_NESTED_FIELDS[key]
+            for subkey in value.keys():
+                if subkey not in allowed:
+                    unknown.append(f"{key}.{subkey}")
+    return unknown
+
+
+@router.patch("/{tenant_id}", response_model=Tenant)
+async def patch_tenant(
+    tenant_id: str,
+    current_user: TokenData = Depends(get_current_super_admin),
+    payload: dict = None
+):
+    """
+    PATCH tenant with deep merge. Rejects unknown fields with HTTP 400.
+    Nested objects are merged, not overwritten.
+    """
+    from fastapi import Request
+    # Get raw JSON body
+    from starlette.requests import Request as StarletteRequest
+    
+    db = get_db()
+    
+    # Check tenant exists
+    existing_tenant = await db.tenants.find_one({"id": tenant_id})
+    if not existing_tenant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tenant not found"
+        )
+    
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Request body required"
+        )
+    
+    # Reject unknown nested fields
+    unknown_fields = validate_no_unknown_fields(payload)
+    if unknown_fields:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown fields rejected: {', '.join(unknown_fields)}"
+        )
+    
+    # SECURITY: Block restricted fields for master tenants
+    if existing_tenant.get("is_master_client"):
+        for blocked in ["chat_policy", "tenant_knowledge", "rag_policy"]:
+            if blocked in payload:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"{blocked} cannot be modified for master tenants"
+                )
+    
+    # Deep merge nested objects
+    merged_data = {}
+    for key, value in payload.items():
+        if key in KNOWN_NESTED_FIELDS and isinstance(value, dict):
+            existing_value = existing_tenant.get(key, {}) or {}
+            merged_data[key] = deep_merge(existing_value, value)
+        else:
+            merged_data[key] = value
+    
+    merged_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.tenants.update_one(
+        {"id": tenant_id},
+        {"$set": merged_data}
+    )
+    
+    updated_tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
+    return Tenant(**updated_tenant)
+
+
 @router.put("/{tenant_id}", response_model=Tenant)
 async def update_tenant(
     tenant_id: str,
     tenant_data: TenantUpdate,
     current_user: TokenData = Depends(get_current_super_admin)
 ):
-    """Update tenant (Super Admin only)"""
+    """Update tenant (Super Admin only) - Full replacement, use PATCH for partial updates"""
     db = get_db()
     
     # Check tenant exists
