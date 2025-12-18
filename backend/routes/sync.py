@@ -16,22 +16,15 @@ def get_db():
 async def manual_sync_tenant(
     tenant_id: str,
     sync_type: str = "all",  # "all", "opportunities", "intelligence"
-    current_user: TokenData = Depends(get_current_user)
+    current_user: TokenData = Depends(get_current_super_admin)
 ):
     """
     Manually trigger data sync for a tenant.
-    Available to super admins OR tenant users for their own tenant.
+    Super admin only.
     
     sync_type: "all" (both), "opportunities" (HigherGov only), "intelligence" (Perplexity only)
     """
     db = get_db()
-    
-    # Access control - tenant users can only sync their own tenant
-    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Can only sync your own tenant"
-        )
     
     tenant = await db.tenants.find_one({"id": tenant_id})
     if not tenant:
