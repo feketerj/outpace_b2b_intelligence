@@ -1,6 +1,6 @@
 {
   "timestamp": "20251218_121520",
-  "api_url": "https://saas-tester.preview.emergentagent.com",
+  "api_url": "https://tenant-api-repair.preview.emergentagent.com",
   "fixes_applied": ["S0-01 double-count", "API_URL unified", "UPLOAD-02 multipart"],
   "total": 22,
   "passed": 21,
