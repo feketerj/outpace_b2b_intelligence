@@ -148,17 +148,13 @@ def validate_no_unknown_fields(data: dict, path: str = "") -> list:
 @router.patch("/{tenant_id}", response_model=Tenant)
 async def patch_tenant(
     tenant_id: str,
-    current_user: TokenData = Depends(get_current_super_admin),
-    payload: dict = None
+    payload: dict,
+    current_user: TokenData = Depends(get_current_super_admin)
 ):
     """
     PATCH tenant with deep merge. Rejects unknown fields with HTTP 400.
     Nested objects are merged, not overwritten.
     """
-    from fastapi import Request
-    # Get raw JSON body
-    from starlette.requests import Request as StarletteRequest
-    
     db = get_db()
     
     # Check tenant exists
