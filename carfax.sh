@@ -49,12 +49,12 @@ log_evidence() {
 
 pass() {
     echo -e "${GREEN}✅ PASS: $1${NC}"
-    ((PASSED++))
+    PASSED=$((PASSED + 1))
 }
 
 fail() {
     echo -e "${RED}❌ FAIL: $1${NC}"
-    ((FAILED++))
+    FAILED=$((FAILED + 1))
 }
 
 section() {
