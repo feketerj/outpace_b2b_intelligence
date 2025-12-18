@@ -640,6 +640,7 @@ main() {
     test_S6_exports
     test_S7_sync
     test_S8_upload
+    test_S9_cf_config
     
     # Generate report and summary
     generate_report
