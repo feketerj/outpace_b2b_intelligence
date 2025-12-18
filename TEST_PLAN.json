@@ -2,7 +2,7 @@
   "test_plan": "OutPace Carfax Test Plan",
   "as_of": "2025-12-18",
   "environments": {
-    "base_url": "https://atomic-chat-fix.preview.emergentagent.com"
+    "base_url": "https://carfax-verified.preview.emergentagent.com"
   },
   "principles": [
     "Evidence-first: every test records curl + HTTP code + key log/db checks",
