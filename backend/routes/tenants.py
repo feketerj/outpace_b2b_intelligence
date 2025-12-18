@@ -160,6 +160,11 @@ ALLOWED_NESTED_FIELDS = {
         "prohibited_claims", "tone_guidelines", "updated_at", "max_context_chars",
         "retrieval_mode", "max_snippets"
     },
+    "master_branding": {
+        "logo_url", "logo_base64", "primary_color", "secondary_color", "accent_color",
+        "text_color", "background_image_url", "background_image_base64", "visual_theme",
+        "enable_glow_effects", "enable_sheen_overlay", "company_name"
+    },
 }
 
 
