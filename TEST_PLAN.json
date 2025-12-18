@@ -1,240 +1,287 @@
 {
-  "app": "OutPace Intelligence Platform",
-  "version": "1.0.0",
-  "generated": "2025-12-18",
-  "source": "FEATURES.json authoritative inventory",
-  "test_strategy": {
-    "approach": "Invariant-Based Testing + Full Endpoint Coverage",
-    "philosophy": "Prove system invariants hold under normal and adversarial conditions",
-    "coverage_goal": "100% of 46 endpoints tested, all 5 invariants proven"
+  "test_plan": "OutPace Carfax Test Plan",
+  "as_of": "2025-12-18",
+  "environments": {
+    "base_url": "https://atomic-chat-fix.preview.emergentagent.com"
   },
-  "invariants": [
-    {
-      "id": "INV-1",
-      "name": "tenant_isolation",
-      "statement": "Tenant cannot read/patch/export/chat/RAG other tenant data. Cross-tenant attempts return 403.",
-      "criticality": "CRITICAL",
-      "affected_endpoints": 24,
-      "test_approach": "Login as Tenant A, attempt to access Tenant B resources, verify 403"
-    },
-    {
-      "id": "INV-2",
-      "name": "chat_atomicity",
-      "statement": "On any failure (LLM/embeddings/DB/quota), no ChatTurn persists.",
-      "criticality": "CRITICAL",
-      "affected_endpoints": 1,
-      "test_approach": "Count chat_turns before/after failed chat operations, delta must be 0"
-    },
-    {
-      "id": "INV-3",
-      "name": "paid_chat_enforcement",
-      "statement": "chat_policy.enabled=false => 403 and no persistence.",
-      "criticality": "HIGH",
-      "affected_endpoints": 1,
-      "test_approach": "Disable chat_policy, attempt message, verify 403 and no new turns"
-    },
-    {
-      "id": "INV-4",
-      "name": "master_tenant_restriction",
-      "statement": "is_master_client=true cannot update chat_policy, rag_policy, tenant_knowledge.",
-      "criticality": "HIGH",
-      "affected_endpoints": 9,
-      "test_approach": "PUT master tenant with forbidden fields, verify 403"
-    },
-    {
-      "id": "INV-5",
-      "name": "export_determinism",
-      "statement": "Export returns valid file OR loud failure (400/403/404). No silent corrupt output.",
-      "criticality": "MEDIUM",
-      "affected_endpoints": 2,
-      "test_approach": "Test export with missing data, invalid tenant, verify appropriate error codes"
-    }
+  "principles": [
+    "Evidence-first: every test records curl + HTTP code + key log/db checks",
+    "Deterministic: explicit setup/teardown where needed",
+    "One failure class per test",
+    "No silent pass: every test has explicit PASS criteria"
   ],
-  "test_suites": [
-    {
-      "id": "TS-AUTH",
-      "name": "Authentication (3 endpoints)",
-      "domain": "auth",
-      "tests": [
-        { "id": "T-AUTH-001", "endpoint": "POST /api/auth/login", "name": "Valid login returns token", "type": "positive", "expected": { "status": 200, "has_field": "access_token" } },
-        { "id": "T-AUTH-002", "endpoint": "POST /api/auth/login", "name": "Invalid password returns 401", "type": "negative", "expected": { "status": 401 } },
-        { "id": "T-AUTH-003", "endpoint": "GET /api/auth/me", "name": "Unauthenticated returns 401/403", "type": "negative", "expected": { "status_one_of": [401, 403] } },
-        { "id": "T-AUTH-004", "endpoint": "GET /api/auth/me", "name": "Authenticated returns user", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-AUTH-005", "endpoint": "POST /api/auth/register", "name": "Register endpoint exists", "type": "smoke", "expected": { "status_one_of": [200, 400, 422] } }
-      ]
-    },
-    {
-      "id": "TS-ADMIN",
-      "name": "Admin (3 endpoints)",
-      "domain": "admin",
-      "tests": [
-        { "id": "T-ADMIN-001", "endpoint": "GET /api/admin/dashboard", "name": "Admin dashboard", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-ADMIN-002", "endpoint": "GET /api/admin/system/health", "name": "System health", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-ADMIN-003", "endpoint": "POST /api/admin/sync/{tenant_id}", "name": "Trigger sync", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 202, 404] } }
-      ]
-    },
-    {
-      "id": "TS-TENANTS",
-      "name": "Tenant Management (5 endpoints)",
-      "domain": "tenants",
-      "tests": [
-        { "id": "T-TENANT-001", "endpoint": "GET /api/tenants", "name": "List tenants", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-TENANT-002", "endpoint": "POST /api/tenants", "name": "Create tenant", "type": "positive", "requires_auth": "super_admin", "input": { "name": "Test", "slug": "test-{timestamp}" }, "expected": { "status": 200, "has_field": "id" } },
-        { "id": "T-TENANT-003", "endpoint": "GET /api/tenants/{tenant_id}", "name": "Get tenant by ID", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-TENANT-004", "endpoint": "PUT /api/tenants/{tenant_id}", "name": "Update tenant", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-TENANT-005", "endpoint": "DELETE /api/tenants/{tenant_id}", "name": "Delete tenant", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 204 } },
-        { "id": "T-TENANT-INV4-001", "endpoint": "PUT /api/tenants/{master_id}", "name": "Master tenant chat_policy block (INV-4)", "type": "invariant", "invariant": "INV-4", "input": { "chat_policy": { "enabled": true } }, "expected": { "status": 403 } },
-        { "id": "T-TENANT-INV4-002", "endpoint": "PUT /api/tenants/{master_id}", "name": "Master tenant rag_policy block (INV-4)", "type": "invariant", "invariant": "INV-4", "input": { "rag_policy": { "enabled": true } }, "expected": { "status": 403 } }
-      ]
-    },
-    {
-      "id": "TS-USERS",
-      "name": "User Management (5 endpoints)",
-      "domain": "users",
-      "tests": [
-        { "id": "T-USER-001", "endpoint": "GET /api/users", "name": "List users", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-USER-002", "endpoint": "POST /api/users", "name": "Create user", "type": "positive", "requires_auth": "super_admin", "input": { "email": "test-{timestamp}@test.com", "password": "Test123!", "full_name": "Test", "role": "tenant_user" }, "expected": { "status": 200 } },
-        { "id": "T-USER-003", "endpoint": "GET /api/users/{user_id}", "name": "Get user by ID", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-USER-004", "endpoint": "PUT /api/users/{user_id}", "name": "Update user", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-USER-005", "endpoint": "DELETE /api/users/{user_id}", "name": "Delete user", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 204 } }
-      ]
-    },
-    {
-      "id": "TS-OPPORTUNITIES",
-      "name": "Opportunities (6 endpoints)",
-      "domain": "opportunities",
-      "tests": [
-        { "id": "T-OPP-001", "endpoint": "GET /api/opportunities", "name": "List opportunities", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-OPP-002", "endpoint": "POST /api/opportunities", "name": "Create opportunity", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 422] } },
-        { "id": "T-OPP-003", "endpoint": "GET /api/opportunities/{opp_id}", "name": "Get opportunity by ID", "type": "positive", "requires_auth": "tenant_user", "expected": { "status_one_of": [200, 404] } },
-        { "id": "T-OPP-004", "endpoint": "PATCH /api/opportunities/{opp_id}", "name": "Update opportunity client fields", "type": "positive", "requires_auth": "tenant_user", "expected": { "status_one_of": [200, 404] } },
-        { "id": "T-OPP-005", "endpoint": "DELETE /api/opportunities/{opp_id}", "name": "Delete opportunity", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [204, 404] } },
-        { "id": "T-OPP-006", "endpoint": "GET /api/opportunities/stats/{tenant_id}", "name": "Get opportunity stats", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-OPP-INV1-001", "endpoint": "GET /api/opportunities/{other_tenant_opp}", "name": "Cross-tenant access blocked (INV-1)", "type": "invariant", "invariant": "INV-1", "requires_auth": "tenant_user_a", "expected": { "status": 403 } }
-      ]
-    },
-    {
-      "id": "TS-INTELLIGENCE",
-      "name": "Intelligence (5 endpoints)",
-      "domain": "intelligence",
-      "tests": [
-        { "id": "T-INTEL-001", "endpoint": "GET /api/intelligence", "name": "List intelligence", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-INTEL-002", "endpoint": "POST /api/intelligence", "name": "Create intelligence", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 422] } },
-        { "id": "T-INTEL-003", "endpoint": "GET /api/intelligence/{intel_id}", "name": "Get intelligence by ID", "type": "positive", "requires_auth": "tenant_user", "expected": { "status_one_of": [200, 404] } },
-        { "id": "T-INTEL-004", "endpoint": "PATCH /api/intelligence/{intel_id}", "name": "Update intelligence client fields", "type": "positive", "requires_auth": "tenant_user", "expected": { "status_one_of": [200, 404] } },
-        { "id": "T-INTEL-005", "endpoint": "DELETE /api/intelligence/{intel_id}", "name": "Delete intelligence", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [204, 404] } }
-      ]
-    },
-    {
-      "id": "TS-CONFIG",
-      "name": "Configuration (2 endpoints)",
-      "domain": "config",
-      "tests": [
-        { "id": "T-CONFIG-001", "endpoint": "GET /api/config/tenants/{tenant_id}/intelligence-config", "name": "Get intelligence config", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-CONFIG-002", "endpoint": "PUT /api/config/tenants/{tenant_id}/intelligence-config", "name": "Update intelligence config", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 422] } }
-      ]
-    },
-    {
-      "id": "TS-EXPORTS",
-      "name": "Exports (2 endpoints)",
-      "domain": "exports",
-      "tests": [
-        { "id": "T-EXPORT-001", "endpoint": "POST /api/exports/pdf", "name": "PDF export with valid tenant", "type": "positive", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 404] } },
-        { "id": "T-EXPORT-002", "endpoint": "POST /api/exports/excel", "name": "Excel export with valid tenant", "type": "positive", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 404] } },
-        { "id": "T-EXPORT-INV5-001", "endpoint": "POST /api/exports/pdf", "name": "Export without tenant_id returns 400 (INV-5)", "type": "invariant", "invariant": "INV-5", "requires_auth": "super_admin", "input": { "opportunity_ids": [] }, "expected": { "status": 400 } },
-        { "id": "T-EXPORT-INV1-001", "endpoint": "POST /api/exports/pdf", "name": "Cross-tenant export blocked (INV-1)", "type": "invariant", "invariant": "INV-1", "requires_auth": "tenant_user_a", "input": { "tenant_id": "{other_tenant_id}" }, "expected": { "status": 403 } }
-      ]
-    },
-    {
-      "id": "TS-CHAT",
-      "name": "Chat (3 endpoints)",
-      "domain": "chat",
-      "tests": [
-        { "id": "T-CHAT-001", "endpoint": "POST /api/chat/message", "name": "Send chat message (enabled)", "type": "positive", "requires_auth": "tenant_user", "setup": "chat_policy.enabled=true", "expected": { "status_one_of": [200, 520] } },
-        { "id": "T-CHAT-002", "endpoint": "GET /api/chat/history/{conversation_id}", "name": "Get chat history", "type": "positive", "requires_auth": "tenant_user", "expected": { "status": 200 } },
-        { "id": "T-CHAT-003", "endpoint": "GET /api/chat/turns/{conversation_id}", "name": "Get chat turns", "type": "positive", "requires_auth": "tenant_user", "expected": { "status": 200 } },
-        { "id": "T-CHAT-INV3-001", "endpoint": "POST /api/chat/message", "name": "Chat disabled returns 403 (INV-3)", "type": "invariant", "invariant": "INV-3", "setup": "chat_policy.enabled=false", "expected": { "status": 403 } },
-        { "id": "T-CHAT-INV2-001", "endpoint": "POST /api/chat/message", "name": "Chat failure leaves no turns (INV-2)", "type": "invariant", "invariant": "INV-2", "method": "count_before_after", "expected": { "delta": 0 } }
-      ]
-    },
-    {
-      "id": "TS-SYNC",
-      "name": "Sync (2 endpoints)",
-      "domain": "sync",
-      "tests": [
-        { "id": "T-SYNC-001", "endpoint": "POST /api/sync/manual/{tenant_id}", "name": "Manual sync", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 202, 404, 500] } },
-        { "id": "T-SYNC-002", "endpoint": "POST /api/sync/opportunity/{tenant_id}", "name": "Sync opportunity by ID", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 400, 404] } }
-      ]
-    },
-    {
-      "id": "TS-UPLOAD",
-      "name": "Upload (2 endpoints)",
-      "domain": "upload",
-      "tests": [
-        { "id": "T-UPLOAD-001", "endpoint": "POST /api/upload/logo/{tenant_id}", "name": "Upload logo endpoint exists", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 400, 422] } },
-        { "id": "T-UPLOAD-002", "endpoint": "POST /api/upload/opportunities/csv/{tenant_id}", "name": "Upload CSV endpoint exists", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 400, 422] } }
-      ]
-    },
-    {
-      "id": "TS-KNOWLEDGE",
-      "name": "Knowledge Snippets (4 endpoints)",
-      "domain": "knowledge_snippets",
-      "tests": [
-        { "id": "T-KB-001", "endpoint": "GET /api/tenants/{tenant_id}/knowledge-snippets", "name": "List knowledge snippets", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-KB-002", "endpoint": "POST /api/tenants/{tenant_id}/knowledge-snippets", "name": "Create knowledge snippet", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 422] } },
-        { "id": "T-KB-003", "endpoint": "PUT /api/tenants/{tenant_id}/knowledge-snippets/{snippet_id}", "name": "Update knowledge snippet", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 404] } },
-        { "id": "T-KB-004", "endpoint": "DELETE /api/tenants/{tenant_id}/knowledge-snippets/{snippet_id}", "name": "Delete knowledge snippet", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [204, 404] } }
-      ]
-    },
-    {
-      "id": "TS-RAG",
-      "name": "RAG (4 endpoints)",
-      "domain": "rag",
-      "tests": [
-        { "id": "T-RAG-001", "endpoint": "GET /api/tenants/{tenant_id}/rag/status", "name": "Get RAG status", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-RAG-002", "endpoint": "GET /api/tenants/{tenant_id}/rag/documents", "name": "List RAG documents", "type": "positive", "requires_auth": "super_admin", "expected": { "status": 200 } },
-        { "id": "T-RAG-003", "endpoint": "POST /api/tenants/{tenant_id}/rag/documents", "name": "Ingest RAG document", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [200, 403, 409, 422] } },
-        { "id": "T-RAG-004", "endpoint": "DELETE /api/tenants/{tenant_id}/rag/documents/{doc_id}", "name": "Delete RAG document", "type": "smoke", "requires_auth": "super_admin", "expected": { "status_one_of": [204, 404] } },
-        { "id": "T-RAG-INV4-001", "endpoint": "POST /api/tenants/{master_id}/rag/documents", "name": "Master tenant RAG ingest blocked (INV-4)", "type": "invariant", "invariant": "INV-4", "expected": { "status": 403 } }
-      ]
-    },
-    {
-      "id": "TS-SYSTEM",
-      "name": "System (1 endpoint)",
-      "domain": "system",
-      "tests": [
-        { "id": "T-SYS-001", "endpoint": "GET /health", "name": "Health check", "type": "positive", "expected": { "status": 200 } }
-      ]
-    }
-  ],
-  "test_credentials": {
+  "fixtures": {
     "super_admin": { "email": "admin@outpace.ai", "password": "Admin123!" },
-    "tenant_user_a": { "email": "tenant-test@test.com", "password": "Test123!" },
-    "tenant_user_b": { "email": "tenant-b-test@test.com", "password": "Test123!" }
+    "tenant_a_user": { "email": "tenant-test@test.com", "password": "Test123!" },
+    "tenant_b_user": { "email": "tenant-b-test@test.com", "password": "Test123!" },
+    "tenant_a_id": "bec8a414-b00d-4a58-9539-5f732db23b35",
+    "tenant_b_id": "8aa521eb-56ad-4727-8f09-c01fc7921c21"
   },
-  "summary": {
-    "total_test_suites": 14,
-    "total_endpoints_covered": 46,
-    "total_test_cases": 58,
-    "invariant_tests": 9,
-    "positive_tests": 32,
-    "negative_tests": 2,
-    "smoke_tests": 15
-  },
-  "execution_order": [
-    "TS-SYSTEM",
-    "TS-AUTH",
-    "TS-ADMIN",
-    "TS-TENANTS",
-    "TS-USERS",
-    "TS-OPPORTUNITIES",
-    "TS-INTELLIGENCE",
-    "TS-CONFIG",
-    "TS-EXPORTS",
-    "TS-CHAT",
-    "TS-SYNC",
-    "TS-UPLOAD",
-    "TS-KNOWLEDGE",
-    "TS-RAG"
+  "suites": [
+    {
+      "name": "S0_smoke",
+      "run_time_target_sec": 120,
+      "tests": [
+        { "id": "S0-01", "name": "login_super_admin", "steps": ["POST /api/auth/login"], "assert": ["200", "access_token present"] },
+        { "id": "S0-02", "name": "login_tenant_user", "steps": ["POST /api/auth/login"], "assert": ["200", "access_token present"] },
+        { "id": "S0-03", "name": "auth_me", "steps": ["GET /api/auth/me"], "assert": ["200", "role and tenant_id present"] },
+        { "id": "S0-04", "name": "list_opportunities", "steps": ["GET /api/opportunities"], "assert": ["200"] },
+        { "id": "S0-05", "name": "list_intelligence", "steps": ["GET /api/intelligence"], "assert": ["200"] },
+        { "id": "S0-06", "name": "health", "steps": ["GET /health"], "assert": ["200"] }
+      ]
+    },
+    {
+      "name": "S1_invariants_tenant_isolation",
+      "tests": [
+        {
+          "id": "ISO-01",
+          "name": "cross_tenant_get_opportunity_403",
+          "setup": ["Tenant A: GET /api/opportunities -> pick opp_id"],
+          "steps": ["Tenant B: GET /api/opportunities/{opp_id}"],
+          "assert": ["HTTP 403", "body.detail == 'Access denied'"],
+          "invariants": ["INV-1"]
+        },
+        {
+          "id": "ISO-02",
+          "name": "cross_tenant_get_intelligence_403",
+          "setup": ["Tenant A: GET /api/intelligence -> pick intel_id"],
+          "steps": ["Tenant B: GET /api/intelligence/{intel_id}"],
+          "assert": ["HTTP 403", "body.detail == 'Access denied'"],
+          "invariants": ["INV-1"]
+        },
+        {
+          "id": "ISO-03",
+          "name": "cross_tenant_export_pdf_403",
+          "setup": ["Tenant A: pick opp_id"],
+          "steps": ["Tenant B: POST /api/exports/pdf with tenant_id=TenantA and opp_id"],
+          "assert": ["HTTP 403"],
+          "invariants": ["INV-1", "INV-5"]
+        },
+        {
+          "id": "ISO-04",
+          "name": "cross_tenant_rag_nonleak_audit",
+          "setup": [
+            "Enable rag_policy for Tenant B",
+            "Tenant A has chunks; Tenant B has 0 chunks"
+          ],
+          "steps": [
+            "Tenant B: POST /api/chat/message ask about Tenant A canary",
+            "Tail logs for [rag.audit] tenant_id=TenantB reason=no_chunks used=0"
+          ],
+          "assert": ["[rag.audit] line exists with tenant_id=TenantB and used=0"],
+          "invariants": ["INV-1"]
+        }
+      ]
+    },
+    {
+      "name": "S2_chat_gating_atomicity_quota",
+      "tests": [
+        {
+          "id": "CHAT-01",
+          "name": "chat_disabled_403_no_persist",
+          "setup": ["Super admin: set tenant.chat_policy.enabled=false", "Reset chat_usage"],
+          "steps": ["Tenant: POST /api/chat/message"],
+          "assert": ["HTTP 403", "DB chat_turns count for conv == 0"],
+          "invariants": ["INV-3", "INV-2"]
+        },
+        {
+          "id": "CHAT-02",
+          "name": "quota_limit_429_no_persist",
+          "setup": ["Super admin: monthly_message_limit=1", "Reset chat_usage"],
+          "steps": ["Tenant: send message -> 200", "Tenant: send second message -> 429"],
+          "assert": ["Second HTTP 429", "DB chat_turns count for blocked conv == 0"],
+          "invariants": ["INV-2"]
+        },
+        {
+          "id": "CHAT-03",
+          "name": "quota_concurrency_1_success_rest_429",
+          "setup": ["monthly_message_limit=1", "Reset chat_usage"],
+          "steps": ["Send N=10 parallel POST /api/chat/message"],
+          "assert": ["Exactly 1 HTTP 200 and N-1 HTTP 429", "DB chat_turns created == 1"],
+          "invariants": ["INV-2"]
+        },
+        {
+          "id": "CHAT-04",
+          "name": "atomicity_on_llm_failure",
+          "setup": ["Force LLM failure (invalid key or service unavailable)"],
+          "steps": ["Count chat_turns BEFORE", "POST /api/chat/message -> failure", "Count chat_turns AFTER"],
+          "assert": ["AFTER == BEFORE"],
+          "invariants": ["INV-2"]
+        },
+        {
+          "id": "CHAT-05",
+          "name": "input_guardrails_conversation_id",
+          "steps": [
+            "POST /api/chat/message with conversation_id containing spaces -> 400",
+            "POST /api/chat/message with conversation_id length > 128 -> 400"
+          ],
+          "assert": ["HTTP 400 for each"],
+          "invariants": ["INV-2"]
+        }
+      ]
+    },
+    {
+      "name": "S3_patch_whitelists_audit",
+      "tests": [
+        {
+          "id": "PATCH-OPP-01",
+          "name": "opportunity_patch_ignored_logged",
+          "setup": ["Get opp_id as tenant"],
+          "steps": ["PATCH /api/opportunities/{opp_id} with allowed client_status + forbidden score + tenant_id"],
+          "assert": [
+            "HTTP 200",
+            "Log contains [audit.patch_ignored] endpoint=opportunities fields includes score and tenant_id",
+            "GET opp shows score unchanged"
+          ],
+          "invariants": ["INV-1"]
+        },
+        {
+          "id": "PATCH-INTEL-01",
+          "name": "intelligence_patch_ignored_logged",
+          "setup": ["Get intel_id as tenant"],
+          "steps": ["PATCH /api/intelligence/{intel_id} with allowed client_notes + forbidden score + tenant_id"],
+          "assert": [
+            "HTTP 200",
+            "Log contains [audit.patch_ignored] endpoint=intelligence fields includes score and tenant_id",
+            "GET intel shows no score field"
+          ],
+          "invariants": ["INV-1"]
+        },
+        {
+          "id": "PATCH-TAGS-01",
+          "name": "opportunity_tags_contract",
+          "setup": ["Get opp_id"],
+          "steps": ["PATCH tags -> ignored+logged", "PATCH client_tags -> stored"],
+          "assert": ["tags ignored", "client_tags persists"],
+          "notes": "Ensures contract is stable for clients/integrations."
+        }
+      ]
+    },
+    {
+      "name": "S4_rag_admin_ingestion_retrieval_integrity",
+      "tests": [
+        {
+          "id": "RAG-01",
+          "name": "ingest_canary_retrieves",
+          "setup": ["Super admin enables rag_policy for Tenant A with capacity"],
+          "steps": [
+            "POST /api/tenants/{tenantA}/rag/documents with unique phrase",
+            "Tenant A chat asks about phrase",
+            "Assert response includes seeded content OR rag.audit shows success used>0"
+          ],
+          "assert": ["HTTP 200 ingest", "[rag.audit] reason=success used>0"]
+        },
+        {
+          "id": "RAG-02",
+          "name": "capacity_enforcement_409",
+          "setup": ["Set rag_policy.max_chunks low"],
+          "steps": ["POST document large enough to exceed chunk limit"],
+          "assert": ["HTTP 409", "detail mentions chunk limit"]
+        },
+        {
+          "id": "RAG-03",
+          "name": "startup_cleanup_processing_docs",
+          "setup": ["Insert fake kb_document status=processing older than threshold + a chunk"],
+          "steps": ["Restart backend", "Check logs for [rag.cleanup]", "Verify DB removed doc+chunks"],
+          "assert": ["doc_count==0", "chunk_count==0"]
+        },
+        {
+          "id": "RAG-04",
+          "name": "indexes_ensured_on_startup",
+          "steps": ["Restart backend", "grep logs for [rag.indexes]"],
+          "assert": ["[rag.indexes] present"]
+        }
+      ]
+    },
+    {
+      "name": "S5_master_tenant_restrictions",
+      "tests": [
+        {
+          "id": "MASTER-01",
+          "name": "master_blocks_chat_policy",
+          "setup": ["Find master tenant id as super_admin"],
+          "steps": ["PUT /api/tenants/{master} with chat_policy"],
+          "assert": ["HTTP 403", "detail contains 'chat_policy cannot be modified'"],
+          "invariants": ["INV-4"]
+        },
+        {
+          "id": "MASTER-02",
+          "name": "master_blocks_rag_policy",
+          "setup": ["Find master tenant id as super_admin"],
+          "steps": ["PUT /api/tenants/{master} with rag_policy"],
+          "assert": ["HTTP 403", "detail contains 'rag_policy cannot be modified'"],
+          "invariants": ["INV-4"]
+        },
+        {
+          "id": "MASTER-03",
+          "name": "master_blocks_tenant_knowledge",
+          "setup": ["Find master tenant id as super_admin"],
+          "steps": ["PUT /api/tenants/{master} with tenant_knowledge"],
+          "assert": ["HTTP 403", "detail contains 'tenant_knowledge cannot be modified'"],
+          "invariants": ["INV-4"]
+        }
+      ]
+    },
+    {
+      "name": "S6_exports_determinism",
+      "tests": [
+        { "id": "EXP-01", "name": "empty_selection_404_pdf", "steps": ["POST /api/exports/pdf with empty ids"], "assert": ["HTTP 404"] },
+        { "id": "EXP-02", "name": "nonexistent_ids_404_pdf", "steps": ["POST /api/exports/pdf with bogus id"], "assert": ["HTTP 404"] },
+        { "id": "EXP-03", "name": "missing_tenant_id_super_admin_400", "steps": ["Super admin POST /api/exports/pdf without tenant_id"], "assert": ["HTTP 400"] },
+        { "id": "EXP-04", "name": "valid_export_has_headers", "setup": ["Pick valid opp/intel ids"], "steps": ["POST /api/exports/pdf"], "assert": ["HTTP 200", "Content-Type application/pdf", "Content-Disposition attachment"] }
+      ]
+    },
+    {
+      "name": "S7_integrations_sync",
+      "tests": [
+        {
+          "id": "SYNC-01",
+          "name": "manual_sync_endpoint_super_admin_only",
+          "steps": [
+            "Tenant_user calls POST /api/sync/manual/{tenant_id} -> 403",
+            "Super_admin calls POST /api/sync/manual/{tenant_id} -> 200/202"
+          ],
+          "assert": ["tenant_user forbidden", "super_admin allowed"]
+        },
+        {
+          "id": "SYNC-02",
+          "name": "admin_trigger_sync_super_admin_only",
+          "steps": [
+            "Tenant_user calls POST /api/admin/sync/{tenant_id} -> 403",
+            "Super_admin calls POST /api/admin/sync/{tenant_id} -> 200"
+          ],
+          "assert": ["tenant_user forbidden", "super_admin allowed"]
+        },
+        {
+          "id": "SYNC-03",
+          "name": "scheduler_starts_on_boot",
+          "steps": ["restart backend", "tail logs for 'Scheduler started successfully'"],
+          "assert": ["scheduler started line present"]
+        }
+      ]
+    },
+    {
+      "name": "S8_upload_branding",
+      "tests": [
+        {
+          "id": "UPLOAD-01",
+          "name": "tenant_logo_upload_super_admin_only",
+          "steps": [
+            "Tenant_user POST /api/upload/logo/{tenant_id} -> 403",
+            "Super_admin POST /api/upload/logo/{tenant_id} -> 200"
+          ],
+          "assert": ["tenant_user forbidden", "super_admin allowed"]
+        },
+        {
+          "id": "UPLOAD-02",
+          "name": "opportunities_csv_upload_super_admin_only",
+          "steps": [
+            "Tenant_user POST /api/upload/opportunities/csv/{tenant_id} -> 403",
+            "Super_admin POST /api/upload/opportunities/csv/{tenant_id} -> 200"
+          ],
+          "assert": ["tenant_user forbidden", "super_admin allowed"]
+        }
+      ]
+    }
   ]
 }
