@@ -26,10 +26,10 @@ LOG_FILE="/var/log/supervisor/backend.err.log"
 # Fixtures from TEST_PLAN.json
 ADMIN_EMAIL="admin@example.com"
 ADMIN_PASSWORD="REDACTED_ADMIN_PASSWORD"
-# Updated fixtures after data changes
+# Updated fixtures - 2025-12-18
 TENANT_A_EMAIL="tenant-b-test@test.com"
 TENANT_A_PASSWORD="REDACTED_TEST_PASSWORD"
-TENANT_B_EMAIL="t1766028763@t.com"
+TENANT_B_EMAIL="enchandia-test@test.com"
 TENANT_B_PASSWORD="REDACTED_TEST_PASSWORD"
 TENANT_A_ID="8aa521eb-56ad-4727-8f09-c01fc7921c21"
 TENANT_B_ID="e4e0b3b4-90ec-4c32-88d8-534aa563ed5d"
