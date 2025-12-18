@@ -432,6 +432,87 @@ test_S8_upload() {
 }
 
 #------------------------------------------------------------------------------
+# S9: CF-CONFIG Tests
+#------------------------------------------------------------------------------
+
+test_S9_cf_config() {
+    section "S9_cf_config (2 tests)"
+    
+    echo -e "\n${BOLD}CF-CONFIG-PERSIST: config_update_persistence${NC}"
+    
+    # Get current tenant config
+    local before_config=$(curl -s -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/api/tenants/$TENANT_A_ID")
+    evidence "BEFORE config retrieved"
+    
+    # Extract current chat_policy enabled state
+    local before_enabled=$(echo "$before_config" | python3 -c "import sys,json; print(json.load(sys.stdin).get('chat_policy',{}).get('enabled', True))" 2>/dev/null)
+    evidence "BEFORE chat_policy.enabled=$before_enabled"
+    
+    # Toggle the enabled state
+    local new_enabled="false"
+    if [ "$before_enabled" = "false" ]; then
+        new_enabled="true"
+    fi
+    
+    # Update config
+    local update_resp=$(curl -s -w "\n%{http_code}" -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "{\"chat_policy\":{\"enabled\":$new_enabled,\"monthly_message_limit\":100}}")
+    local update_status=$(echo "$update_resp" | tail -n1)
+    evidence "UPDATE -> HTTP $update_status"
+    
+    # Get config after update
+    local after_config=$(curl -s -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/api/tenants/$TENANT_A_ID")
+    local after_enabled=$(echo "$after_config" | python3 -c "import sys,json; print(json.load(sys.stdin).get('chat_policy',{}).get('enabled', True))" 2>/dev/null)
+    evidence "AFTER chat_policy.enabled=$after_enabled"
+    
+    # Restore original state
+    set_chat_policy "$TENANT_A_ID" "$before_enabled"
+    evidence "Restored original chat_policy.enabled=$before_enabled"
+    
+    # Assert: config persisted the intended change
+    if [ "$update_status" = "200" ] && [ "$after_enabled" = "$new_enabled" ]; then
+        pass "CF-CONFIG-PERSIST: config_update_persistence"
+    else
+        fail "CF-CONFIG-PERSIST (status=$update_status, expected=$new_enabled, got=$after_enabled)"
+    fi
+    
+    echo -e "\n${BOLD}CF-CONFIG-NON-DESTRUCTIVE: nested_field_update_preserves_siblings${NC}"
+    
+    # Get full tenant config before
+    before_config=$(curl -s -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/api/tenants/$TENANT_A_ID")
+    local before_name=$(echo "$before_config" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name', ''))" 2>/dev/null)
+    local before_rag_enabled=$(echo "$before_config" | python3 -c "import sys,json; print(json.load(sys.stdin).get('rag_policy',{}).get('enabled', False))" 2>/dev/null)
+    evidence "BEFORE name='$before_name', rag_policy.enabled=$before_rag_enabled"
+    
+    # Update only chat_policy, should not affect other fields
+    update_resp=$(curl -s -w "\n%{http_code}" -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{"chat_policy":{"enabled":true,"monthly_message_limit":50}}')
+    update_status=$(echo "$update_resp" | tail -n1)
+    evidence "UPDATE chat_policy only -> HTTP $update_status"
+    
+    # Get config after partial update
+    after_config=$(curl -s -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/api/tenants/$TENANT_A_ID")
+    local after_name=$(echo "$after_config" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name', ''))" 2>/dev/null)
+    local after_rag_enabled=$(echo "$after_config" | python3 -c "import sys,json; print(json.load(sys.stdin).get('rag_policy',{}).get('enabled', False))" 2>/dev/null)
+    local after_chat_limit=$(echo "$after_config" | python3 -c "import sys,json; print(json.load(sys.stdin).get('chat_policy',{}).get('monthly_message_limit', 0))" 2>/dev/null)
+    evidence "AFTER name='$after_name', rag_policy.enabled=$after_rag_enabled, chat_limit=$after_chat_limit"
+    
+    # Restore original chat policy
+    set_chat_policy "$TENANT_A_ID" "true"
+    
+    # Assert: siblings preserved, target updated
+    if [ "$update_status" = "200" ] && [ "$before_name" = "$after_name" ] && [ "$before_rag_enabled" = "$after_rag_enabled" ] && [ "$after_chat_limit" = "50" ]; then
+        pass "CF-CONFIG-NON-DESTRUCTIVE: nested_field_update_preserves_siblings"
+    else
+        fail "CF-CONFIG-NON-DESTRUCTIVE (status=$update_status, name_match=$([ "$before_name" = "$after_name" ] && echo true || echo false), rag_match=$([ "$before_rag_enabled" = "$after_rag_enabled" ] && echo true || echo false), limit=$after_chat_limit)"
+    fi
+}
+
+#------------------------------------------------------------------------------
 # Report Generation
 #------------------------------------------------------------------------------
 
