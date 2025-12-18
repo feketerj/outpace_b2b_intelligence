@@ -156,10 +156,13 @@ export default function TenantsPage() {
     e.preventDefault();
     
     try {
+      // Filter out read-only fields before sending to backend
+      const { is_master_client, id, created_at, updated_at, ...editableData } = formData;
+      
       let savedTenant;
       if (editingTenant) {
         // Update existing tenant
-        const response = await axios.put(`${API_URL}/api/tenants/${editingTenant.id}`, formData);
+        const response = await axios.put(`${API_URL}/api/tenants/${editingTenant.id}`, editableData);
         savedTenant = response.data;
       } else {
         // Create new tenant
