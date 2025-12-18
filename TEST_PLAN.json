@@ -282,6 +282,35 @@
           "assert": ["tenant_user forbidden", "super_admin allowed"]
         }
       ]
+    },
+    {
+      "name": "S9_cf_config",
+      "tests": [
+        {
+          "id": "CF-CONFIG-PERSIST",
+          "name": "config_update_persistence",
+          "setup": ["Get current tenant config"],
+          "steps": [
+            "Update tenant chat_policy.enabled",
+            "Retrieve config after update",
+            "Verify intended change persisted"
+          ],
+          "assert": ["HTTP 200", "config after update == config before + intended change"],
+          "notes": "Ensures configuration updates are properly persisted"
+        },
+        {
+          "id": "CF-CONFIG-NON-DESTRUCTIVE", 
+          "name": "nested_field_update_preserves_siblings",
+          "setup": ["Get full tenant config with multiple fields"],
+          "steps": [
+            "Update only chat_policy field",
+            "Retrieve config after update", 
+            "Verify other fields (name, rag_policy) unchanged"
+          ],
+          "assert": ["HTTP 200", "sibling fields preserved", "target field updated"],
+          "notes": "Ensures partial updates don't remove unrelated configuration"
+        }
+      ]
     }
   ]
 }
