@@ -20,20 +20,20 @@ def get_db():
 @router.post("/opportunities/csv/{tenant_id}")
 async def upload_opportunities_csv(
     tenant_id: str,
-    file: UploadFile = File(...),
-    current_user: TokenData = Depends(get_current_user)
+    current_user: TokenData = Depends(get_current_user),
+    file: UploadFile = File(...)
 ):
     """
-    Upload opportunities from CSV file.
+    Upload opportunities from CSV file. Super admin only.
     CSV columns: title, description, agency, due_date, estimated_value, naics_code, source_url
     """
     db = get_db()
     
-    # Access control
-    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
+    # Access control - super admin only
+    if current_user.role != "super_admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
+            detail="Super admin access required"
         )
     
     # Validate file type
