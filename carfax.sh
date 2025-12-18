@@ -331,7 +331,7 @@ for x in t:
     
     echo -e "\n${BOLD}MASTER-03: master_blocks_tenant_knowledge${NC}"
     status=$(http_status -X PUT -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
-        "$API_URL/api/tenants/$master_id" -d '{"tenant_knowledge":{"snippets":[]}}')
+        "$API_URL/api/tenants/$master_id" -d '{"tenant_knowledge":{"enabled":true}}')
     evidence "PUT tenant_knowledge -> HTTP $status"
     if [ "$status" = "403" ]; then pass "MASTER-03: master_blocks_tenant_knowledge [INV-4]"; else fail "MASTER-03 ($status)"; fi
 }
