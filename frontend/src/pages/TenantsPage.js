@@ -166,7 +166,7 @@ export default function TenantsPage() {
         savedTenant = response.data;
       } else {
         // Create new tenant
-        const response = await axios.post(`${API_URL}/api/tenants`, formData);
+        const response = await axios.post(`${API_URL}/api/tenants`, editableData);
         savedTenant = response.data;
       }
       
