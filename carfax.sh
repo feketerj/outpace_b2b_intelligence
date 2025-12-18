@@ -471,8 +471,9 @@ test_S9_cf_config() {
     set_chat_policy "$TENANT_A_ID" "$before_enabled"
     evidence "Restored original chat_policy.enabled=$before_enabled"
     
-    # Assert: config persisted the intended change
-    if [ "$update_status" = "200" ] && [ "$after_enabled" = "$new_enabled" ]; then
+    # Assert: config persisted the intended change (normalize boolean comparison)
+    local normalized_after=$(echo "$after_enabled" | tr '[:upper:]' '[:lower:]')
+    if [ "$update_status" = "200" ] && [ "$normalized_after" = "$new_enabled" ]; then
         pass "CF-CONFIG-PERSIST: config_update_persistence"
     else
         fail "CF-CONFIG-PERSIST (status=$update_status, expected=$new_enabled, got=$after_enabled)"
