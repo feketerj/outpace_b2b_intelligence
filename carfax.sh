@@ -244,7 +244,7 @@ test_S2_chat_atomicity() {
     curl -s -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
         -H "Authorization: Bearer $ADMIN_TOKEN" \
         -H "Content-Type: application/json" \
-        -d '{"chat_policy":{"enabled":true,"monthly_message_limit":1},"chat_usage":{"current_month":"2025-12","messages_used":1}}' > /dev/null
+        -d '{"chat_policy":{"enabled":true,"monthly_message_limit":1},"chat_usage":{"month":"2025-12","messages_used":1}}' > /dev/null
     evidence "Set monthly_message_limit=1, messages_used=1 (quota exhausted)"
     
     before_count=$(get_chat_turns_count "$TENANT_A_ID")
