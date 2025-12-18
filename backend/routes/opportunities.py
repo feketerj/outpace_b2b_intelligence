@@ -149,6 +149,7 @@ async def get_opportunity(
             detail="Access denied"
         )
     
+    _audit_access("get_opportunity", opp_doc.get("tenant_id"), object_id=opp_id)
     return Opportunity(**opp_doc)
 
 @router.delete("/{opp_id}", status_code=status.HTTP_204_NO_CONTENT)
