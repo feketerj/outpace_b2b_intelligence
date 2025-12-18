@@ -336,6 +336,12 @@ sudo supervisorctl restart backend
 # Check all RAG audit logs
 grep "\[rag.audit\]" /var/log/supervisor/backend.err.log | tail -50
 
+# Check tenant audit logs
+grep "\[tenant.audit\]" /var/log/supervisor/backend.err.log | tail -50
+
+# Check patch ignored fields
+grep "\[audit.patch_ignored\]" /var/log/supervisor/backend.err.log | tail -50
+
 # Check quota logs
 grep "\[quota\]" /var/log/supervisor/backend.err.log | tail -50
 
@@ -354,3 +360,25 @@ mongo outpace_intelligence --eval 'db.tenants.updateMany({}, {$set: {"rag_policy
 # Restart backend
 sudo supervisorctl restart backend
 ```
+
+---
+
+## SECRETS DISCIPLINE (MANDATORY)
+
+**NEVER print full secret values.** Use this sanitized check:
+
+```bash
+# Safe env check - shows presence only, last 4 chars
+check_secrets() {
+    cd /app/backend
+    JWT=$(grep JWT_SECRET .env | cut -d= -f2)
+    MISTRAL=$(grep MISTRAL_API_KEY .env | cut -d= -f2)
+    echo "JWT_SECRET: ${JWT:+SET}...${JWT: -4}"
+    echo "MISTRAL_API_KEY: ${MISTRAL:+SET}...${MISTRAL: -4}"
+}
+check_secrets
+```
+
+**If a secret is printed to any shared channel:** ROTATE IMMEDIATELY.
+- JWT_SECRET: Change in .env, restart backend (all sessions invalidated)
+- MISTRAL_API_KEY: Regenerate in Mistral console, update .env, restart
