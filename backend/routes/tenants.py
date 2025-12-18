@@ -128,7 +128,8 @@ def deep_merge(base: dict, updates: dict) -> dict:
 
 ALLOWED_TOP_LEVEL_FIELDS: Set[str] = {
     "name", "slug", "status", "branding", "search_profile", "scoring_weights",
-    "agent_config", "intelligence_config", "chat_policy", "tenant_knowledge", "rag_policy"
+    "agent_config", "intelligence_config", "chat_policy", "tenant_knowledge", "rag_policy",
+    "master_branding"  # For master clients
 }
 
 ALLOWED_NESTED_FIELDS = {
