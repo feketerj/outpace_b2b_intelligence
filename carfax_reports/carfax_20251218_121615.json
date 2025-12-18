@@ -1,0 +1,10 @@
+{
+  "timestamp": "20251218_121615",
+  "api_url": "https://carfax-verified.preview.emergentagent.com",
+  "total": 21,
+  "passed": 21,
+  "failed": 0,
+  "pass_rate": "100.0%",
+  "invariants_proven": ["INV-1","INV-4","INV-5"],
+  "status": "CARFAX_VERIFIED"
+}
