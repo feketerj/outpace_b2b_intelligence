@@ -156,22 +156,54 @@ export default function TenantsPage() {
     e.preventDefault();
     
     try {
+      let savedTenant;
       if (editingTenant) {
         // Update existing tenant
-        await axios.put(`${API_URL}/api/tenants/${editingTenant.id}`, formData);
-        toast.success('Tenant updated successfully!');
+        const response = await axios.put(`${API_URL}/api/tenants/${editingTenant.id}`, formData);
+        savedTenant = response.data;
       } else {
         // Create new tenant
-        await axios.post(`${API_URL}/api/tenants`, formData);
-        toast.success('Tenant created successfully!');
+        const response = await axios.post(`${API_URL}/api/tenants`, formData);
+        savedTenant = response.data;
       }
+      
+      // CRITICAL: Reload and verify persistence BEFORE showing success
+      const verifyResponse = await axios.get(`${API_URL}/api/tenants/${savedTenant.id}`);
+      const persistedTenant = verifyResponse.data;
+      
+      // Verify key fields were persisted (not silently dropped)
+      const verificationErrors = [];
+      if (formData.name && persistedTenant.name !== formData.name) {
+        verificationErrors.push(`name: expected "${formData.name}", got "${persistedTenant.name}"`);
+      }
+      if (formData.chat_policy?.enabled !== undefined && 
+          persistedTenant.chat_policy?.enabled !== formData.chat_policy.enabled) {
+        verificationErrors.push(`chat_policy.enabled: expected ${formData.chat_policy.enabled}, got ${persistedTenant.chat_policy?.enabled}`);
+      }
+      
+      if (verificationErrors.length > 0) {
+        // Data was not persisted correctly - this should never happen with the backend fix
+        toast.error(`Save verification failed: ${verificationErrors.join('; ')}`);
+        return;
+      }
+      
+      // Only show success AFTER verified persistence
+      toast.success(editingTenant ? 'Tenant updated and verified!' : 'Tenant created and verified!');
       
       setShowDialog(false);
       setEditingTenant(null);
       setFormData(getEmptyFormData());
       fetchTenants();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to save tenant');
+      // Display backend error message VERBATIM
+      const errorDetail = error.response?.data?.detail;
+      if (errorDetail) {
+        toast.error(`Backend error: ${errorDetail}`);
+      } else if (error.response?.status) {
+        toast.error(`Request failed (HTTP ${error.response.status}): ${error.message}`);
+      } else {
+        toast.error(`Network error: ${error.message}`);
+      }
     }
   };
 
