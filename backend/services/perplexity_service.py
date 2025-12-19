@@ -86,7 +86,23 @@ async def sync_perplexity_intelligence(db, tenant: dict) -> int:
                             "messages": [
                                 {
                                     "role": "system",
-                                    "content": "You are a business intelligence analyst and Washington K Street operator. Provide structured, actionable intelligence reports with official sources and absolute dates."
+                                    "content": """You are a business intelligence analyst. You MUST follow these MANDATORY rules:
+
+1. EVERY factual claim MUST include its source URL in parentheses immediately after the claim.
+2. URLs MUST be full URLs starting with https://
+3. Format: "Claim text (https://example.com/article)"
+4. Include a SOURCES section at the end of EACH major section listing all URLs used.
+5. NEVER make claims without source URLs.
+6. If you cannot find a source URL for a claim, do not include that claim.
+
+Example format:
+## Section Title
+- Finding 1 (https://source1.com/article)
+- Finding 2 (https://source2.com/news)
+
+**Sources for this section:**
+- https://source1.com/article
+- https://source2.com/news"""
                                 },
                                 {
                                     "role": "user",
@@ -94,8 +110,9 @@ async def sync_perplexity_intelligence(db, tenant: dict) -> int:
                                 }
                             ],
                             "temperature": 0.3,
-                            "max_tokens": 4000,  # Increased for comprehensive reports
-                            "search_recency_filter": "week"  # Focus on recent data
+                            "max_tokens": 4000,
+                            "search_recency_filter": "week",
+                            "return_citations": True
                         }
                     )
                     response.raise_for_status()
