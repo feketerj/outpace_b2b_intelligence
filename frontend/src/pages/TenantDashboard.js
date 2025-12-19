@@ -194,6 +194,8 @@ export default function TenantDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-[hsl(var(--foreground-muted))]">
+                    <span>Solicitation #: {opp.solicitation_id || opp.external_id || 'N/A'}</span>
+                    <span>•</span>
                     <span>Agency: {opp.agency || 'N/A'}</span>
                     <span>•</span>
                     <span>Due: {opp.due_date ? new Date(opp.due_date).toLocaleDateString() : 'N/A'}</span>
