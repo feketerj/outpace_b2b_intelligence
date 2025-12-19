@@ -65,6 +65,9 @@ run_suite "Frontend Static Contract" "cd /app/backend && python -m pytest tests/
 # This runs all 26 invariant tests including:
 # - S7 SYNC-02: ONE admin sync call with FULL CONTRACT VALIDATION (no timeout pass)
 # - Regression detection for old "Sync triggered successfully" response
+# Remove stale marker file before running CARFAX
+rm -f /tmp/carfax_sync02_ok.marker
+
 # CAPTURE OUTPUT for post-run assertions
 CARFAX_OUTPUT=$(cd /app && bash carfax.sh 2>&1)
 CARFAX_EXIT=$?
