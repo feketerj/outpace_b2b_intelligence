@@ -464,10 +464,13 @@ except Exception as e:
         
         if [[ "$CONTRACT_CHECK" == OK:* ]]; then
             evidence "Contract validated: $CONTRACT_CHECK"
-            # Write marker file for CI gate verification (harder to bypass than stdout grep)
+            # Write marker file ATOMICALLY for CI gate verification
+            # Uses temp file + mv to prevent partial writes causing flaky CI
             local MARKER_FILE="/tmp/carfax_sync02_ok.marker"
+            local MARKER_TEMP="/tmp/carfax_sync02_ok.marker.tmp.$$"
             echo "$SYNC_RESPONSE" | python3 -c "
 import sys, json
+from datetime import datetime, timezone
 try:
     d = json.load(sys.stdin)
     marker = {
@@ -476,13 +479,14 @@ try:
         'sync_timestamp': d.get('sync_timestamp'),
         'opportunities_synced': d.get('opportunities_synced'),
         'intelligence_synced': d.get('intelligence_synced'),
-        'contract_validated': True
+        'contract_validated': True,
+        'marker_created_utc': datetime.now(timezone.utc).isoformat()
     }
     print(json.dumps(marker))
 except:
     pass
-" > "$MARKER_FILE"
-            evidence "Marker file written: $MARKER_FILE"
+" > "$MARKER_TEMP" && mv "$MARKER_TEMP" "$MARKER_FILE"
+            evidence "Marker file written atomically: $MARKER_FILE"
             pass "SYNC-02: admin_sync_returns_full_contract"
         elif [[ "$CONTRACT_CHECK" == REGRESSION:* ]]; then
             evidence "REGRESSION DETECTED: $CONTRACT_CHECK"
