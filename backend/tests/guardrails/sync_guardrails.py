@@ -199,11 +199,13 @@ class SyncGuard:
     @contextmanager
     def allow_sync(self):
         """
-        Context manager that allows a sync call.
+        Context manager that allows a sync call AND network access.
+        
+        P0 HARDENED: This is the ONLY place where network is allowed in CI.
         
         Usage:
             with sync_guard.allow_sync():
-                # Make sync call here
+                # Make sync call here - network is allowed
                 pass
         
         Raises:
@@ -217,8 +219,10 @@ class SyncGuard:
                 )
             self._sync_allowed = True
         
+        # P0 HARDENING: Enable network access within sync context
         try:
-            yield self
+            with network_deny_guard.allow_network():
+                yield self
         finally:
             with self._sync_lock:
                 self._sync_allowed = False
