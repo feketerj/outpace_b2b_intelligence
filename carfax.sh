@@ -4,6 +4,30 @@
 # OutPace Intelligence Platform - Evidence-Based Test Runner
 # Covers: INV-1, INV-2, INV-3, INV-4, INV-5
 #==============================================================================
+#
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  CANONICAL PROOF OWNER - DO NOT DUPLICATE                                 ║
+# ║═══════════════════════════════════════════════════════════════════════════║
+# ║  This script is the SINGLE SOURCE OF TRUTH for:                           ║
+# ║    1. Executing SYNC-02 (the only real sync call in CI)                   ║
+# ║    2. Validating the full sync contract (7 required fields)               ║
+# ║    3. Writing the marker file atomically (/tmp/carfax_sync02_ok.marker)   ║
+# ║                                                                           ║
+# ║  INVARIANTS:                                                              ║
+# ║    - Exactly ONE sync call happens here (in test_S7_sync → SYNC-02)       ║
+# ║    - Marker is written ONLY after contract validation succeeds            ║
+# ║    - Timeout or network failure = FAIL (never treated as success)         ║
+# ║                                                                           ║
+# ║  CALLERS:                                                                 ║
+# ║    - ci_verify.sh (the canonical CI runner)                               ║
+# ║    - Manual verification runs                                             ║
+# ║                                                                           ║
+# ║  DO NOT:                                                                  ║
+# ║    - Add another script that calls sync endpoints                         ║
+# ║    - Duplicate marker writing logic                                       ║
+# ║    - Accept timeouts as proof of success                                  ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+#
 
 set -e
 
