@@ -15,6 +15,7 @@ import { FileText, RefreshCw, Search, Filter, Download } from 'lucide-react';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function TenantDashboard() {
+  const navigate = useNavigate();
   const { currentTenant, brandingStyles } = useTenant();
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
