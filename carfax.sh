@@ -526,6 +526,44 @@ test_S9_cf_config() {
 }
 
 #------------------------------------------------------------------------------
+# S10: Intelligence Source URL Enforcement
+#------------------------------------------------------------------------------
+
+test_S10_intelligence_sources() {
+    section "S10_intelligence_source_enforcement (1 test)"
+    
+    echo -e "\n${BOLD}INTEL-01: no_sourceless_intelligence_allowed${NC}"
+    
+    # Count intelligence reports with empty source_urls
+    local sourceless_count=$(cd /app/backend && python3 -c "
+import os, asyncio
+from motor.motor_asyncio import AsyncIOMotorClient
+
+async def main():
+    c = AsyncIOMotorClient(os.environ.get('MONGO_URL', 'mongodb://localhost:27017'))
+    db = c[os.environ.get('DB_NAME', 'outpace_intelligence')]
+    count = await db.intelligence.count_documents({
+        '\$or': [
+            {'source_urls': {'$exists': False}},
+            {'source_urls': []},
+            {'source_urls': None}
+        ]
+    })
+    print(count)
+
+asyncio.run(main())
+" 2>/dev/null)
+    
+    evidence "Intelligence reports with empty source_urls: $sourceless_count"
+    
+    if [ "$sourceless_count" = "0" ]; then
+        pass "INTEL-01: no_sourceless_intelligence_allowed"
+    else
+        fail "INTEL-01: Found $sourceless_count intelligence reports without source_urls"
+    fi
+}
+
+#------------------------------------------------------------------------------
 # Report Generation
 #------------------------------------------------------------------------------
 
