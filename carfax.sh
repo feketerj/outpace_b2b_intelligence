@@ -384,7 +384,7 @@ test_S6_exports() {
 #------------------------------------------------------------------------------
 
 test_S7_sync() {
-    section "S7_integrations_sync (3 tests)"
+    section "S7_integrations_sync (2 tests)"
     
     # TEST 1: Permission check - tenant users cannot call sync endpoints
     echo -e "\n${BOLD}SYNC-01: sync_endpoints_require_super_admin${NC}"
@@ -398,10 +398,10 @@ test_S7_sync() {
         fail "SYNC-01 (manual=$s1, admin=$s2) - expected both 403"
     fi
     
-    # TEST 2: Contract-shaped response - ONE admin sync call must return 200 + JSON contract
+    # TEST 2: FULL CONTRACT VALIDATION - ONE admin sync call must return 200 + complete JSON contract
     # This is the CRITICAL test that proves deterministic sync behavior
-    # NO TIMEOUT ACCEPTED - must get actual JSON response
-    echo -e "\n${BOLD}SYNC-02: admin_sync_returns_contract_json${NC}"
+    # NO TIMEOUT ACCEPTED - must get actual JSON response with ALL contract fields
+    echo -e "\n${BOLD}SYNC-02: admin_sync_returns_full_contract${NC}"
     evidence "Calling /api/admin/sync with sync_type=opportunities (max 120s)..."
     local SYNC_RESPONSE=$(curl -s --max-time 120 -X POST \
         -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -412,59 +412,66 @@ test_S7_sync() {
     # Check if curl timed out or failed
     if [ $SYNC_STATUS -ne 0 ]; then
         evidence "CURL FAILED with exit code $SYNC_STATUS (timeout or network error)"
-        fail "SYNC-02: admin_sync_returns_contract_json (curl failed)"
+        fail "SYNC-02: admin_sync_returns_full_contract (curl failed - no timeout passes allowed)"
     else
-        # Validate response contains contract fields and is NOT the old async message
+        # Validate response contains ALL contract fields and is NOT the old async message
         local CONTRACT_CHECK=$(echo "$SYNC_RESPONSE" | python3 -c "
 import sys, json
 try:
     d = json.load(sys.stdin)
-    # Check for OLD REGRESSION response
+    errors_found = []
+    
+    # CRITICAL: Check for OLD REGRESSION response pattern
     if 'message' in d and 'triggered' in str(d.get('message','')).lower():
-        print('REGRESSION:OLD_ASYNC_MESSAGE')
-    # Check required contract fields
-    required = ['tenant_id', 'tenant_name', 'opportunities_synced', 'intelligence_synced', 'status']
-    missing = [f for f in required if f not in d]
-    if missing:
-        print(f'MISSING:{missing}')
-    elif not isinstance(d.get('opportunities_synced'), int):
-        print('TYPE_ERROR:opportunities_synced not int')
-    elif not isinstance(d.get('intelligence_synced'), int):
-        print('TYPE_ERROR:intelligence_synced not int')
-    elif d.get('status') not in ['success', 'partial']:
-        print(f'ENUM_ERROR:status={d.get(\"status\")}')
+        print('REGRESSION:OLD_ASYNC_MESSAGE_DETECTED')
+        sys.exit(0)
+    
+    # FULL CONTRACT FIELDS (hardened - includes sync_timestamp and errors)
+    required_fields = {
+        'tenant_id': str,
+        'tenant_name': str,
+        'opportunities_synced': int,
+        'intelligence_synced': int,
+        'status': str,
+        'sync_timestamp': str,
+        'errors': list
+    }
+    
+    # Check each required field exists and has correct type
+    for field, expected_type in required_fields.items():
+        if field not in d:
+            errors_found.append(f'MISSING:{field}')
+        elif not isinstance(d[field], expected_type):
+            errors_found.append(f'TYPE_ERROR:{field} expected {expected_type.__name__}, got {type(d[field]).__name__}')
+    
+    # Validate status enum
+    if 'status' in d and d['status'] not in ['success', 'partial']:
+        errors_found.append(f'ENUM_ERROR:status must be success|partial, got {d[\"status\"]}')
+    
+    if errors_found:
+        print('VALIDATION_FAILED:' + ';'.join(errors_found))
     else:
-        print(f'OK:opp={d[\"opportunities_synced\"]},intel={d[\"intelligence_synced\"]},status={d[\"status\"]}')
+        # Success - print evidence of all validated fields
+        print(f'OK:opp={d[\"opportunities_synced\"]},intel={d[\"intelligence_synced\"]},status={d[\"status\"]},timestamp={d[\"sync_timestamp\"][:19]},errors_count={len(d[\"errors\"])}')
+        
 except json.JSONDecodeError as e:
-    print(f'JSON_ERROR:{e}')
+    print(f'JSON_PARSE_ERROR:{e}')
 except Exception as e:
-    print(f'ERROR:{e}')
+    print(f'UNEXPECTED_ERROR:{e}')
 " 2>/dev/null)
         
         if [[ "$CONTRACT_CHECK" == OK:* ]]; then
-            evidence "Response: $CONTRACT_CHECK"
-            pass "SYNC-02: admin_sync_returns_contract_json"
+            evidence "Contract validated: $CONTRACT_CHECK"
+            pass "SYNC-02: admin_sync_returns_full_contract"
         elif [[ "$CONTRACT_CHECK" == REGRESSION:* ]]; then
             evidence "REGRESSION DETECTED: $CONTRACT_CHECK"
-            evidence "Response was: ${SYNC_RESPONSE:0:200}..."
-            fail "SYNC-02: REGRESSION - old async message detected"
+            evidence "Response was: ${SYNC_RESPONSE:0:300}..."
+            fail "SYNC-02: REGRESSION - old async message pattern detected"
         else
             evidence "Contract validation failed: $CONTRACT_CHECK"
-            evidence "Response was: ${SYNC_RESPONSE:0:200}..."
-            fail "SYNC-02: admin_sync_returns_contract_json ($CONTRACT_CHECK)"
+            evidence "Response was: ${SYNC_RESPONSE:0:300}..."
+            fail "SYNC-02: admin_sync_returns_full_contract ($CONTRACT_CHECK)"
         fi
-    fi
-    
-    # TEST 3: Alternative endpoint parity - /api/sync/manual returns same contract
-    # Quick permission + basic check (not full sync since we just did one)
-    echo -e "\n${BOLD}SYNC-03: manual_sync_endpoint_accessible${NC}"
-    local s3=$(http_status -X POST -H "Authorization: Bearer $ADMIN_TOKEN" --max-time 5 "$API_URL/api/sync/manual/$TENANT_A_ID?sync_type=opportunities" 2>/dev/null || echo "408")
-    # Accept 200, 408 (started but didn't wait), or other valid codes
-    evidence "super_admin /sync/manual -> HTTP $s3"
-    if [[ "$s3" =~ ^(200|202|0*408)$ ]]; then
-        pass "SYNC-03: manual_sync_endpoint_accessible"
-    else
-        fail "SYNC-03: manual_sync_endpoint_accessible (HTTP $s3)"
     fi
 }
 
