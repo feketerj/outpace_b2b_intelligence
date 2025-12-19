@@ -91,7 +91,7 @@ http_status_quick() {
 # Get chat_turns count for a tenant via direct DB query
 get_chat_turns_count() {
     local tenant_id=$1
-    cd /app/backend && python3 -c "
+    cd "$REPO_ROOT/backend" && python3 -c "
 import os, asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
