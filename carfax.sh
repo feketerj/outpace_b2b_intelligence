@@ -396,9 +396,10 @@ test_S7_sync() {
     # Admin gets 200 - we use quick check since we just need permission verification
     # Full sync contract is verified in dedicated contract tests
     local s2=$(http_status_quick -X POST -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/api/sync/manual/$TENANT_A_ID?sync_type=opportunities")
-    # If admin timed out (408), that's OK - it means sync started (permission granted)
+    # If admin timed out (408 or 000408), that's OK - it means sync started (permission granted)
     evidence "tenant_user -> HTTP $s1, super_admin -> HTTP $s2"
-    if [ "$s1" = "403" ] && [[ "$s2" =~ ^(200|202|408)$ ]]; then
+    # Handle both "408" and "000408" formats from curl timeout
+    if [ "$s1" = "403" ] && [[ "$s2" =~ ^(200|202|0*408)$ ]]; then
         pass "SYNC-01: manual_sync_endpoint_super_admin_only"
     else
         fail "SYNC-01 (tenant=$s1, admin=$s2)"
@@ -408,8 +409,8 @@ test_S7_sync() {
     s1=$(http_status_quick -X POST -H "Authorization: Bearer $TENANT_A_TOKEN" "$API_URL/api/admin/sync/$TENANT_A_ID")
     s2=$(http_status_quick -X POST -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/api/admin/sync/$TENANT_A_ID?sync_type=opportunities")
     evidence "tenant_user -> HTTP $s1, super_admin -> HTTP $s2"
-    # 408 = timeout = sync started = permission OK
-    if [ "$s1" = "403" ] && [[ "$s2" =~ ^(200|202|404|500|408)$ ]]; then
+    # 408/000408 = timeout = sync started = permission OK
+    if [ "$s1" = "403" ] && [[ "$s2" =~ ^(200|202|404|500|0*408)$ ]]; then
         pass "SYNC-02: admin_trigger_sync_super_admin_only"
     else
         fail "SYNC-02 (tenant=$s1, admin=$s2)"
