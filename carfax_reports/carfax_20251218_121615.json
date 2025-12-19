@@ -1,6 +1,6 @@
 {
   "timestamp": "20251218_121615",
-  "api_url": "https://tenant-api-repair.preview.emergentagent.com",
+  "api_url": "https://sync-fix-3.preview.emergentagent.com",
   "total": 21,
   "passed": 21,
   "failed": 0,

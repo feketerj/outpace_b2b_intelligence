@@ -172,8 +172,8 @@
       "Scheduled sync jobs"
     ],
     "environment": {
-      "backend_url": "https://tenant-api-repair.preview.emergentagent.com/api",
-      "frontend_url": "https://tenant-api-repair.preview.emergentagent.com",
+      "backend_url": "https://sync-fix-3.preview.emergentagent.com/api",
+      "frontend_url": "https://sync-fix-3.preview.emergentagent.com",
       "database": "MongoDB localhost:27017",
       "api_keys_configured": {
         "highergov": "700002685b7b439db928d3e5524c96a4 (configured)",

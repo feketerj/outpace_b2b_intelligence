@@ -2,7 +2,7 @@
   "test_plan": "OutPace Carfax Test Plan",
   "as_of": "2025-12-18",
   "environments": {
-    "base_url": "https://tenant-api-repair.preview.emergentagent.com"
+    "base_url": "https://sync-fix-3.preview.emergentagent.com"
   },
   "principles": [
     "Evidence-first: every test records curl + HTTP code + key log/db checks",

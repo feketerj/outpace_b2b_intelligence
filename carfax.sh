@@ -17,7 +17,7 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 # Single source of truth for API_URL (matches TEST_PLAN.json)
-API_URL="${API_URL:-https://tenant-api-repair.preview.emergentagent.com}"
+API_URL="${API_URL:-https://sync-fix-3.preview.emergentagent.com}"
 REPORT_DIR="/app/carfax_reports"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 REPORT_FILE="$REPORT_DIR/carfax_$TIMESTAMP.json"

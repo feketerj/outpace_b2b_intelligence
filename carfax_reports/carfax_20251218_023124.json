@@ -1,7 +1,7 @@
 {
   "report": "CARFAX - Comprehensive Auditable Report",
   "timestamp": "20251218_023124",
-  "api_url": "https://tenant-api-repair.preview.emergentagent.com",
+  "api_url": "https://sync-fix-3.preview.emergentagent.com",
   "summary": {
     "total_tests": 10,
     "passed": 9,
