@@ -464,6 +464,25 @@ except Exception as e:
         
         if [[ "$CONTRACT_CHECK" == OK:* ]]; then
             evidence "Contract validated: $CONTRACT_CHECK"
+            # Write marker file for CI gate verification (harder to bypass than stdout grep)
+            local MARKER_FILE="/tmp/carfax_sync02_ok.marker"
+            echo "$SYNC_RESPONSE" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    marker = {
+        'tenant_id': d.get('tenant_id'),
+        'status': d.get('status'),
+        'sync_timestamp': d.get('sync_timestamp'),
+        'opportunities_synced': d.get('opportunities_synced'),
+        'intelligence_synced': d.get('intelligence_synced'),
+        'contract_validated': True
+    }
+    print(json.dumps(marker))
+except:
+    pass
+" > "$MARKER_FILE"
+            evidence "Marker file written: $MARKER_FILE"
             pass "SYNC-02: admin_sync_returns_full_contract"
         elif [[ "$CONTRACT_CHECK" == REGRESSION:* ]]; then
             evidence "REGRESSION DETECTED: $CONTRACT_CHECK"
