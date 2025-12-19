@@ -16,7 +16,7 @@
 #   6. contract_validated=false → FAIL
 #
 
-set -e
+# Note: NOT using set -e because we expect failures
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
