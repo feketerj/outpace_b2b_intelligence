@@ -162,3 +162,11 @@ async def sync_tenant_data(db, tenant: dict):
         {"id": tenant_id},
         {"$set": {"last_synced_at": sync_end.isoformat()}}
     )
+    
+    # Return sync results for deterministic API responses
+    return {
+        "opportunities_synced": opp_count,
+        "intelligence_synced": intel_count,
+        "errors": errors,
+        "duration_seconds": duration
+    }
