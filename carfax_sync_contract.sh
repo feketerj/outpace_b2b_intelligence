@@ -24,8 +24,23 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Configuration
-API_URL=$(grep REACT_APP_BACKEND_URL /app/frontend/.env | cut -d '=' -f2)
+# Configuration - repo-relative path resolution for GitHub Actions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="${GITHUB_WORKSPACE:-${REPO_ROOT:-$SCRIPT_DIR}}"
+
+# API_URL: prefer env var, fallback to repo-relative .env
+if [ -n "$API_URL" ]; then
+    : # Use existing API_URL from environment
+elif [ -f "$REPO_ROOT/frontend/.env" ]; then
+    API_URL=$(grep REACT_APP_BACKEND_URL "$REPO_ROOT/frontend/.env" | cut -d '=' -f2)
+elif [ -f "/app/frontend/.env" ]; then
+    # Fallback for local dev environment
+    API_URL=$(grep REACT_APP_BACKEND_URL /app/frontend/.env | cut -d '=' -f2)
+else
+    echo "ERROR: Cannot find frontend/.env to read API_URL. Set API_URL env var."
+    exit 1
+fi
+
 TENANT_ID="8aa521eb-56ad-4727-8f09-c01fc7921c21"
 
 echo -e "${BLUE}╔═══════════════════════════════════════════════════════════════╗${NC}"
