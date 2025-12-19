@@ -123,4 +123,7 @@ jobs:
           echo "=== Monte Carlo Summary ==="
           echo "Tier: ${{ needs.determine-tier.outputs.tier_name }}"
           echo "Iterations: ${{ needs.determine-tier.outputs.iterations }}"
+          echo "SYNC-02: NOT RUN (nightly uses validators only)"
           echo "Status: Completed"
+          echo ""
+          echo "NOTE: Real sync calls only happen in merge-main workflow."
