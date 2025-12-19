@@ -66,7 +66,7 @@ run_suite() {
 }
 
 # Suite 1: Frontend Static Contract Tests (fastest - no API calls)
-run_suite "Frontend Static Contract" "cd /app/backend && python -m pytest tests/test_sync_frontend_contract.py -v --tb=short"
+run_suite "Frontend Static Contract" "cd \"$REPO_ROOT/backend\" && python -m pytest tests/test_sync_frontend_contract.py -v --tb=short"
 
 # Suite 2: Full CARFAX Invariant Suite (includes live sync with contract validation)
 # This runs all 26 invariant tests including:
