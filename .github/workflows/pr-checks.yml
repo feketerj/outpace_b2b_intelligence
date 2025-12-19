@@ -72,7 +72,7 @@ jobs:
           PR_MODE: "true"
           CI: "true"
         run: |
-          python -m pytest tests/test_sync_frontend_contract.py -v --tb=short --pr-mode || true
+          python -m pytest tests/test_sync_frontend_contract.py -v --tb=short --pr-mode
       
       - name: Verify PR mode enforcement
         run: |
