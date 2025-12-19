@@ -93,36 +93,78 @@ echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━�
 MARKER_FILE="/tmp/carfax_sync02_ok.marker"
 MARKER_VALID=false
 
-# Remove stale marker before CARFAX run would have been better, but we check freshness via content
 if [ -f "$MARKER_FILE" ]; then
     echo -e "${GREEN}✓ Marker file exists: $MARKER_FILE${NC}"
     
-    # Parse and validate marker content
+    # COMPREHENSIVE marker validation: JSON parsing, integrity, and freshness
     MARKER_CHECK=$(cat "$MARKER_FILE" | python3 -c "
-import sys, json
+import sys, json, re
+from datetime import datetime, timezone, timedelta
+
+UUID_REGEX = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.I)
+MAX_AGE_MINUTES = 10
+
 try:
     d = json.load(sys.stdin)
+    errors = []
+    
+    # 1. Check required keys exist
     required = ['tenant_id', 'status', 'sync_timestamp', 'contract_validated']
     missing = [k for k in required if k not in d]
     if missing:
-        print(f'MISSING_KEYS:{missing}')
-    elif d.get('contract_validated') != True:
-        print('CONTRACT_NOT_VALIDATED')
-    elif d.get('status') not in ['success', 'partial']:
-        print(f'INVALID_STATUS:{d.get(\"status\")}')
+        errors.append(f'MISSING_KEYS:{missing}')
+    
+    # 2. Validate contract_validated flag
+    if d.get('contract_validated') != True:
+        errors.append('CONTRACT_NOT_VALIDATED')
+    
+    # 3. Validate status enum
+    if d.get('status') not in ['success', 'partial']:
+        errors.append(f'INVALID_STATUS:{d.get(\"status\")}')
+    
+    # 4. INTEGRITY: Validate tenant_id is UUID format
+    tenant_id = d.get('tenant_id', '')
+    if not tenant_id or not UUID_REGEX.match(tenant_id):
+        errors.append(f'INVALID_TENANT_ID_FORMAT:{tenant_id[:20]}')
+    
+    # 5. INTEGRITY: Validate sync_timestamp is parseable ISO format
+    sync_ts = d.get('sync_timestamp', '')
+    try:
+        # Handle both +00:00 and Z timezone formats
+        ts_clean = sync_ts.replace('Z', '+00:00')
+        parsed_ts = datetime.fromisoformat(ts_clean)
+    except (ValueError, TypeError) as e:
+        errors.append(f'UNPARSEABLE_TIMESTAMP:{sync_ts[:30]}')
+        parsed_ts = None
+    
+    # 6. FRESHNESS: sync_timestamp must be within last 10 minutes UTC
+    if parsed_ts:
+        now_utc = datetime.now(timezone.utc)
+        # Handle naive timestamps by assuming UTC
+        if parsed_ts.tzinfo is None:
+            parsed_ts = parsed_ts.replace(tzinfo=timezone.utc)
+        age = now_utc - parsed_ts
+        if age > timedelta(minutes=MAX_AGE_MINUTES):
+            errors.append(f'STALE_MARKER:age={age.total_seconds():.0f}s,max={MAX_AGE_MINUTES*60}s')
+        elif age < timedelta(seconds=-60):  # Allow 1 min clock skew
+            errors.append(f'FUTURE_TIMESTAMP:age={age.total_seconds():.0f}s')
+    
+    if errors:
+        print('INVALID:' + ';'.join(errors))
     else:
-        print(f'VALID:tenant={d[\"tenant_id\"][:8]}...,status={d[\"status\"]},ts={d[\"sync_timestamp\"][:19]}')
+        print(f'VALID:tenant={tenant_id[:8]}...,status={d[\"status\"]},ts={sync_ts[:19]},fresh=yes')
+        
 except json.JSONDecodeError as e:
-    print(f'JSON_ERROR:{e}')
+    print(f'JSON_PARSE_ERROR:{e}')
 except Exception as e:
-    print(f'ERROR:{e}')
+    print(f'UNEXPECTED_ERROR:{e}')
 " 2>/dev/null)
     
     if [[ "$MARKER_CHECK" == VALID:* ]]; then
         MARKER_VALID=true
-        echo -e "${GREEN}✓ Marker content validated: $MARKER_CHECK${NC}"
+        echo -e "${GREEN}✓ Marker validated (integrity + freshness): $MARKER_CHECK${NC}"
     else
-        echo -e "${RED}✗ Marker content invalid: $MARKER_CHECK${NC}"
+        echo -e "${RED}✗ Marker validation FAILED: $MARKER_CHECK${NC}"
     fi
 else
     echo -e "${RED}✗ Marker file NOT FOUND: $MARKER_FILE${NC}"
