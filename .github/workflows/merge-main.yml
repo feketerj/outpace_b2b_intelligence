@@ -77,18 +77,35 @@ jobs:
       - name: Validate marker gate (post-verification check)
         run: |
           python3 << 'PYEOF'
+          # CANONICAL MARKER VALIDATION - MUST MATCH marker_validator.py
+          # P0 HARDENED: All 7 fields + freshness + strict UUID + counts type
           import sys, json, re
           from pathlib import Path
           from datetime import datetime, timezone, timedelta
           
+          # Strict RFC 4122 UUID regex (case-insensitive)
           UUID_REGEX = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.I)
           MAX_AGE_MINUTES = 10
           
+          # ALL 7 REQUIRED FIELDS (matches marker_validator.py REQUIRED_FIELDS)
+          REQUIRED_FIELDS = [
+              'tenant_id',
+              'status',
+              'sync_timestamp',
+              'opportunities_synced',    # COUNT FIELD - must be int
+              'intelligence_synced',     # COUNT FIELD - must be int
+              'contract_validated',
+              'marker_created_utc',
+          ]
+          
           marker_path = Path('/tmp/carfax_sync02_ok.marker')
+          
+          # 1. Check file exists
           if not marker_path.exists():
               print('MARKER GATE FAILED: Marker file not found')
               sys.exit(1)
           
+          # 2. Parse JSON
           try:
               data = json.loads(marker_path.read_text())
           except json.JSONDecodeError as e:
@@ -96,23 +113,55 @@ jobs:
               sys.exit(1)
           
           errors = []
-          required = ['tenant_id', 'status', 'sync_timestamp', 'contract_validated', 'marker_created_utc']
-          missing = [k for k in required if k not in data]
+          
+          # 3. Check all 7 required fields
+          missing = [k for k in REQUIRED_FIELDS if k not in data]
           if missing:
-              errors.append(f'MISSING_KEYS:{missing}')
+              errors.append(f'MISSING_FIELDS:{missing}')
           
+          # 4. Validate contract_validated is True (boolean)
           if data.get('contract_validated') is not True:
-              errors.append('CONTRACT_NOT_VALIDATED')
+              errors.append(f'CONTRACT_NOT_VALIDATED:{data.get("contract_validated")}')
           
+          # 5. Validate status enum
+          status = data.get('status')
+          if status not in ['success', 'partial']:
+              errors.append(f'INVALID_STATUS:{status}')
+          
+          # 6. Validate tenant_id is strict RFC 4122 UUID
           tenant_id = data.get('tenant_id', '')
           if not UUID_REGEX.match(str(tenant_id)):
               errors.append(f'INVALID_UUID:{tenant_id[:20]}')
+          
+          # 7. FRESHNESS CHECK: marker_created_utc must be <= 10 minutes old
+          marker_ts = data.get('marker_created_utc', '')
+          try:
+              ts_clean = str(marker_ts).replace('Z', '+00:00')
+              parsed_ts = datetime.fromisoformat(ts_clean)
+              if parsed_ts.tzinfo is None:
+                  parsed_ts = parsed_ts.replace(tzinfo=timezone.utc)
+              now_utc = datetime.now(timezone.utc)
+              age = now_utc - parsed_ts
+              age_seconds = age.total_seconds()
+              if age > timedelta(minutes=MAX_AGE_MINUTES):
+                  errors.append(f'STALE_MARKER:age={age_seconds:.0f}s,max={MAX_AGE_MINUTES*60}s')
+              elif age < timedelta(seconds=-60):
+                  errors.append(f'FUTURE_TIMESTAMP:age={age_seconds:.0f}s')
+          except (ValueError, TypeError) as e:
+              errors.append(f'UNPARSEABLE_TIMESTAMP:{marker_ts[:30]}')
+              age_seconds = None
+          
+          # 8. Validate count types (must be integers)
+          for count_field in ['opportunities_synced', 'intelligence_synced']:
+              val = data.get(count_field)
+              if count_field not in missing and not isinstance(val, int):
+                  errors.append(f'INVALID_COUNT_TYPE:{count_field}={type(val).__name__}')
           
           if errors:
               print(f'MARKER GATE FAILED: {"; ".join(errors)}')
               sys.exit(1)
           
-          print(f'MARKER GATE PASSED: tenant={tenant_id[:8]}..., status={data.get("status")}')
+          print(f'MARKER GATE PASSED: tenant={tenant_id[:8]}..., status={status}, age={age_seconds:.0f}s, opp={data.get("opportunities_synced")}, intel={data.get("intelligence_synced")}')
           PYEOF
       
       - name: Upload marker artifact
