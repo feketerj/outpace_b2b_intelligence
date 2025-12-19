@@ -414,6 +414,8 @@ test_S7_sync() {
         evidence "CURL FAILED with exit code $SYNC_STATUS (timeout or network error)"
         fail "SYNC-02: admin_sync_returns_full_contract (curl failed - no timeout passes allowed)"
     else
+        # Log truncated raw JSON for forensic visibility on failure
+        evidence "Raw JSON (first 200 chars): ${SYNC_RESPONSE:0:200}"
         # Validate response contains ALL contract fields and is NOT the old async message
         local CONTRACT_CHECK=$(echo "$SYNC_RESPONSE" | python3 -c "
 import sys, json
