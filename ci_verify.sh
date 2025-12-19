@@ -76,7 +76,7 @@ run_suite "Frontend Static Contract" "cd \"$REPO_ROOT/backend\" && python -m pyt
 rm -f /tmp/carfax_sync02_ok.marker
 
 # CAPTURE OUTPUT for post-run assertions
-CARFAX_OUTPUT=$(cd /app && bash carfax.sh 2>&1)
+CARFAX_OUTPUT=$(cd "$REPO_ROOT" && bash carfax.sh 2>&1)
 CARFAX_EXIT=$?
 echo "$CARFAX_OUTPUT"
 
