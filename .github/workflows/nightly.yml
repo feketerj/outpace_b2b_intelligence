@@ -102,7 +102,7 @@ jobs:
           # Run contract validators with randomized seed
           cd backend
           SEED=$(( ${{ matrix.iteration }} * 1000 + $(date +%s) % 1000 ))
-          python -m pytest tests/validators/ -v --tb=short -p no:randomly || true
+          python -m pytest tests/validators/ -v --tb=short -p no:randomly
           
           # Run marker tamper tests
           python -m pytest tests/validators/test_marker_tamper.py -v --tb=short
