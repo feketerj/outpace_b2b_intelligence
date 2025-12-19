@@ -306,17 +306,20 @@ backend:
         agent: "main"
         comment: "✅ Get and update intelligence config working."
 
-  - task: "Sync: Manual Sync API"
+  - task: "Sync: Manual Sync API (Deterministic)"
     implemented: true
     working: true
-    file: "backend/routes/sync.py"
+    file: "backend/routes/admin.py, backend/routes/sync.py"
     stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
+    priority: "high"
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
         comment: "✅ Manual sync trigger working."
+      - working: true
+        agent: "main"
+        comment: "✅ FIXED: Made /api/admin/sync deterministic. Now returns actual counts {opportunities_synced, intelligence_synced} instead of generic 'Sync triggered successfully'. Tested with curl - takes 42+ seconds proving synchronous behavior. Also added sync_type parameter to filter."
 
   - task: "Chat: History API"
     implemented: true
