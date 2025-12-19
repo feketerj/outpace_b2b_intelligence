@@ -11,7 +11,7 @@ This document defines what constitutes proof in the OutPace Intelligence Platfor
 
 **Green without proof is red.**
 
-CI may only pass if there is cryptographic evidence that the sync contract was validated.
+CI may only pass if there is structured evidence (marker file artifact) that the sync contract was validated.
 
 ---
 
