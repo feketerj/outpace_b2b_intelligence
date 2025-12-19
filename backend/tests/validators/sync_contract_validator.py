@@ -229,18 +229,28 @@ class SyncContractValidator:
         return self.validate(data)
 
 
-# Singleton for convenience
-_default_validator = SyncContractValidator(strict_uuid=False)
+# Singleton for convenience - P0 HARDENED: STRICT UUID BY DEFAULT
+_default_validator = SyncContractValidator(strict_uuid=True)
 
 
 def validate_sync_contract(data: Dict[str, Any]) -> ValidationResult:
-    """Convenience function using default validator."""
+    """Convenience function using default validator (STRICT UUID)."""
     return _default_validator.validate(data)
 
 
 def validate_sync_contract_strict(data: Dict[str, Any]) -> ValidationResult:
-    """Convenience function using strict UUID validation."""
-    return SyncContractValidator(strict_uuid=True).validate(data)
+    """Convenience function using strict UUID validation (same as default now)."""
+    return _default_validator.validate(data)
+
+
+def validate_sync_contract_relaxed(data: Dict[str, Any]) -> ValidationResult:
+    """
+    LEGACY ONLY: Convenience function using relaxed UUID validation.
+    
+    WARNING: This weakens P0 guarantees. Use only for documented legacy compatibility.
+    """
+    validator = SyncContractValidator(strict_uuid=False, allow_relaxed_uuid=True)
+    return validator.validate(data)
 
 
 if __name__ == "__main__":
