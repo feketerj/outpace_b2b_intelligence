@@ -58,19 +58,17 @@ run_suite() {
     return $exit_code
 }
 
-# Suite 1: Quick Contract Shape Tests
-run_suite "Sync Contract (Quick)" "cd /app && bash carfax_sync_contract.sh"
-
-# Suite 2: Frontend Static Contract Tests (fastest - no API calls)
+# Suite 1: Frontend Static Contract Tests (fastest - no API calls)
 run_suite "Frontend Static Contract" "cd /app/backend && python -m pytest tests/test_sync_frontend_contract.py -v --tb=short"
 
-# Suite 3: Skip deep pytest backend tests in CI to stay under 180s
-# The carfax.sh already covers the live sync verification
-echo -e "${YELLOW}[INFO] Skipping deep pytest backend tests (covered by carfax.sh)${NC}"
-echo ""
-
-# Suite 4: Full CARFAX Invariant Suite
+# Suite 2: Full CARFAX Invariant Suite (includes live sync tests)
+# This runs all 26 invariant tests including sync permission checks
 run_suite "CARFAX Full Suite" "cd /app && bash carfax.sh"
+
+# Suite 3: Sync Contract Shape Tests (quick - ONE sync call)
+# Run AFTER carfax.sh to verify contract shape without redundant sync calls
+# Uses responses from a single sync call to verify schema
+run_suite "Sync Contract Shape" "cd /app && bash carfax_sync_contract.sh"
 
 # =============================================================================
 # SUMMARY
