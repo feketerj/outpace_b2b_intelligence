@@ -51,6 +51,113 @@ class SyncGuardViolation(Exception):
     pass
 
 
+class NetworkDenyViolation(Exception):
+    """Raised when unauthorized network access is attempted in CI."""
+    pass
+
+
+class NetworkDenyGuard:
+    """
+    P0 HARDENING: Global network deny outside SYNC-02 context.
+    
+    In CI mode (CI=true env var), ALL socket connections are blocked
+    by default. Network access is ONLY allowed within sync_guard.allow_sync().
+    
+    This is RUNTIME enforcement, not convention-based.
+    """
+    
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._initialized = False
+        return cls._instance
+    
+    def __init__(self):
+        if self._initialized:
+            return
+        
+        self._network_allowed = False
+        self._original_socket_connect = None
+        self._is_ci = os.environ.get('CI', '').lower() in ('true', '1', 'yes')
+        self._is_pr_mode = os.environ.get('PR_MODE', '').lower() in ('true', '1', 'yes')
+        self._deny_active = False
+        self._network_lock = threading.Lock()
+        self._initialized = True
+    
+    def _blocked_connect(self, *args, **kwargs):
+        """Replacement socket.connect that blocks unauthorized connections."""
+        if not self._network_allowed:
+            raise NetworkDenyViolation(
+                "NETWORK ACCESS DENIED: Attempted socket connection outside SYNC-02 context. "
+                "In CI mode, all network calls are blocked except within sync_guard.allow_sync(). "
+                "This is a P0 guardrail violation."
+            )
+        return self._original_socket_connect(*args, **kwargs)
+    
+    def activate(self):
+        """Activate global network deny (called at test session start in CI)."""
+        if not self._is_ci:
+            return  # Only enforce in CI
+        
+        with self._network_lock:
+            if self._deny_active:
+                return
+            
+            self._original_socket_connect = socket.socket.connect
+            socket.socket.connect = lambda self_sock, *args, **kwargs: \
+                network_deny_guard._blocked_connect_wrapper(self_sock, *args, **kwargs)
+            self._deny_active = True
+    
+    def _blocked_connect_wrapper(self, sock, *args, **kwargs):
+        """Wrapper that checks network allowance."""
+        if not self._network_allowed:
+            raise NetworkDenyViolation(
+                f"NETWORK ACCESS DENIED: Attempted connection to {args[0] if args else 'unknown'}. "
+                "Network calls blocked outside SYNC-02 context in CI mode."
+            )
+        return self._original_socket_connect(sock, *args, **kwargs)
+    
+    def deactivate(self):
+        """Deactivate global network deny (called at test session end)."""
+        with self._network_lock:
+            if not self._deny_active:
+                return
+            
+            if self._original_socket_connect:
+                socket.socket.connect = self._original_socket_connect
+                self._original_socket_connect = None
+            self._deny_active = False
+    
+    @contextmanager
+    def allow_network(self):
+        """Context manager to temporarily allow network access (SYNC-02 only)."""
+        with self._network_lock:
+            was_allowed = self._network_allowed
+            self._network_allowed = True
+        try:
+            yield
+        finally:
+            with self._network_lock:
+                self._network_allowed = was_allowed
+    
+    @property
+    def is_active(self) -> bool:
+        return self._deny_active
+    
+    @property
+    def is_network_allowed(self) -> bool:
+        return self._network_allowed
+
+
+# Singleton instance
+network_deny_guard = NetworkDenyGuard()
+
+
 class SyncGuard:
     """
     Singleton guard that enforces sync call constraints.
