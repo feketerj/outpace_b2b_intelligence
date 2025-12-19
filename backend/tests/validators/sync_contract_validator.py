@@ -68,6 +68,9 @@ class SyncContractValidator:
         result = validator.validate(response_dict)
         if not result:
             raise ContractViolation(result.errors)
+    
+    P0 HARDENING: Strict RFC 4122 UUID validation is NOW DEFAULT.
+    Relaxed mode requires explicit opt-in AND is logged as a warning.
     """
     
     REQUIRED_FIELDS = {
@@ -80,14 +83,32 @@ class SyncContractValidator:
         'errors': list,
     }
     
-    def __init__(self, strict_uuid: bool = False):
+    def __init__(self, strict_uuid: bool = True, allow_relaxed_uuid: bool = False):
         """
         Args:
-            strict_uuid: If True, use RFC 4122 strict UUID validation.
-                        If False, use relaxed UUID format.
+            strict_uuid: If True (DEFAULT), use RFC 4122 strict UUID validation.
+                        If False, requires allow_relaxed_uuid=True or raises.
+            allow_relaxed_uuid: Must be explicitly True to use relaxed UUID mode.
+                               This is a P0 safety gate.
         """
+        # P0 HARDENING: Strict UUID is default. Relaxed requires explicit opt-in.
+        if not strict_uuid and not allow_relaxed_uuid:
+            raise ValueError(
+                "Relaxed UUID validation requires explicit allow_relaxed_uuid=True. "
+                "This is a P0 safety gate. Strict RFC 4122 UUIDs are required by default."
+            )
+        
         self.strict_uuid = strict_uuid
+        self.allow_relaxed_uuid = allow_relaxed_uuid
         self.uuid_regex = UUID_REGEX if strict_uuid else UUID_REGEX_RELAXED
+        
+        if not strict_uuid:
+            import warnings
+            warnings.warn(
+                "SyncContractValidator using RELAXED UUID validation. "
+                "This weakens P0 guarantees and should only be used for legacy compatibility.",
+                UserWarning
+            )
     
     def validate(self, data: Dict[str, Any]) -> ValidationResult:
         """
