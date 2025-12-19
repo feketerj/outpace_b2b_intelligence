@@ -45,8 +45,17 @@ REQUIRED_FIELDS = [
 ]
 
 
+@pytest.mark.external_sync
 class TestSyncContract:
-    """Contract tests for sync endpoint determinism."""
+    """
+    Contract tests for sync endpoint determinism.
+    
+    WARNING: This class makes LIVE sync calls to the API.
+    It is marked with @pytest.mark.external_sync and EXCLUDED from CI.
+    
+    For CI verification, use: bash ci_verify.sh
+    For manual deep testing: python -m pytest tests/test_sync_contract.py -v
+    """
     
     @pytest.fixture(autouse=True)
     def setup(self):
