@@ -79,6 +79,11 @@ http_status() {
     curl -s -o /dev/null -w "%{http_code}" "$@"
 }
 
+# Quick permission check - 5s timeout, just checks auth/permission, not full execution
+http_status_quick() {
+    curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$@" 2>/dev/null || echo "408"
+}
+
 # Get chat_turns count for a tenant via direct DB query
 get_chat_turns_count() {
     local tenant_id=$1
