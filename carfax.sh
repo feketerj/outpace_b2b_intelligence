@@ -328,23 +328,24 @@ for x in t:
         evidence "Using existing master tenant: $master_id"
     fi
     
-    echo -e "\n${BOLD}MASTER-01: master_blocks_chat_policy${NC}"
+    # Policy change: Super admin CAN now modify master tenants
+    echo -e "\n${BOLD}MASTER-01: super_admin_can_modify_master_chat_policy${NC}"
     local status=$(http_status -X PUT -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
-        "$API_URL/api/tenants/$master_id" -d '{"chat_policy":{"enabled":true}}')
+        "$API_URL/api/tenants/$master_id" -d '{"chat_policy":{"enabled":true,"monthly_message_limit":100}}')
     evidence "PUT chat_policy -> HTTP $status"
-    if [ "$status" = "403" ]; then pass "MASTER-01: master_blocks_chat_policy [INV-4]"; else fail "MASTER-01 ($status)"; fi
+    if [ "$status" = "200" ]; then pass "MASTER-01: super_admin_can_modify_master_chat_policy [INV-4]"; else fail "MASTER-01 ($status)"; fi
     
-    echo -e "\n${BOLD}MASTER-02: master_blocks_rag_policy${NC}"
+    echo -e "\n${BOLD}MASTER-02: super_admin_can_modify_master_rag_policy${NC}"
     status=$(http_status -X PUT -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
         "$API_URL/api/tenants/$master_id" -d '{"rag_policy":{"enabled":true}}')
     evidence "PUT rag_policy -> HTTP $status"
-    if [ "$status" = "403" ]; then pass "MASTER-02: master_blocks_rag_policy [INV-4]"; else fail "MASTER-02 ($status)"; fi
+    if [ "$status" = "200" ]; then pass "MASTER-02: super_admin_can_modify_master_rag_policy [INV-4]"; else fail "MASTER-02 ($status)"; fi
     
-    echo -e "\n${BOLD}MASTER-03: master_blocks_tenant_knowledge${NC}"
+    echo -e "\n${BOLD}MASTER-03: super_admin_can_modify_master_tenant_knowledge${NC}"
     status=$(http_status -X PUT -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
         "$API_URL/api/tenants/$master_id" -d '{"tenant_knowledge":{"enabled":true}}')
     evidence "PUT tenant_knowledge -> HTTP $status"
-    if [ "$status" = "403" ]; then pass "MASTER-03: master_blocks_tenant_knowledge [INV-4]"; else fail "MASTER-03 ($status)"; fi
+    if [ "$status" = "200" ]; then pass "MASTER-03: super_admin_can_modify_master_tenant_knowledge [INV-4]"; else fail "MASTER-03 ($status)"; fi
 }
 
 #------------------------------------------------------------------------------
