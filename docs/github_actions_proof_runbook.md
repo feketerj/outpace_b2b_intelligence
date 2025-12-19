@@ -1,238 +1,209 @@
-# GitHub Actions Proof Runbook
+# Verification Proof Runbook
 
-> **Purpose**: Execute PR/merge/nightly workflows on GitHub Actions and capture evidence that the verification system cannot lie.  
-> **Time Required**: ~10 minutes  
-> **Prerequisites**: Push access to the repository
-
----
-
-## Quick Reference
-
-| Workflow | Trigger | SYNC-02 | Marker Gate | Artifacts |
-|----------|---------|---------|-------------|-----------|
-| `pr-checks.yml` | PR opened | ❌ No | ❌ No | ❌ No |
-| `merge-main.yml` | Push to main | ✅ Yes (1) | ✅ Yes | ✅ Yes |
-| `nightly.yml` | Cron / manual | ❌ No | ❌ No | ❌ No |
+> Version: 2.0 (Truth-Boundary Edition)  
+> Scope: Repo-agnostic, process-neutral
 
 ---
 
-## Step 1: Push Code to GitHub
+## Purpose
 
-### Option A: Emergent Platform (Recommended)
-1. In the Emergent chat UI, click **"Save to GitHub"**
-2. Select the target repository
-3. Provide a commit message: `P0: Verification hardening - single SYNC-02, marker gating, canonical validator`
+This runbook defines how to establish proof that the verification system enforces its invariants in a real CI environment. Proof is structural, not procedural.
 
-### Option B: Manual Git Commands
-```bash
-# From your local clone of the repository
-cd /path/to/outpace_b2b_intelligence
+---
 
-# Create branch
-git checkout -b verification-hardening
+## Core Concept: Truth-Establishing Execution Boundary
 
-# Stage all changes
-git add .
+Proof requires executing the verification suite in an environment where:
+1. The sync endpoint is reachable
+2. The marker file can be written
+3. Artifacts can be uploaded
 
-# Commit
-git commit -m "P0: Verification hardening - single SYNC-02, marker gating, canonical validator"
+This boundary is typically a CI runner (GitHub Actions, GitLab CI, etc.) but the proof semantics are identical regardless of trigger mechanism.
 
-# Push
-git push origin verification-hardening
+---
+
+## What Constitutes Proof
+
+Proof requires ALL of the following observable outcomes:
+
+### 1. Single SYNC-02 Execution
+
+The verification suite must execute exactly one real sync call. This is evidenced by the following log string appearing exactly once:
+
+```
+SYNC-02: admin_sync_returns_full_contract
+```
+
+### 2. Marker Gate Validation
+
+The marker file must be validated by the canonical validator. This is evidenced by:
+
+```
+MARKER GATE PASSED: tenant=
+```
+
+### 3. Artifact Presence
+
+Two artifacts must be uploaded and discoverable in the CI run:
+
+| Artifact Name | Description |
+|---------------|-------------|
+| sync-contract-marker | The marker JSON file |
+| carfax-reports | CARFAX test reports |
+
+---
+
+## Triggering a Truth-Establishing Run
+
+The verification suite can be triggered by any mechanism that results in workflow execution. Common triggers include:
+
+- Direct push to a branch with workflow triggers
+- Pull request creation (if workflows trigger on PRs)
+- Manual workflow dispatch
+- Scheduled cron execution
+
+The specific trigger mechanism is irrelevant to proof validity. What matters is that the workflow executes completely and produces the canonical proof signals.
+
+### Identifying the Truth Boundary
+
+Before collecting proof, identify which workflow in your repository is configured to:
+1. Run ci_verify.sh (or equivalent)
+2. Execute SYNC-02
+3. Validate the marker gate
+4. Upload artifacts
+
+This is typically a workflow triggered on push to the main/default branch, but may vary by repository configuration.
+
+---
+
+## Proof Collection Procedure
+
+### Step 1: Trigger Workflow Execution
+
+Push code to the repository using your platform's mechanism:
+- Emergent: Use "Save to GitHub" feature
+- Git CLI: git push
+- Platform UI: Direct commit
+
+### Step 2: Locate the Workflow Run
+
+In your CI platform, navigate to the workflow run that was triggered. Record:
+
+```
+RUN_URL: [URL of the workflow run]
+```
+
+### Step 3: Search for Canonical Proof Strings
+
+In the workflow logs, search for each canonical proof string:
+
+| Proof String | Required Count | Found |
+|--------------|----------------|-------|
+| SYNC-02: admin_sync_returns_full_contract | Exactly 1 | [ ] |
+| MARKER GATE PASSED: tenant= | At least 1 | [ ] |
+
+### Step 4: Verify Artifact Presence
+
+In the workflow run's artifact section, confirm presence:
+
+| Artifact | Present |
+|----------|---------|
+| sync-contract-marker | [ ] |
+| carfax-reports | [ ] |
+
+### Step 5: Record Evidence
+
+Capture the following evidence:
+
+```
+VERIFICATION EVIDENCE
+=====================
+
+Workflow Run URL:
+  [paste URL]
+
+SYNC-02 Log Line:
+  [paste the line containing "SYNC-02: admin_sync_returns_full_contract"]
+
+Marker Gate Log Line:
+  [paste the line containing "MARKER GATE PASSED: tenant="]
+
+Artifacts Present:
+  sync-contract-marker: [YES/NO]
+  carfax-reports: [YES/NO]
+
+Verification Status: [PASS/FAIL]
 ```
 
 ---
 
-## Step 2: Open Pull Request
+## Non-Truth-Boundary Runs
 
-1. Navigate to: https://github.com/feketerj/outpace_b2b_intelligence/pulls
-2. Click **"New pull request"**
-3. Configure:
-   - **Base**: `main`
-   - **Compare**: `verification-hardening` (or your branch name)
-4. Title: `P0: Verification Hardening - Single SYNC-02 + Marker Gating`
-5. Body: Copy contents from `PR_DESCRIPTION.md` in the repository root
-6. Click **"Create pull request"**
+Some workflow configurations may exclude the sync call (e.g., PR checks, nightly validators). These runs are valid but do not establish sync-contract proof.
 
-**Record**: `PR_URL = https://github.com/feketerj/outpace_b2b_intelligence/pull/___`
+To verify a non-truth-boundary run is correctly configured:
+1. Confirm the workflow completes successfully
+2. Confirm SYNC-02 does NOT appear in logs
+3. Confirm no marker artifacts are uploaded
+
+This validates that the workflow correctly excludes sync calls when intended.
 
 ---
 
-## Step 3: Verify PR Workflow (No Sync)
+## Pre-Proof Audit: Repository /app References
 
-The PR workflow should trigger automatically within ~30 seconds.
+Before declaring proof complete, audit the repository for hardcoded /app paths in CI-facing code:
 
-### Where to Look
-1. Go to the **"Checks"** tab on the PR page
-2. Or: Actions → Find the run for your PR
-
-### What to Verify
-| Check | Expected | Pass/Fail |
-|-------|----------|-----------|
-| Workflow completes | ✅ Green checkmark | ☐ |
-| No sync calls made | No `/api/admin/sync` in logs | ☐ |
-| Final message | `"PR checks complete (no external sync calls)"` | ☐ |
-
-### Log Strings to Search For
 ```
-✅ EXPECTED (must appear):
-   "PR checks complete (no external sync calls)"
-   "pytest" (should show tests running)
-
-❌ MUST NOT APPEAR:
-   "SYNC-02"
-   "/api/admin/sync"
-   "/api/sync/manual"
+grep -rn '"/app' *.sh docs/*.md scripts/*.sh .github/workflows/*.yml 2>/dev/null | grep -v '#'
 ```
 
-**Record**: `PR_WORKFLOW_URL = https://github.com/feketerj/outpace_b2b_intelligence/actions/runs/___`
+Expected result: No matches, or only fallback paths in deprecated/non-CI code.
 
 ---
 
-## Step 4: Merge Pull Request
+## Proof Validity Criteria
 
-1. On the PR page, click **"Merge pull request"**
-2. Confirm the merge
-3. This triggers the `merge-main.yml` workflow
+A verification run is valid proof if and only if:
 
----
-
-## Step 5: Verify Merge Workflow (Single SYNC-02 + Artifacts)
-
-### Where to Look
-1. Go to: Actions → **"Merge to Main (Full Suite)"** → Most recent run
-2. Or use the link from the merge commit
-
-### What to Verify
-
-#### A. Single SYNC-02 Execution
-| Check | Expected | Pass/Fail |
-|-------|----------|-----------|
-| SYNC-02 appears | Exactly ONCE in logs | ☐ |
-| SYNC-02 passes | `✅ PASS: SYNC-02: admin_sync_returns_full_contract` | ☐ |
-
-**Log string to search**:
-```
-"SYNC-02: admin_sync_returns_full_contract"
-```
-→ Must appear **exactly once**. Use Ctrl+F and count occurrences.
-
-#### B. Marker Gate Passes
-| Check | Expected | Pass/Fail |
-|-------|----------|-----------|
-| Marker gate step | Completes green | ☐ |
-| Gate message | `"MARKER GATE PASSED: tenant=..."` | ☐ |
-
-**Log string to search**:
-```
-"MARKER GATE PASSED: tenant="
-```
-
-#### C. Artifacts Uploaded
-1. Scroll to bottom of the workflow run page
-2. Find the **"Artifacts"** section
-
-| Artifact Name | Expected | Present |
-|---------------|----------|---------|
-| `sync-contract-marker` | Marker JSON file | ☐ |
-| `carfax-reports` | CARFAX JSON reports | ☐ |
-
-**Record**: `MERGE_WORKFLOW_URL = https://github.com/feketerj/outpace_b2b_intelligence/actions/runs/___`
-
----
-
-## Step 6: Trigger Nightly Workflow (Optional)
-
-1. Go to: Actions → **"Nightly Monte Carlo"**
-2. Click **"Run workflow"** dropdown (right side)
-3. Select branch: `main`
-4. Click **"Run workflow"**
-
-### What to Verify
-| Check | Expected | Pass/Fail |
-|-------|----------|-----------|
-| Workflow starts | Run appears in list | ☐ |
-| Workflow completes | ✅ Green checkmark | ☐ |
-| No sync calls | No SYNC-02 in logs | ☐ |
-
-**Record**: `NIGHTLY_WORKFLOW_URL = https://github.com/feketerj/outpace_b2b_intelligence/actions/runs/___`
-
----
-
-## Evidence Collection Template
-
-Copy this template and fill in the values:
-
-```
-═══════════════════════════════════════════════════════════════
-GITHUB ACTIONS VERIFICATION EVIDENCE
-═══════════════════════════════════════════════════════════════
-
-PR URL:
-  https://github.com/feketerj/outpace_b2b_intelligence/pull/___
-
-PR WORKFLOW RUN:
-  URL: https://github.com/feketerj/outpace_b2b_intelligence/actions/runs/___
-  Status: [PASS/FAIL]
-  Sync Calls: [NONE DETECTED / ERROR - SEE LOG]
-
-MERGE WORKFLOW RUN:
-  URL: https://github.com/feketerj/outpace_b2b_intelligence/actions/runs/___
-  Status: [PASS/FAIL]
-  SYNC-02 Count: [1 / ERROR]
-  Marker Gate: [PASSED / FAILED]
-  
-  Log Snippet (SYNC-02):
-    [paste line containing "SYNC-02: admin_sync_returns_full_contract"]
-  
-  Log Snippet (Marker Gate):
-    [paste line containing "MARKER GATE PASSED"]
-
-ARTIFACTS:
-  sync-contract-marker: [PRESENT / MISSING]
-  carfax-reports: [PRESENT / MISSING]
-
-NIGHTLY WORKFLOW RUN (if executed):
-  URL: https://github.com/feketerj/outpace_b2b_intelligence/actions/runs/___
-  Status: [PASS/FAIL]
-  Sync Calls: [NONE DETECTED / ERROR]
-
-═══════════════════════════════════════════════════════════════
-```
+1. The workflow completed (did not fail or cancel)
+2. "SYNC-02: admin_sync_returns_full_contract" appears exactly once
+3. "MARKER GATE PASSED: tenant=" appears at least once
+4. Both artifacts (sync-contract-marker, carfax-reports) are present
+5. No /app hardcoding exists in CI-critical paths
 
 ---
 
 ## Troubleshooting
 
-### PR Workflow Fails
-- Check if `pytest` dependencies are installed
-- Verify `--pr-mode` flag is being used
-- Ensure no `|| true` bypass was accidentally removed from a required test
+### SYNC-02 Does Not Appear
+- Verify the workflow is configured to run ci_verify.sh
+- Check if PR-mode or similar exclusion is active
+- Verify API_URL secret/environment variable is set
 
-### Merge Workflow Fails on SYNC-02
-- Check if `API_URL` secret is configured in repository settings
-- Verify the sync endpoint is accessible
-- Check for network/timeout issues
-
-### Merge Workflow Fails on Marker Gate
-- SYNC-02 may have failed silently (check curl output)
-- Marker file may not have been written (check for contract validation errors)
-- Freshness window may have expired if run took >10 minutes
+### Marker Gate Fails
+- SYNC-02 may have failed (check for contract validation errors)
+- Marker file may not have been written
+- Freshness window (10 minutes) may have expired
 
 ### Artifacts Missing
-- Check `if: always()` is present on upload steps
-- Verify paths: `/tmp/carfax_sync02_ok.marker` and `carfax_reports/`
+- Verify upload steps use "if: always()" condition
+- Check artifact paths match expected locations
 
 ---
 
-## Verification Complete Criteria
+## Canonical Reference
 
-All of the following must be true:
+### Proof Strings (exhaustive list)
+```
+SYNC-02: admin_sync_returns_full_contract
+MARKER GATE PASSED: tenant=
+```
 
-- [ ] PR workflow passed with zero sync calls
-- [ ] Merge workflow passed with exactly one SYNC-02
-- [ ] Merge workflow shows "MARKER GATE PASSED"
-- [ ] Both artifacts are present in merge workflow
-- [ ] (Optional) Nightly workflow ran successfully
+### Artifact Names (exhaustive list)
+```
+sync-contract-marker
+carfax-reports
+```
 
-Once complete, the verification system is proven in the real GitHub Actions environment.
+Any log string or artifact not in this list is NOT part of the proof contract.
