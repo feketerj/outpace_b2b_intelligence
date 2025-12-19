@@ -294,7 +294,7 @@ async def fetch_single_opportunity(db, tenant: dict, opportunity_id: str) -> Dic
                     "naics_code": opp_data.get("naics_code"),
                     "keywords": keywords,
                     "source_type": "highergov",
-                    "source_url": opp_data.get("url", ""),
+                    "source_url": opp_data.get("url", "") or (f"https://www.highergov.com/contract-opportunity/{opp_data.get('source_id', '')}/" if opp_data.get('source_id') else ""),
                     "raw_data": opp_data,
                     "score": 0,
                     "ai_relevance_summary": None,
