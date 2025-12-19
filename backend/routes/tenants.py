@@ -236,14 +236,8 @@ async def patch_tenant(
             detail="Tenant not found"
         )
     
-    # STEP 4: SECURITY - Block restricted fields for master tenants
-    if existing_tenant.get("is_master_client"):
-        for blocked in ["chat_policy", "tenant_knowledge", "rag_policy"]:
-            if blocked in payload:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"{blocked} cannot be modified for master tenants"
-                )
+    # STEP 4: Super admin can modify all tenants including master clients
+    # (Policy change: master tenant restrictions removed for super_admin)
     
     # STEP 5: Deep merge nested objects
     merged_data = {}
