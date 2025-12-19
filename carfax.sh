@@ -693,6 +693,7 @@ main() {
     test_S7_sync
     test_S8_upload
     test_S9_cf_config
+    test_S10_intelligence_sources
     
     # Generate report and summary
     generate_report
