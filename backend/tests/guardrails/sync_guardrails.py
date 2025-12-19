@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """
-DELIVERABLE C: SYNC-02 Test Harness Guardrails
-==============================================
+DELIVERABLE C: SYNC-02 Test Harness Guardrails (P0 HARDENED)
+============================================================
 Enforces single sync call constraint and prevents unauthorized sync attempts.
+
+P0 HARDENING ADDITIONS:
+- Global network deny by default in CI
+- Runtime enforcement (not convention-based)
+- Explicit allowlist for SYNC-02 context only
 
 GUARDRAILS:
 1. SYNC-02 can only run ONCE per test session
@@ -10,9 +15,10 @@ GUARDRAILS:
 3. Sync calls must block until completion
 4. Marker written atomically only on success
 5. On failure, no marker written
+6. ALL network calls blocked outside SYNC-02 context (P0)
 
 Usage in tests:
-    from guardrails.sync_guardrails import SyncGuard, sync_guard
+    from guardrails.sync_guardrails import SyncGuard, sync_guard, network_deny_guard
     
     # Decorator approach
     @sync_guard.protected
@@ -21,18 +27,23 @@ Usage in tests:
     
     # Context manager approach
     with sync_guard.allow_sync():
-        # Only here can SYNC-02 run
+        # Only here can SYNC-02 run AND network is allowed
         pass
+    
+    # Network deny is AUTOMATIC in CI mode
 """
 import os
+import sys
 import json
 import threading
 import functools
 import tempfile
+import socket
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, Callable
 from pathlib import Path
 from contextlib import contextmanager
+from unittest.mock import patch
 
 
 class SyncGuardViolation(Exception):
