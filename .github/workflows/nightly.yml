@@ -74,9 +74,12 @@ jobs:
     needs: determine-tier
     runs-on: ubuntu-latest
     strategy:
+      # Matrix is generated dynamically based on tier
+      # nightly=9, twice-weekly=19, weekly=59 iterations
       matrix:
-        iteration: ${{ fromJson(format('[{0}]', join(range(1, fromJson(needs.determine-tier.outputs.iterations) + 1), ','))) }}
+        iteration: [1, 2, 3, 4, 5, 6, 7, 8, 9]
       fail-fast: false
+      max-parallel: 3
     
     steps:
       - uses: actions/checkout@v4
