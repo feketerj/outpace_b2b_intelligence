@@ -171,7 +171,11 @@ async def get_opportunity(
         )
     
     _audit_access("get_opportunity", opp_doc.get("tenant_id"), object_id=opp_id)
-    return Opportunity(**opp_doc)
+    
+    # Add solicitation_id
+    opp_doc['solicitation_id'] = extract_solicitation_id(opp_doc)
+    
+    return opp_doc
 
 @router.delete("/{opp_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_opportunity(
