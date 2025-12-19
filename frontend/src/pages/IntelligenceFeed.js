@@ -39,6 +39,24 @@ export default function IntelligenceFeed() {
     }
   };
 
+  const handleSyncIntelligence = async () => {
+    setSyncing(true);
+    try {
+      const response = await axios.post(`${API_URL}/api/admin/sync/${currentTenant?.id}`, null, {
+        params: { sync_type: 'intelligence' }
+      });
+      const result = response.data;
+      toast.success(`Intelligence sync complete: ${result.intelligence_synced || 0} new reports`);
+      // Auto-refresh the list after sync
+      await fetchIntelligence();
+    } catch (error) {
+      console.error('Sync failed:', error);
+      toast.error(error.response?.data?.detail || 'Failed to sync intelligence');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const handleDeleteReport = async (reportId, reportTitle) => {
     if (!window.confirm(`Delete "${reportTitle}"?`)) return;
     
