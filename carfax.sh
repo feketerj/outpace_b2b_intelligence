@@ -310,12 +310,23 @@ for x in t:
         break
 " 2>/dev/null)
     
+    # Self-contained: Create master tenant if none exists
     if [ -z "$master_id" ]; then
-        evidence "No master tenant found"
-        fail "S5: No master tenant"
-        return
+        evidence "No master tenant found - creating one for test"
+        local create_resp=$(curl -s -X POST "$API_URL/api/tenants" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"CARFAX Test Master","slug":"carfax-test-master","status":"active","is_master_client":true}')
+        master_id=$(echo "$create_resp" | python3 -c "import sys,json;print(json.load(sys.stdin).get('id',''))" 2>/dev/null)
+        if [ -z "$master_id" ]; then
+            evidence "Failed to create master tenant"
+            fail "S5: Could not create master tenant"
+            return
+        fi
+        evidence "Created test master tenant: $master_id"
+    else
+        evidence "Using existing master tenant: $master_id"
     fi
-    evidence "Master tenant ID: $master_id"
     
     echo -e "\n${BOLD}MASTER-01: master_blocks_chat_policy${NC}"
     local status=$(http_status -X PUT -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
