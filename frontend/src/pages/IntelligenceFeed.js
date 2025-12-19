@@ -8,7 +8,7 @@ import { ExportModal } from '../components/custom/ExportModal';
 import { ChatAssistant } from '../components/custom/ChatAssistant';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { TrendingUp, ExternalLink, Calendar, Trash2, Download } from 'lucide-react';
+import { TrendingUp, ExternalLink, Calendar, Trash2, Download, RefreshCw } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -16,6 +16,7 @@ export default function IntelligenceFeed() {
   const { currentTenant, brandingStyles } = useTenant();
   const [intelligence, setIntelligence] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
 
   useEffect(() => {
