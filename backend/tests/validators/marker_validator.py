@@ -56,17 +56,36 @@ class MarkerValidator:
     The marker file is written atomically by CARFAX only when SYNC-02
     passes full contract validation. This validator ensures the marker
     is fresh, well-formed, and contains valid data.
+    
+    P0 HARDENED MARKER SCHEMA (v1.0):
+    ================================
+    All fields are TOP-LEVEL (no nested 'counts' object).
+    
+    Required fields:
+    - tenant_id: string (strict RFC 4122 UUID)
+    - status: string ("success" | "partial")
+    - sync_timestamp: string (ISO 8601 UTC)
+    - opportunities_synced: integer (>= 0)
+    - intelligence_synced: integer (>= 0)
+    - contract_validated: boolean (must be True)
+    - marker_created_utc: string (ISO 8601 UTC, <= 10 min old)
+    
+    This schema is FINAL. Any drift is a P0 regression.
     """
     
+    # P0 HARDENED: Single authoritative schema. No 'counts' wrapper.
     REQUIRED_FIELDS = [
         'tenant_id',
         'status', 
         'sync_timestamp',
-        'opportunities_synced',
-        'intelligence_synced',
+        'opportunities_synced',      # TOP-LEVEL, not nested
+        'intelligence_synced',       # TOP-LEVEL, not nested
         'contract_validated',
         'marker_created_utc',
     ]
+    
+    # Schema version for drift detection
+    SCHEMA_VERSION = "1.0"
     
     def __init__(
         self, 
