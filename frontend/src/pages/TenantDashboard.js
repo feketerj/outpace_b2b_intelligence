@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TenantLayout } from '../components/layout/TenantLayout';
 import { useTenant } from '../context/TenantContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
