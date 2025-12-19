@@ -160,7 +160,7 @@ class SyncGuard:
             True if marker written successfully
             False if validation failed (no marker written)
         """
-        from .sync_contract_validator import validate_sync_contract
+        from tests.validators.sync_contract_validator import validate_sync_contract
         
         path = marker_path or self._marker_path
         
