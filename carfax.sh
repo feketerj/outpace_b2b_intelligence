@@ -16,9 +16,13 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
+# Resolve repo root dynamically (no hardcoded /app for GitHub Actions)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="${GITHUB_WORKSPACE:-${REPO_ROOT:-$SCRIPT_DIR}}"
+
 # Single source of truth for API_URL (matches TEST_PLAN.json)
 API_URL="${API_URL:-https://sync-contract-fix.preview.emergentagent.com}"
-REPORT_DIR="/app/carfax_reports"
+REPORT_DIR="$REPO_ROOT/carfax_reports"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 REPORT_FILE="$REPORT_DIR/carfax_$TIMESTAMP.json"
 LOG_FILE="/var/log/supervisor/backend.err.log"
