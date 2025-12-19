@@ -121,6 +121,16 @@ Example format:
                     content = result["choices"][0]["message"]["content"]
                     citations = result.get("citations", [])
                     
+                    # HARD ENFORCEMENT: Reject reports without source URLs
+                    if not citations or len(citations) == 0:
+                        logger.error(
+                            f"INTELLIGENCE_REJECTED: Perplexity returned no citations for tenant {tenant_id}. "
+                            f"Query: {query[:100]}... Report NOT inserted. Source URLs are MANDATORY."
+                        )
+                        continue  # Skip this report entirely
+                    
+                    logger.info(f"Intelligence report accepted with {len(citations)} source URLs")
+                    
                     # Determine title based on whether custom template was used
                     if prompt_template:
                         title = f"{tenant_name} - Intelligence Report - {datetime.now().strftime('%Y-%m-%d')}"
@@ -138,10 +148,10 @@ Example format:
                         "summary": content[:500],
                         "content": content,
                         "type": intel_type,
-                        "source_urls": citations,
+                        "source_urls": citations,  # Guaranteed non-empty at this point
                         "keywords": competitors + interest_areas + keywords,
                         "metadata": {
-                            "query": query[:200],  # Store truncated query
+                            "query": query[:200],
                             "model": "sonar-pro",
                             "lookback_days": intel_config.get("lookback_days", 14),
                             "has_custom_template": bool(prompt_template)
