@@ -61,14 +61,18 @@ run_suite() {
 # Suite 1: Frontend Static Contract Tests (fastest - no API calls)
 run_suite "Frontend Static Contract" "cd /app/backend && python -m pytest tests/test_sync_frontend_contract.py -v --tb=short"
 
-# Suite 2: Full CARFAX Invariant Suite (includes live sync tests)
-# This runs all 26 invariant tests including sync permission checks
+# Suite 2: Full CARFAX Invariant Suite (includes live sync with contract validation)
+# This runs all 27 invariant tests including:
+# - S7 SYNC-02: ONE admin sync call with FULL CONTRACT VALIDATION (no timeout pass)
+# - Regression detection for old "Sync triggered successfully" response
 run_suite "CARFAX Full Suite" "cd /app && bash carfax.sh"
 
-# Suite 3: Sync Contract Shape Tests (quick - ONE sync call)
-# Run AFTER carfax.sh to verify contract shape without redundant sync calls
-# Uses responses from a single sync call to verify schema
-run_suite "Sync Contract Shape" "cd /app && bash carfax_sync_contract.sh"
+# NOTE: carfax_sync_contract.sh is now SKIPPED in CI
+# The contract validation is embedded in CARFAX S7 SYNC-02
+# carfax_sync_contract.sh can still be run manually for deeper verification:
+#   bash /app/carfax_sync_contract.sh
+echo -e "${YELLOW}[INFO] carfax_sync_contract.sh skipped (contract check embedded in CARFAX S7)${NC}"
+echo ""
 
 # =============================================================================
 # SUMMARY
