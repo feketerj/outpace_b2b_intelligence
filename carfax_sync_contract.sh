@@ -26,6 +26,25 @@
 # For CI-safe single-sync verification, use: bash ci_verify.sh
 #
 
+# ============================================================================
+# CI GUARD: Refuse to run in CI environment unless explicitly overridden
+# ============================================================================
+if [ "$CI" = "true" ] && [ "$ALLOW_DEPRECATED_SYNC_SCRIPT" != "true" ]; then
+    echo ""
+    echo "╔═══════════════════════════════════════════════════════════════════╗"
+    echo "║  ❌ ERROR: DEPRECATED SCRIPT BLOCKED IN CI                        ║"
+    echo "╠═══════════════════════════════════════════════════════════════════╣"
+    echo "║  carfax_sync_contract.sh is DEPRECATED and makes 3 sync calls.    ║"
+    echo "║                                                                   ║"
+    echo "║  For CI, use: bash ci_verify.sh                                   ║"
+    echo "║                                                                   ║"
+    echo "║  To override (NOT RECOMMENDED):                                   ║"
+    echo "║    ALLOW_DEPRECATED_SYNC_SCRIPT=true bash carfax_sync_contract.sh ║"
+    echo "╚═══════════════════════════════════════════════════════════════════╝"
+    echo ""
+    exit 1
+fi
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
