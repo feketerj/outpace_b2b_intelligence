@@ -14,8 +14,15 @@
 # Usage: bash ci_verify.sh
 # Exit: 0 if all pass, 1 if any fail
 #
+# NON-NEGOTIABLE: CI cannot pass without marker-gated SYNC-02 proof.
+#
 
 set -o pipefail
+
+# Resolve repo root dynamically (no hardcoded /app)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="${GITHUB_WORKSPACE:-${REPO_ROOT:-$SCRIPT_DIR}}"
+export REPO_ROOT
 
 # Colors
 RED='\033[0;31m'
