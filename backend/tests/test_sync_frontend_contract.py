@@ -95,8 +95,7 @@ class TestSyncToastBehavior:
                 assert "synced" in line.lower() or "result" in line or "response" in line, \
                     f"Line {i+1}: Toast must show actual counts, not generic message"
     
-    @pytest.mark.asyncio  
-    async def test_tenants_page_uses_response_counts_in_toast(self):
+    def test_tenants_page_uses_response_counts_in_toast(self):
         """
         INVARIANT: TenantsPage sync toast MUST display summed counts.
         """
