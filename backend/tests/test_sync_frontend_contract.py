@@ -1,118 +1,177 @@
 #!/usr/bin/env python3
 """
-FRONTEND CONTRACT TEST: Sync Now Visibility & Toast Behavior
-============================================================
-This test suite verifies the frontend correctly implements:
-1. Sync Now button visibility based on user role (code inspection)
-2. Toast messages display actual counts from API response (code inspection)
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  STATIC CONTRACT TEST: Frontend Sync Implementation                          ║
+║                                                                              ║
+║  THIS IS A STATIC CODE ANALYSIS TEST - NO PLAYWRIGHT/BROWSER REQUIRED        ║
+║                                                                              ║
+║  These tests verify the frontend code correctly implements the sync          ║
+║  contract by inspecting the source files directly.                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-These tests inspect frontend code to verify the contract is implemented.
-For E2E tests, use Playwright separately.
+TESTS PERFORMED:
+1. IntelligenceFeed.js imports useAuth for role checking
+2. IntelligenceFeed.js uses isSuperAdmin() to guard Sync Now button
+3. IntelligenceFeed.js toast includes actual count expression
+4. TenantsPage.js uses response counts in toast message
 
-DO NOT MODIFY THIS FILE WITHOUT QC APPROVAL.
+DO NOT ADD PLAYWRIGHT DEPENDENCY - USE STATIC CODE INSPECTION ONLY.
+DO NOT MODIFY WITHOUT QC APPROVAL.
 """
 import pytest
 import re
+import os
 
-# Configuration
-FRONTEND_URL = "http://localhost:3000"
-
-# Test credentials
-SUPER_ADMIN_EMAIL = "admin@example.com"
-SUPER_ADMIN_PASSWORD = "REDACTED_ADMIN_PASSWORD"
-TENANT_USER_EMAIL = "tenant-b-test@test.com"
-TENANT_USER_PASSWORD = "REDACTED_TEST_PASSWORD"
+# Frontend file paths
+INTELLIGENCE_FEED_PATH = "/app/frontend/src/pages/IntelligenceFeed.js"
+TENANTS_PAGE_PATH = "/app/frontend/src/pages/TenantsPage.js"
 
 
-class TestSyncButtonVisibility:
-    """Tests that frontend code correctly implements role-based visibility."""
+class TestSyncButtonVisibilityContract:
+    """
+    STATIC CONTRACT TESTS: Verify frontend code implements role-based visibility.
     
-    def test_intelligence_page_sync_button_requires_super_admin(self):
+    These tests inspect the source code to verify the contract is implemented.
+    They do NOT require Playwright or browser automation.
+    """
+    
+    def test_intelligence_feed_imports_use_auth(self):
         """
-        INVARIANT: IntelligenceFeed.js MUST wrap Sync Now button in isSuperAdmin() check.
+        INVARIANT: IntelligenceFeed.js MUST import useAuth from AuthContext.
         
-        This ensures tenant users cannot see or click the button.
+        This is required to access isSuperAdmin() for role checking.
         """
-        frontend_path = "/app/frontend/src/pages/IntelligenceFeed.js"
-        
-        with open(frontend_path, "r") as f:
+        with open(INTELLIGENCE_FEED_PATH, "r") as f:
             code = f.read()
         
-        # Verify isSuperAdmin import
-        assert "useAuth" in code or "isSuperAdmin" in code, \
-            "IntelligenceFeed.js must import auth context for role checking"
+        # Check for useAuth import
+        assert "useAuth" in code, \
+            "IntelligenceFeed.js must import useAuth from AuthContext"
         
-        # Verify isSuperAdmin() wraps the Sync Now button
-        # The pattern should be: {isSuperAdmin() && (<Button...Sync Now...)}
-        assert "isSuperAdmin()" in code, \
-            "REGRESSION: IntelligenceFeed.js must use isSuperAdmin() to guard Sync Now button"
+        # Verify it's actually imported (not just mentioned in a comment)
+        import_pattern = r"import\s*{[^}]*useAuth[^}]*}\s*from"
+        assert re.search(import_pattern, code), \
+            "useAuth must be properly imported (import { useAuth } from ...)"
+    
+    def test_intelligence_feed_uses_is_super_admin_guard(self):
+        """
+        INVARIANT: IntelligenceFeed.js MUST use isSuperAdmin() to guard Sync Now button.
         
-        # Verify the conditional is near the Sync Now button
-        sync_button_index = code.find("Sync Now")
-        is_super_admin_index = code.find("isSuperAdmin()")
+        The pattern should be: {isSuperAdmin() && (<Button...Sync Now...)}
+        This ensures tenant users cannot see the button.
+        """
+        with open(INTELLIGENCE_FEED_PATH, "r") as f:
+            code = f.read()
         
-        # isSuperAdmin check should be within 500 chars before "Sync Now"
-        assert is_super_admin_index != -1 and sync_button_index != -1, \
-            "Could not find both isSuperAdmin() and 'Sync Now' in code"
+        # Check isSuperAdmin is destructured from useAuth
+        assert "isSuperAdmin" in code, \
+            "IntelligenceFeed.js must use isSuperAdmin() for role checking"
         
-        distance = sync_button_index - is_super_admin_index
+        # Find the Sync Now button location
+        sync_now_match = re.search(r"Sync Now", code)
+        assert sync_now_match, "Could not find 'Sync Now' button text in code"
+        sync_now_pos = sync_now_match.start()
+        
+        # Find isSuperAdmin() guard location
+        is_super_admin_match = re.search(r"isSuperAdmin\(\)", code)
+        assert is_super_admin_match, "Could not find isSuperAdmin() call in code"
+        guard_pos = is_super_admin_match.start()
+        
+        # The guard should appear BEFORE the Sync Now button (within 500 chars)
+        # This verifies the conditional rendering pattern
+        distance = sync_now_pos - guard_pos
         assert 0 < distance < 500, \
-            f"isSuperAdmin() should guard Sync Now button (distance: {distance} chars)"
-
-
-class TestSyncToastBehavior:
-    """Tests that toast messages display actual counts."""
+            f"isSuperAdmin() guard must be near Sync Now button (distance: {distance} chars). " \
+            f"Expected pattern: {{isSuperAdmin() && (<Button>Sync Now</Button>)}}"
     
-    def test_frontend_uses_response_counts_in_toast(self):
+    def test_intelligence_feed_toast_uses_count_expression(self):
         """
-        INVARIANT: Toast message MUST display counts from API response.
+        INVARIANT: Toast message MUST include the actual count from API response.
         
-        The toast should show "X new reports" or similar with actual numbers,
-        NOT a generic "Sync successful" message.
+        The toast should show something like:
+        - `${result.intelligence_synced} new reports`
+        - `Intelligence sync complete: ${result.intelligence_synced || 0} new reports`
         
-        This test verifies the frontend code references result.intelligence_synced
-        or result.opportunities_synced in the toast.
+        NOT a generic "Sync successful" without counts.
         """
-        # Instead of waiting 90s for a sync, we verify the frontend code
-        # correctly uses the response data.
-        
-        import os
-        frontend_path = "/app/frontend/src/pages/IntelligenceFeed.js"
-        
-        with open(frontend_path, "r") as f:
+        with open(INTELLIGENCE_FEED_PATH, "r") as f:
             code = f.read()
         
-        # Verify the toast uses response data, not a hardcoded message
-        assert "result.intelligence_synced" in code or "response.data.intelligence_synced" in code, \
-            "REGRESSION: Frontend must use intelligence_synced count in toast"
+        # Find the handleSyncIntelligence function
+        handler_match = re.search(r"handleSyncIntelligence\s*=\s*async", code)
+        assert handler_match, "Could not find handleSyncIntelligence function"
         
-        # Verify no hardcoded success messages without counts
-        # Old bug pattern: toast.success("Sync successful") or similar
-        lines = code.split("\n")
-        for i, line in enumerate(lines):
-            if "toast.success" in line and "handleSync" in code[max(0, code.find(line)-500):code.find(line)+100]:
-                # This is in the sync handler - verify it uses counts
-                assert "synced" in line.lower() or "result" in line or "response" in line, \
-                    f"Line {i+1}: Toast must show actual counts, not generic message"
+        # Extract the function body (approximate - up to next function or 1000 chars)
+        handler_start = handler_match.start()
+        handler_section = code[handler_start:handler_start + 1500]
+        
+        # Look for toast.success with count expression
+        toast_pattern = r"toast\.success\([^)]*intelligence_synced[^)]*\)"
+        toast_match = re.search(toast_pattern, handler_section)
+        
+        assert toast_match, \
+            "Toast in handleSyncIntelligence must include intelligence_synced count. " \
+            "Expected pattern: toast.success(`...${result.intelligence_synced}...`)"
+        
+        # Verify it's using the count in a string interpolation, not just checking it
+        toast_content = toast_match.group(0)
+        assert "${" in toast_content or "`" in handler_section[:toast_match.end() - handler_start + 100], \
+            "Toast must use template literal with count interpolation"
+
+
+class TestTenantsPageToastContract:
+    """
+    STATIC CONTRACT TESTS: Verify TenantsPage.js uses response counts in toast.
+    """
     
-    def test_tenants_page_uses_response_counts_in_toast(self):
+    def test_tenants_page_sync_toast_uses_summed_counts(self):
         """
-        INVARIANT: TenantsPage sync toast MUST display summed counts.
-        """
-        frontend_path = "/app/frontend/src/pages/TenantsPage.js"
+        INVARIANT: TenantsPage.js sync toast MUST display summed counts.
         
-        with open(frontend_path, "r") as f:
+        The toast should show total synced items:
+        - `Synced ${response.data.opportunities_synced + response.data.intelligence_synced} items!`
+        """
+        with open(TENANTS_PAGE_PATH, "r") as f:
             code = f.read()
         
-        # Verify the toast uses response data
-        assert "opportunities_synced" in code and "intelligence_synced" in code, \
-            "TenantsPage must use sync counts in toast"
+        # Verify both count fields are referenced
+        assert "opportunities_synced" in code, \
+            "TenantsPage.js must reference opportunities_synced"
+        assert "intelligence_synced" in code, \
+            "TenantsPage.js must reference intelligence_synced"
         
-        # Check for the pattern that adds both counts
-        assert "response.data.opportunities_synced" in code or \
-               "opportunities_synced + " in code or \
-               "+" in code and "synced" in code, \
-            "TenantsPage toast should sum opportunities and intelligence counts"
+        # Find the sync button handler (onClick with sync/manual)
+        sync_handler_pattern = r"onClick\s*=\s*\{\s*async\s*\(\)\s*=>\s*\{[^}]*sync/manual"
+        # Broader search for the sync-related toast
+        toast_pattern = r"toast\.success\([^)]*synced[^)]*\)"
+        
+        toast_match = re.search(toast_pattern, code, re.IGNORECASE)
+        assert toast_match, \
+            "TenantsPage.js must have toast.success with 'synced' showing counts"
+        
+        # Verify the toast includes count arithmetic or interpolation
+        toast_area = code[max(0, toast_match.start()-200):toast_match.end()+50]
+        assert "+" in toast_area or "opportunities_synced" in toast_area, \
+            "Toast should sum or display sync counts"
+
+
+class TestNoPlaywrightDependency:
+    """
+    META-TEST: Verify this test file does not import Playwright.
+    """
+    
+    def test_no_playwright_import(self):
+        """
+        This test file must NOT depend on Playwright.
+        It should use static code inspection only.
+        """
+        with open(__file__, "r") as f:
+            test_code = f.read()
+        
+        assert "playwright" not in test_code.lower().replace("no_playwright", ""), \
+            "This test file must not import or depend on Playwright"
+        assert "async_playwright" not in test_code, \
+            "This test file must not use async_playwright"
 
 
 if __name__ == "__main__":
