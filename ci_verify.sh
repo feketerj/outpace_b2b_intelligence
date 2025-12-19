@@ -5,11 +5,22 @@
 # Runs all regression guards in sequence with timing.
 # Target: Complete in < 180 seconds total.
 #
-# Suites:
-# 1. carfax_sync_contract.sh - Quick contract shape tests (ONE live sync call)
-# 2. pytest backend contract tests - Deep live verification
-# 3. pytest frontend static tests - Code inspection
-# 4. carfax.sh - Full invariant suite
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  CANONICAL CI RUNNER - SINGLE ENTRY POINT FOR VERIFICATION                ║
+# ║═══════════════════════════════════════════════════════════════════════════║
+# ║  This script is the ONLY CI entry point that:                             ║
+# ║    1. Calls carfax.sh (which executes SYNC-02)                            ║
+# ║    2. Validates the marker file gate                                      ║
+# ║    3. Determines CI pass/fail status                                      ║
+# ║                                                                           ║
+# ║  PROOF CHAIN:                                                             ║
+# ║    ci_verify.sh → carfax.sh → SYNC-02 → marker → gate validation          ║
+# ║                                                                           ║
+# ║  DO NOT:                                                                  ║
+# ║    - Call carfax.sh separately in CI workflows                            ║
+# ║    - Add additional sync calls                                            ║
+# ║    - Bypass marker validation                                             ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
 #
 # Usage: bash ci_verify.sh
 # Exit: 0 if all pass, 1 if any fail
