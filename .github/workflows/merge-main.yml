@@ -1,0 +1,65 @@
+# DELIVERABLE D: CI Wiring - Merge to Main Workflow
+# =================================================
+# Runs on push to main - FULL suite INCLUDING SYNC-02 and marker gate.
+# This is the ONLY place where real sync calls are allowed.
+#
+# NON-NEGOTIABLE: Exactly ONE sync call (SYNC-02) with full contract validation.
+
+name: Merge to Main (Full Suite)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  full-verification:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-asyncio requests
+          pip install -r backend/requirements.txt
+      
+      - name: Run contract validators
+        run: |
+          cd backend
+          python -m pytest tests/validators/ -v --tb=short
+      
+      - name: Run frontend static tests
+        run: |
+          cd backend
+          python -m pytest tests/test_sync_frontend_contract.py -v --tb=short
+      
+      - name: Delete stale marker
+        run: rm -f /tmp/carfax_sync02_ok.marker
+      
+      - name: Run CARFAX full suite (includes SYNC-02)
+        run: |
+          cd /app
+          bash carfax.sh
+        env:
+          API_URL: ${{ secrets.API_URL }}
+      
+      - name: Validate marker gate
+        run: |
+          cd backend
+          python -c "
+from tests.validators import validate_marker
+result = validate_marker()
+if not result:
+    print(f'MARKER GATE FAILED: {result}')
+    exit(1)
+print(f'MARKER GATE PASSED: {result}')
+"
+      
+      - name: Run CI verification wrapper
+        run: |
+          bash ci_verify.sh
