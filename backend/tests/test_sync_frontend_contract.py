@@ -21,10 +21,35 @@ DO NOT MODIFY WITHOUT QC APPROVAL.
 import pytest
 import re
 import os
+from pathlib import Path
 
-# Frontend file paths
-INTELLIGENCE_FEED_PATH = "/app/frontend/src/pages/IntelligenceFeed.js"
-TENANTS_PAGE_PATH = "/app/frontend/src/pages/TenantsPage.js"
+
+def _get_repo_root() -> Path:
+    """
+    Resolve repo root dynamically for GitHub Actions compatibility.
+    Priority: GITHUB_WORKSPACE > REPO_ROOT > FRONTEND_ROOT parent > path traversal from this file.
+    """
+    # 1. GitHub Actions sets GITHUB_WORKSPACE
+    if os.environ.get("GITHUB_WORKSPACE"):
+        return Path(os.environ["GITHUB_WORKSPACE"])
+    
+    # 2. Explicit REPO_ROOT env var
+    if os.environ.get("REPO_ROOT"):
+        return Path(os.environ["REPO_ROOT"])
+    
+    # 3. FRONTEND_ROOT points to frontend/ dir
+    if os.environ.get("FRONTEND_ROOT"):
+        return Path(os.environ["FRONTEND_ROOT"]).parent
+    
+    # 4. Path traversal: this file is at <repo>/backend/tests/test_sync_frontend_contract.py
+    #    So repo root is 3 levels up
+    return Path(__file__).resolve().parent.parent.parent
+
+
+# Dynamically resolved frontend file paths (no hardcoded /app)
+_REPO_ROOT = _get_repo_root()
+INTELLIGENCE_FEED_PATH = str(_REPO_ROOT / "frontend" / "src" / "pages" / "IntelligenceFeed.js")
+TENANTS_PAGE_PATH = str(_REPO_ROOT / "frontend" / "src" / "pages" / "TenantsPage.js")
 
 
 class TestSyncButtonVisibilityContract:
