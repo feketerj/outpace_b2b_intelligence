@@ -14,7 +14,7 @@
 # DO NOT MODIFY WITHOUT QC APPROVAL.
 #
 
-set -e
+# Don't use set -e as grep returning empty is valid
 
 # Colors
 RED='\033[0;31m'
