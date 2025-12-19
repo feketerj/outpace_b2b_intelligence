@@ -62,16 +62,70 @@ run_suite() {
 run_suite "Frontend Static Contract" "cd /app/backend && python -m pytest tests/test_sync_frontend_contract.py -v --tb=short"
 
 # Suite 2: Full CARFAX Invariant Suite (includes live sync with contract validation)
-# This runs all 27 invariant tests including:
+# This runs all 26 invariant tests including:
 # - S7 SYNC-02: ONE admin sync call with FULL CONTRACT VALIDATION (no timeout pass)
 # - Regression detection for old "Sync triggered successfully" response
-run_suite "CARFAX Full Suite" "cd /app && bash carfax.sh"
+# CAPTURE OUTPUT for post-run assertions
+CARFAX_OUTPUT=$(cd /app && bash carfax.sh 2>&1)
+CARFAX_EXIT=$?
+echo "$CARFAX_OUTPUT"
+
+if [ $CARFAX_EXIT -eq 0 ]; then
+    echo -e "${GREEN}✅ CARFAX Full Suite PASSED${NC}"
+else
+    echo -e "${RED}❌ CARFAX Full Suite FAILED (exit code: $CARFAX_EXIT)${NC}"
+    ALL_PASSED=false
+fi
+echo ""
+
+# =============================================================================
+# FAIL-FAST GATE: Verify S7 SYNC-02 actually executed with contract validation
+# This prevents a future edit from silently skipping S7 while still claiming green
+# =============================================================================
+echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}  Verifying S7 SYNC-02 Contract Validation Executed${NC}"
+echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+S7_SECTION_FOUND=false
+SYNC02_TEST_FOUND=false
+CONTRACT_OK_FOUND=false
+
+if echo "$CARFAX_OUTPUT" | grep -q "S7_integrations_sync"; then
+    S7_SECTION_FOUND=true
+    echo -e "${GREEN}✓ S7_integrations_sync section executed${NC}"
+else
+    echo -e "${RED}✗ S7_integrations_sync section NOT FOUND${NC}"
+fi
+
+if echo "$CARFAX_OUTPUT" | grep -q "SYNC-02: admin_sync_returns_full_contract"; then
+    SYNC02_TEST_FOUND=true
+    echo -e "${GREEN}✓ SYNC-02: admin_sync_returns_full_contract test ran${NC}"
+else
+    echo -e "${RED}✗ SYNC-02 test NOT FOUND${NC}"
+fi
+
+if echo "$CARFAX_OUTPUT" | grep -q "Contract validated: OK:"; then
+    CONTRACT_OK_FOUND=true
+    echo -e "${GREEN}✓ Contract validated with OK status${NC}"
+else
+    echo -e "${RED}✗ Contract validation OK NOT FOUND${NC}"
+fi
+
+echo ""
+
+if [ "$S7_SECTION_FOUND" = true ] && [ "$SYNC02_TEST_FOUND" = true ] && [ "$CONTRACT_OK_FOUND" = true ]; then
+    echo -e "${GREEN}✅ S7 SYNC-02 Contract Validation Gate PASSED${NC}"
+else
+    echo -e "${RED}❌ S7 SYNC-02 Contract Validation Gate FAILED${NC}"
+    echo -e "${RED}   CI cannot pass without S7/SYNC-02 contract proof${NC}"
+    ALL_PASSED=false
+fi
+echo ""
 
 # NOTE: carfax_sync_contract.sh is now SKIPPED in CI
 # The contract validation is embedded in CARFAX S7 SYNC-02
-# carfax_sync_contract.sh can still be run manually for deeper verification:
-#   bash /app/carfax_sync_contract.sh
-echo -e "${YELLOW}[INFO] carfax_sync_contract.sh skipped (contract check embedded in CARFAX S7)${NC}"
+# Manual deep contract test: bash /app/carfax_sync_contract.sh
+echo -e "${YELLOW}[INFO] Manual deep contract test available: bash /app/carfax_sync_contract.sh${NC}"
 echo ""
 
 # =============================================================================
