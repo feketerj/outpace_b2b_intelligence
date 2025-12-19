@@ -22,6 +22,7 @@ class IntelligenceType(str, Enum):
     COMPETITIVE = "competitive"
     NEWS = "news"
     MARKET = "market"
+    CUSTOM_REPORT = "custom_report"
 
 # Base Models
 class MongoModel(BaseModel):
