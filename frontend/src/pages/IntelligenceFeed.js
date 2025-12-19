@@ -99,15 +99,17 @@ export default function IntelligenceFeed() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              onClick={handleSyncIntelligence}
-              variant="outline"
-              className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))]"
-              disabled={syncing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing...' : 'Sync Now'}
-            </Button>
+            {isSuperAdmin() && (
+              <Button
+                onClick={handleSyncIntelligence}
+                variant="outline"
+                className="border-[hsl(var(--border))] hover:bg-[hsl(var(--background-tertiary))]"
+                disabled={syncing}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync Now'}
+              </Button>
+            )}
             <Button
               onClick={() => setShowExportModal(true)}
               variant="outline"
