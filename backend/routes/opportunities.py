@@ -76,7 +76,6 @@ async def create_opportunity(
     await db.opportunities.insert_one(opp_doc)
     return Opportunity(**opp_doc)
 
-@router.get("", response_model=PaginatedResponse)
 def extract_solicitation_id(opp: dict) -> str:
     """
     Extract solicitation identifier from opportunity data.
@@ -94,6 +93,7 @@ def extract_solicitation_id(opp: dict) -> str:
     return opp.get('external_id', '')
 
 
+@router.get("", response_model=PaginatedResponse)
 async def list_opportunities(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
