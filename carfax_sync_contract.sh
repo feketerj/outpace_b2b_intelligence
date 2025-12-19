@@ -1,20 +1,29 @@
 #!/bin/bash
 #
-# CARFAX SYNC CONTRACT TEST (CI-SAFE)
-# ====================================
-# Permanent regression guard for P0 sync determinism fix.
-# This script tests response CONTRACT SHAPE via ONE live API call.
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  DEPRECATED - DO NOT USE IN CI                                            ║
+# ║═══════════════════════════════════════════════════════════════════════════║
+# ║  This script is DEPRECATED as of 2025-12-19.                              ║
+# ║                                                                           ║
+# ║  REASON: It makes multiple sync calls, which violates the "single sync"   ║
+# ║  invariant required for CI. The canonical proof path is:                  ║
+# ║                                                                           ║
+# ║    ci_verify.sh → carfax.sh (SYNC-02) → marker                            ║
+# ║                                                                           ║
+# ║  USE INSTEAD:                                                             ║
+# ║    - For CI: bash ci_verify.sh                                            ║
+# ║    - For manual deep testing: bash carfax.sh                              ║
+# ║                                                                           ║
+# ║  This script is kept for manual/ad-hoc verification OUTSIDE of CI.        ║
+# ║  Running it in CI will cause duplicate sync calls.                        ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
 #
-# RUNTIME TARGET: < 60 seconds
-# For deeper live sync testing, use pytest test_sync_contract.py
+# CARFAX SYNC CONTRACT TEST (MANUAL USE ONLY)
+# ===========================================
+# Tests response CONTRACT SHAPE via multiple live API calls.
+# NOT CI-SAFE: Makes 3 sync calls total.
 #
-# INVARIANTS TESTED:
-# 1. Response contains required fields (tenant_id, tenant_name, *_synced, status, sync_timestamp, errors)
-# 2. NO "triggered successfully" async message (regression detection)
-# 3. Tenant users receive 403 Forbidden
-# 4. Correct types (integers for counts, list for errors)
-#
-# DO NOT MODIFY WITHOUT QC APPROVAL.
+# For CI-safe single-sync verification, use: bash ci_verify.sh
 #
 
 # Colors
