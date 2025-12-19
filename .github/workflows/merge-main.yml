@@ -72,29 +72,27 @@ jobs:
       - name: Validate marker gate
         working-directory: ${{ github.workspace }}/backend
         run: |
-          python3 -c "
-import sys
-sys.path.insert(0, '.')
-try:
-    from tests.validators import validate_marker
-    result = validate_marker()
-    if not result:
-        print(f'MARKER GATE FAILED: {result}')
-        sys.exit(1)
-    print(f'MARKER GATE PASSED: {result}')
-except ImportError as e:
-    print(f'Import error (may be expected if not in /app): {e}')
-    # Check marker file directly
-    import json
-    from pathlib import Path
-    marker_path = Path('/tmp/carfax_sync02_ok.marker')
-    if marker_path.exists():
-        data = json.loads(marker_path.read_text())
-        print(f'Marker exists: {data}')
-    else:
-        print('Marker not found')
-        sys.exit(1)
-"
+          python3 << 'PYEOF'
+          import sys, json
+          from pathlib import Path
+          sys.path.insert(0, '.')
+          try:
+              from tests.validators import validate_marker
+              result = validate_marker()
+              if not result:
+                  print(f'MARKER GATE FAILED: {result}')
+                  sys.exit(1)
+              print(f'MARKER GATE PASSED: {result}')
+          except ImportError as e:
+              print(f'Import fallback (expected in GHA): {e}')
+              marker_path = Path('/tmp/carfax_sync02_ok.marker')
+              if marker_path.exists():
+                  data = json.loads(marker_path.read_text())
+                  print(f'Marker exists: {data}')
+              else:
+                  print('Marker not found')
+                  sys.exit(1)
+          PYEOF
       
       - name: Run CI verification wrapper
         working-directory: ${{ github.workspace }}
