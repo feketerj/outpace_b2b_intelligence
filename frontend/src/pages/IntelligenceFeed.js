@@ -15,6 +15,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function IntelligenceFeed() {
   const { currentTenant, brandingStyles } = useTenant();
+  const { isSuperAdmin } = useAuth();
   const [intelligence, setIntelligence] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
