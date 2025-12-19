@@ -104,3 +104,21 @@ except ImportError as e:
           else
             echo "ci_verify.sh not found, marker validation above is sufficient"
           fi
+      
+      - name: Upload marker artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sync-contract-marker
+          path: /tmp/carfax_sync02_ok.marker
+          if-no-files-found: warn
+          retention-days: 30
+      
+      - name: Upload CARFAX reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: carfax-reports
+          path: ${{ github.workspace }}/carfax_reports/
+          if-no-files-found: ignore
+          retention-days: 30
