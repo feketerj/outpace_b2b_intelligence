@@ -2,7 +2,7 @@
   "report": "CARFAX - Comprehensive Auditable Report For Application eXecution",
   "app": "OutPace Intelligence Platform",
   "timestamp": "20251218_222601",
-  "api_url": "https://sync-fix-3.preview.emergentagent.com",
+  "api_url": "https://sync-contract-fix.preview.emergentagent.com",
   "test_plan": "TEST_PLAN.json",
   "summary": {
     "total_tests": 25,
