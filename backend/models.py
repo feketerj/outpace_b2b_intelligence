@@ -273,6 +273,7 @@ class Opportunity(OpportunityBase):
     tenant_id: str
     score: float = 0  # Changed to float to handle decimal scores
     ai_relevance_summary: Optional[str] = None
+    solicitation_id: Optional[str] = None  # Extracted identifier for display
     captured_date: datetime
     created_at: datetime
     updated_at: datetime
