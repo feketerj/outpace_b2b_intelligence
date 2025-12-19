@@ -15,7 +15,7 @@ TESTS PERFORMED:
 3. IntelligenceFeed.js toast includes actual count expression
 4. TenantsPage.js uses response counts in toast message
 
-DO NOT ADD PLAYWRIGHT DEPENDENCY - USE STATIC CODE INSPECTION ONLY.
+DO NOT ADD BROWSER AUTOMATION - USE STATIC CODE INSPECTION ONLY.
 DO NOT MODIFY WITHOUT QC APPROVAL.
 """
 import pytest
