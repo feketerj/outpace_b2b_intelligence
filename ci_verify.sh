@@ -191,8 +191,8 @@ echo ""
 
 # NOTE: carfax_sync_contract.sh is now SKIPPED in CI
 # The contract validation is embedded in CARFAX S7 SYNC-02
-# Manual deep contract test: bash /app/carfax_sync_contract.sh
-echo -e "${YELLOW}[INFO] Manual deep contract test available: bash /app/carfax_sync_contract.sh${NC}"
+# Manual deep contract test: bash carfax_sync_contract.sh (from repo root)
+echo -e "${YELLOW}[INFO] Manual deep contract test available: bash $REPO_ROOT/carfax_sync_contract.sh${NC}"
 echo ""
 
 # =============================================================================
