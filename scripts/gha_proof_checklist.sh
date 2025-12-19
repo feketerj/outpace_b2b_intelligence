@@ -1,160 +1,123 @@
 #!/bin/bash
 #
-# GitHub Actions Proof Checklist
-# ===============================
-# Prints the exact log strings and artifacts to verify in GitHub Actions.
-# This script makes NO network calls - it is purely instructional.
+# Verification Proof Checklist
+# ============================
+# Prints canonical proof requirements for CI verification.
+# This script is network-free and produces plain text only.
 #
 # Usage: bash scripts/gha_proof_checklist.sh
 #
 
-set -e
-
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-BOLD='\033[1m'
-NC='\033[0m'
+# No ANSI codes, no symbols, no emojis - plain text only
 
 echo ""
-echo -e "${BOLD}╔═══════════════════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║           GITHUB ACTIONS PROOF CHECKLIST                                      ║${NC}"
-echo -e "${BOLD}║           (No network calls - instructional only)                             ║${NC}"
-echo -e "${BOLD}╚═══════════════════════════════════════════════════════════════════════════════╝${NC}"
+echo "========================================================================"
+echo "VERIFICATION PROOF CHECKLIST"
+echo "========================================================================"
+echo ""
+echo "This checklist defines the canonical proof signals for verification."
+echo "Proof is valid regardless of trigger mechanism (push, PR, dispatch)."
 echo ""
 
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
-echo -e "${CYAN}  1. PR WORKFLOW VERIFICATION${NC}"
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
+echo "------------------------------------------------------------------------"
+echo "SECTION 1: CANONICAL PROOF STRINGS"
+echo "------------------------------------------------------------------------"
 echo ""
-echo -e "${GREEN}✓ LOG STRINGS THAT MUST APPEAR:${NC}"
-echo "    \"PR checks complete (no external sync calls)\""
-echo "    \"passed\" (pytest summary)"
+echo "The following strings MUST appear in the CI logs for proof to be valid."
 echo ""
-echo -e "${RED}✗ LOG STRINGS THAT MUST NOT APPEAR:${NC}"
-echo "    \"SYNC-02\""
-echo "    \"/api/admin/sync\""
-echo "    \"/api/sync/manual\""
-echo "    \"admin_sync_returns_full_contract\""
+echo "  String 1 (must appear EXACTLY ONCE):"
+echo "    SYNC-02: admin_sync_returns_full_contract"
 echo ""
-echo -e "${YELLOW}  Search tip: Use Ctrl+F in the workflow log viewer${NC}"
+echo "  String 2 (must appear AT LEAST ONCE):"
+echo "    MARKER GATE PASSED: tenant="
 echo ""
-
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
-echo -e "${CYAN}  2. MERGE WORKFLOW VERIFICATION${NC}"
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
-echo ""
-echo -e "${GREEN}✓ SYNC-02 PROOF (must appear EXACTLY ONCE):${NC}"
-echo "    \"SYNC-02: admin_sync_returns_full_contract\""
-echo ""
-echo "    How to verify:"
-echo "    1. Open merge workflow run"
-echo "    2. Expand 'Run CI verification' step"
-echo "    3. Ctrl+F search for 'SYNC-02'"
-echo "    4. Count occurrences (must be exactly 1)"
-echo ""
-echo -e "${GREEN}✓ MARKER GATE PROOF (must appear):${NC}"
-echo "    \"MARKER GATE PASSED: tenant=\""
-echo ""
-echo "    Full expected format:"
-echo "    \"MARKER GATE PASSED: tenant=8aa521eb..., status=success, age=Xs, opp=N, intel=N\""
-echo ""
-echo -e "${GREEN}✓ CI SUMMARY (must appear):${NC}"
-echo "    \"✅ ALL CI CHECKS PASSED\""
+echo "Search for these exact strings in the workflow logs."
+echo "Count occurrences of String 1 - it must be exactly 1."
 echo ""
 
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
-echo -e "${CYAN}  3. ARTIFACTS TO VERIFY${NC}"
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
+echo "------------------------------------------------------------------------"
+echo "SECTION 2: CANONICAL ARTIFACTS"
+echo "------------------------------------------------------------------------"
 echo ""
-echo "  Location: Bottom of merge workflow run page → 'Artifacts' section"
+echo "The following artifacts MUST be present in the CI run."
 echo ""
-echo -e "${GREEN}  Required Artifacts:${NC}"
-echo "    ┌─────────────────────────┬─────────────────────────────────────────┐"
-echo "    │ Artifact Name           │ Contents                                │"
-echo "    ├─────────────────────────┼─────────────────────────────────────────┤"
-echo "    │ sync-contract-marker    │ /tmp/carfax_sync02_ok.marker (JSON)     │"
-echo "    │ carfax-reports          │ carfax_reports/*.json                   │"
-echo "    └─────────────────────────┴─────────────────────────────────────────┘"
+echo "  Artifact 1: sync-contract-marker"
+echo "    Contains: Marker JSON file (/tmp/carfax_sync02_ok.marker)"
 echo ""
-
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
-echo -e "${CYAN}  4. NIGHTLY WORKFLOW VERIFICATION (if triggered)${NC}"
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
+echo "  Artifact 2: carfax-reports"
+echo "    Contains: CARFAX test report JSON files"
 echo ""
-echo -e "${GREEN}✓ LOG STRINGS THAT MUST APPEAR:${NC}"
-echo "    \"Monte Carlo Summary\""
-echo "    \"SYNC-02: NOT RUN (nightly uses validators only)\""
-echo ""
-echo -e "${RED}✗ LOG STRINGS THAT MUST NOT APPEAR:${NC}"
-echo "    \"admin_sync_returns_full_contract\""
-echo "    \"/api/admin/sync\""
+echo "Verify both artifacts appear in the workflow run's artifact section."
 echo ""
 
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
-echo -e "${CYAN}  5. EVIDENCE TEMPLATE (copy and fill)${NC}"
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
+echo "------------------------------------------------------------------------"
+echo "SECTION 3: PROOF VALIDITY CRITERIA"
+echo "------------------------------------------------------------------------"
 echo ""
-cat << 'TEMPLATE'
-═══════════════════════════════════════════════════════════════
-GITHUB ACTIONS VERIFICATION EVIDENCE
-═══════════════════════════════════════════════════════════════
-
-PR URL:
-  https://github.com/feketerj/outpace_b2b_intelligence/pull/___
-
-PR WORKFLOW:
-  URL: https://github.com/feketerj/outpace_b2b_intelligence/actions/runs/___
-  Status: [PASS/FAIL]
-  Sync calls detected: [YES/NO]
-
-MERGE WORKFLOW:
-  URL: https://github.com/feketerj/outpace_b2b_intelligence/actions/runs/___
-  Status: [PASS/FAIL]
-  
-  SYNC-02 Log Line:
-    [paste: "✅ PASS: SYNC-02: admin_sync_returns_full_contract"]
-  
-  Marker Gate Log Line:
-    [paste: "MARKER GATE PASSED: tenant=..."]
-  
-  SYNC-02 Count: [1]
-
-ARTIFACTS:
-  sync-contract-marker: [YES/NO]
-  carfax-reports: [YES/NO]
-
-NIGHTLY WORKFLOW (optional):
-  URL: https://github.com/feketerj/outpace_b2b_intelligence/actions/runs/___
-  Status: [PASS/FAIL]
-
-═══════════════════════════════════════════════════════════════
-TEMPLATE
+echo "A verification run constitutes valid proof if and only if:"
+echo ""
+echo "  [ ] Workflow completed successfully (not failed/cancelled)"
+echo "  [ ] SYNC-02 string appears exactly once"
+echo "  [ ] MARKER GATE PASSED string appears at least once"
+echo "  [ ] Artifact sync-contract-marker is present"
+echo "  [ ] Artifact carfax-reports is present"
 echo ""
 
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
-echo -e "${CYAN}  6. PASS/FAIL CRITERIA${NC}"
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
+echo "------------------------------------------------------------------------"
+echo "SECTION 4: EVIDENCE TEMPLATE"
+echo "------------------------------------------------------------------------"
 echo ""
-echo "  All of the following must be TRUE for verification to pass:"
+echo "Copy and complete this template:"
 echo ""
-echo "    [ ] PR workflow completed successfully"
-echo "    [ ] PR workflow made ZERO sync calls"
-echo "    [ ] Merge workflow completed successfully"
-echo "    [ ] Merge workflow executed EXACTLY ONE SYNC-02"
-echo "    [ ] Merge workflow shows 'MARKER GATE PASSED'"
-echo "    [ ] Artifact 'sync-contract-marker' is present"
-echo "    [ ] Artifact 'carfax-reports' is present"
+echo "  VERIFICATION EVIDENCE"
+echo "  ====================="
 echo ""
-echo -e "${GREEN}  If all checks pass: Verification system is proven in real GitHub Actions.${NC}"
-echo -e "${RED}  If any check fails: Investigate and fix before declaring success.${NC}"
+echo "  Workflow Run URL:"
+echo "    [paste URL]"
+echo ""
+echo "  SYNC-02 Log Line:"
+echo "    [paste line containing: SYNC-02: admin_sync_returns_full_contract]"
+echo ""
+echo "  Marker Gate Log Line:"
+echo "    [paste line containing: MARKER GATE PASSED: tenant=]"
+echo ""
+echo "  SYNC-02 Count: [1]"
+echo ""
+echo "  Artifacts Present:"
+echo "    sync-contract-marker: [YES/NO]"
+echo "    carfax-reports: [YES/NO]"
+echo ""
+echo "  Verification Status: [PASS/FAIL]"
 echo ""
 
-echo -e "${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
-echo -e "${BOLD}  END OF CHECKLIST${NC}"
-echo -e "${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
+echo "------------------------------------------------------------------------"
+echo "SECTION 5: REPOSITORY AUDIT"
+echo "------------------------------------------------------------------------"
 echo ""
-echo "  Full runbook: docs/github_actions_proof_runbook.md"
-echo "  PR description: PR_DESCRIPTION.md"
+echo "Before declaring proof complete, audit for hardcoded paths:"
+echo ""
+echo "  Command:"
+echo "    grep -rn '\"/app' *.sh docs/*.md scripts/*.sh 2>/dev/null | grep -v '#'"
+echo ""
+echo "  Expected: No matches (or only fallback paths in deprecated code)"
+echo ""
+
+echo "------------------------------------------------------------------------"
+echo "SECTION 6: NON-PROOF RUNS"
+echo "------------------------------------------------------------------------"
+echo ""
+echo "Some workflows intentionally exclude sync calls (e.g., PR checks)."
+echo "These runs are valid but do NOT establish sync-contract proof."
+echo ""
+echo "To verify a non-proof run is correctly configured:"
+echo "  [ ] Workflow completes successfully"
+echo "  [ ] SYNC-02 string does NOT appear"
+echo "  [ ] No marker artifacts uploaded"
+echo ""
+
+echo "========================================================================"
+echo "END OF CHECKLIST"
+echo "========================================================================"
+echo ""
+echo "Reference: docs/github_actions_proof_runbook.md"
 echo ""
