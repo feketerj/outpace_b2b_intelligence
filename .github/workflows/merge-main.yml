@@ -53,55 +53,67 @@ jobs:
       - name: Run frontend static tests
         working-directory: ${{ github.workspace }}/backend
         run: |
-          python -m pytest tests/test_sync_frontend_contract.py -v --tb=short || true
+          python -m pytest tests/test_sync_frontend_contract.py -v --tb=short
       
       - name: Delete stale marker
         run: rm -f /tmp/carfax_sync02_ok.marker
       
-      - name: Run CARFAX full suite (includes SYNC-02)
-        working-directory: ${{ github.workspace }}
-        run: |
-          if [ -f carfax.sh ]; then
-            bash carfax.sh
-          else
-            echo "carfax.sh not found in workspace, skipping"
-          fi
-        env:
-          API_URL: ${{ secrets.API_URL }}
-      
-      - name: Validate marker gate
-        working-directory: ${{ github.workspace }}/backend
-        run: |
-          python3 << 'PYEOF'
-          import sys, json
-          from pathlib import Path
-          sys.path.insert(0, '.')
-          try:
-              from tests.validators import validate_marker
-              result = validate_marker()
-              if not result:
-                  print(f'MARKER GATE FAILED: {result}')
-                  sys.exit(1)
-              print(f'MARKER GATE PASSED: {result}')
-          except ImportError as e:
-              print(f'Import fallback (expected in GHA): {e}')
-              marker_path = Path('/tmp/carfax_sync02_ok.marker')
-              if marker_path.exists():
-                  data = json.loads(marker_path.read_text())
-                  print(f'Marker exists: {data}')
-              else:
-                  print('Marker not found')
-                  sys.exit(1)
-          PYEOF
-      
-      - name: Run CI verification wrapper
+      # CANONICAL PROOF RUNNER: ci_verify.sh is the ONLY runner that executes SYNC-02.
+      # It internally calls carfax.sh which performs the single sync + marker write.
+      # DO NOT add separate carfax.sh step - that would duplicate SYNC-02.
+      - name: Run CI verification (SINGLE SYNC-02 proof)
         working-directory: ${{ github.workspace }}
         run: |
           if [ -f ci_verify.sh ]; then
             bash ci_verify.sh
           else
-            echo "ci_verify.sh not found, marker validation above is sufficient"
+            echo "ERROR: ci_verify.sh not found - cannot verify sync contract"
+            exit 1
           fi
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          REPO_ROOT: ${{ github.workspace }}
+      
+      - name: Validate marker gate (post-verification check)
+        run: |
+          python3 << 'PYEOF'
+          import sys, json, re
+          from pathlib import Path
+          from datetime import datetime, timezone, timedelta
+          
+          UUID_REGEX = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.I)
+          MAX_AGE_MINUTES = 10
+          
+          marker_path = Path('/tmp/carfax_sync02_ok.marker')
+          if not marker_path.exists():
+              print('MARKER GATE FAILED: Marker file not found')
+              sys.exit(1)
+          
+          try:
+              data = json.loads(marker_path.read_text())
+          except json.JSONDecodeError as e:
+              print(f'MARKER GATE FAILED: Invalid JSON - {e}')
+              sys.exit(1)
+          
+          errors = []
+          required = ['tenant_id', 'status', 'sync_timestamp', 'contract_validated', 'marker_created_utc']
+          missing = [k for k in required if k not in data]
+          if missing:
+              errors.append(f'MISSING_KEYS:{missing}')
+          
+          if data.get('contract_validated') is not True:
+              errors.append('CONTRACT_NOT_VALIDATED')
+          
+          tenant_id = data.get('tenant_id', '')
+          if not UUID_REGEX.match(str(tenant_id)):
+              errors.append(f'INVALID_UUID:{tenant_id[:20]}')
+          
+          if errors:
+              print(f'MARKER GATE FAILED: {"; ".join(errors)}')
+              sys.exit(1)
+          
+          print(f'MARKER GATE PASSED: tenant={tenant_id[:8]}..., status={data.get("status")}')
+          PYEOF
       
       - name: Upload marker artifact
         uses: actions/upload-artifact@v4
