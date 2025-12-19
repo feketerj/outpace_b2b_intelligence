@@ -63,8 +63,7 @@ class TestSyncButtonVisibility:
 class TestSyncToastBehavior:
     """Tests that toast messages display actual counts."""
     
-    @pytest.mark.asyncio
-    async def test_frontend_uses_response_counts_in_toast(self):
+    def test_frontend_uses_response_counts_in_toast(self):
         """
         INVARIANT: Toast message MUST display counts from API response.
         
