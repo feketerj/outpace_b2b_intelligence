@@ -108,6 +108,10 @@ export default function OpportunityDetail() {
               </Badge>
             </div>
             <div className="flex items-center gap-4 text-sm text-[hsl(var(--foreground-muted))]">
+              <span className="font-medium">
+                Solicitation #: {opportunity?.solicitation_id || opportunity?.external_id || 'N/A'}
+              </span>
+              <span>•</span>
               <span className="flex items-center gap-1">
                 <Building2 className="h-4 w-4" />
                 {opportunity?.agency || 'N/A'}
