@@ -637,7 +637,7 @@ test_S10_intelligence_sources() {
     echo -e "\n${BOLD}INTEL-01: no_sourceless_intelligence_allowed${NC}"
     
     # Count intelligence reports with empty source_urls
-    local sourceless_count=$(cd /app/backend && python3 -c "
+    local sourceless_count=$(cd "$REPO_ROOT/backend" && python3 -c "
 import os, asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
