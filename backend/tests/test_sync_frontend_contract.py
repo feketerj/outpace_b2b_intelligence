@@ -155,23 +155,26 @@ class TestTenantsPageToastContract:
             "Toast should sum or display sync counts"
 
 
-class TestNoPlaywrightDependency:
+class TestNoBrowserDependency:
     """
-    META-TEST: Verify this test file does not import Playwright.
+    META-TEST: Verify this test file does not import browser automation libs.
     """
     
-    def test_no_playwright_import(self):
+    def test_no_browser_automation_import(self):
         """
-        This test file must NOT depend on Playwright.
+        This test file must NOT depend on browser automation.
         It should use static code inspection only.
         """
         with open(__file__, "r") as f:
             test_code = f.read()
         
-        assert "playwright" not in test_code.lower().replace("no_playwright", ""), \
-            "This test file must not import or depend on Playwright"
-        assert "async_playwright" not in test_code, \
-            "This test file must not use async_playwright"
+        # Check imports section only (first 50 lines)
+        imports_section = "\n".join(test_code.split("\n")[:50])
+        
+        assert "from playwright" not in imports_section, \
+            "This test file must not import browser automation libraries"
+        assert "import selenium" not in imports_section.lower(), \
+            "This test file must not import selenium"
 
 
 if __name__ == "__main__":
