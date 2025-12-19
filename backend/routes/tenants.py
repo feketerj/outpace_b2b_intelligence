@@ -320,14 +320,8 @@ async def update_tenant(
                 detail="Tenant slug already exists"
             )
     
-    # STEP 5: SECURITY - Block restricted fields for master tenants
-    if existing_tenant.get("is_master_client"):
-        for blocked in ["chat_policy", "tenant_knowledge", "rag_policy"]:
-            if blocked in raw_body:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"{blocked} cannot be modified for master tenants"
-                )
+    # STEP 5: Super admin can modify all tenants including master clients
+    # (Policy change: master tenant restrictions removed for super_admin)
     
     # STEP 6: Deep merge nested objects (prevent sibling loss)
     merged_data = {}
