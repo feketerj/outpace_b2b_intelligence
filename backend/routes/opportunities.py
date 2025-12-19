@@ -77,6 +77,23 @@ async def create_opportunity(
     return Opportunity(**opp_doc)
 
 @router.get("", response_model=PaginatedResponse)
+def extract_solicitation_id(opp: dict) -> str:
+    """
+    Extract solicitation identifier from opportunity data.
+    Priority order:
+    1. raw_data.source_id (HigherGov)
+    2. raw_data.solicitationNumber (SAM)
+    3. raw_data.noticeId (SAM)
+    4. raw_data.notice_id
+    5. external_id (fallback)
+    """
+    raw = opp.get('raw_data', {})
+    for field in ['source_id', 'solicitationNumber', 'noticeId', 'notice_id']:
+        if raw.get(field):
+            return str(raw[field])
+    return opp.get('external_id', '')
+
+
 async def list_opportunities(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -112,12 +129,16 @@ async def list_opportunities(
     cursor = db.opportunities.find(query, {"_id": 0}).skip(skip).limit(per_page).sort("score", -1)
     opportunities = await cursor.to_list(length=per_page)
     
+    # Add solicitation_id to each opportunity
+    for opp in opportunities:
+        opp['solicitation_id'] = extract_solicitation_id(opp)
+    
     pages = (total + per_page - 1) // per_page
     
     _audit_access("list_opportunities", query.get("tenant_id", "all"), count=len(opportunities))
     
     return PaginatedResponse(
-        data=[Opportunity(**o) for o in opportunities],
+        data=opportunities,
         pagination=PaginationMetadata(
             total=total,
             page=page,
