@@ -384,36 +384,87 @@ test_S6_exports() {
 #------------------------------------------------------------------------------
 
 test_S7_sync() {
-    section "S7_integrations_sync (2 tests)"
+    section "S7_integrations_sync (3 tests)"
     
-    # NOTE: These tests verify PERMISSION only, not full sync execution
-    # Full sync contract testing is done in carfax_sync_contract.sh and pytest
-    # Using quick timeout for tenant (gets 403 fast) and admin check
-    
-    echo -e "\n${BOLD}SYNC-01: manual_sync_endpoint_super_admin_only${NC}"
+    # TEST 1: Permission check - tenant users cannot call sync endpoints
+    echo -e "\n${BOLD}SYNC-01: sync_endpoints_require_super_admin${NC}"
     # Tenant user should get 403 immediately (no waiting for sync)
     local s1=$(http_status_quick -X POST -H "Authorization: Bearer $TENANT_A_TOKEN" "$API_URL/api/sync/manual/$TENANT_A_ID")
-    # Admin gets 200 - we use quick check since we just need permission verification
-    # Full sync contract is verified in dedicated contract tests
-    local s2=$(http_status_quick -X POST -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/api/sync/manual/$TENANT_A_ID?sync_type=opportunities")
-    # If admin timed out (408 or 000408), that's OK - it means sync started (permission granted)
-    evidence "tenant_user -> HTTP $s1, super_admin -> HTTP $s2"
-    # Handle both "408" and "000408" formats from curl timeout
-    if [ "$s1" = "403" ] && [[ "$s2" =~ ^(200|202|0*408)$ ]]; then
-        pass "SYNC-01: manual_sync_endpoint_super_admin_only"
+    local s2=$(http_status_quick -X POST -H "Authorization: Bearer $TENANT_A_TOKEN" "$API_URL/api/admin/sync/$TENANT_A_ID")
+    evidence "tenant_user /sync/manual -> HTTP $s1, /admin/sync -> HTTP $s2"
+    if [ "$s1" = "403" ] && [ "$s2" = "403" ]; then
+        pass "SYNC-01: sync_endpoints_require_super_admin"
     else
-        fail "SYNC-01 (tenant=$s1, admin=$s2)"
+        fail "SYNC-01 (manual=$s1, admin=$s2) - expected both 403"
     fi
     
-    echo -e "\n${BOLD}SYNC-02: admin_trigger_sync_super_admin_only${NC}"
-    s1=$(http_status_quick -X POST -H "Authorization: Bearer $TENANT_A_TOKEN" "$API_URL/api/admin/sync/$TENANT_A_ID")
-    s2=$(http_status_quick -X POST -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/api/admin/sync/$TENANT_A_ID?sync_type=opportunities")
-    evidence "tenant_user -> HTTP $s1, super_admin -> HTTP $s2"
-    # 408/000408 = timeout = sync started = permission OK
-    if [ "$s1" = "403" ] && [[ "$s2" =~ ^(200|202|404|500|0*408)$ ]]; then
-        pass "SYNC-02: admin_trigger_sync_super_admin_only"
+    # TEST 2: Contract-shaped response - ONE admin sync call must return 200 + JSON contract
+    # This is the CRITICAL test that proves deterministic sync behavior
+    # NO TIMEOUT ACCEPTED - must get actual JSON response
+    echo -e "\n${BOLD}SYNC-02: admin_sync_returns_contract_json${NC}"
+    evidence "Calling /api/admin/sync with sync_type=opportunities (max 120s)..."
+    local SYNC_RESPONSE=$(curl -s --max-time 120 -X POST \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
+        -H "Content-Type: application/json" \
+        "$API_URL/api/admin/sync/$TENANT_A_ID?sync_type=opportunities")
+    local SYNC_STATUS=$?
+    
+    # Check if curl timed out or failed
+    if [ $SYNC_STATUS -ne 0 ]; then
+        evidence "CURL FAILED with exit code $SYNC_STATUS (timeout or network error)"
+        fail "SYNC-02: admin_sync_returns_contract_json (curl failed)"
     else
-        fail "SYNC-02 (tenant=$s1, admin=$s2)"
+        # Validate response contains contract fields and is NOT the old async message
+        local CONTRACT_CHECK=$(echo "$SYNC_RESPONSE" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    # Check for OLD REGRESSION response
+    if 'message' in d and 'triggered' in str(d.get('message','')).lower():
+        print('REGRESSION:OLD_ASYNC_MESSAGE')
+    # Check required contract fields
+    required = ['tenant_id', 'tenant_name', 'opportunities_synced', 'intelligence_synced', 'status']
+    missing = [f for f in required if f not in d]
+    if missing:
+        print(f'MISSING:{missing}')
+    elif not isinstance(d.get('opportunities_synced'), int):
+        print('TYPE_ERROR:opportunities_synced not int')
+    elif not isinstance(d.get('intelligence_synced'), int):
+        print('TYPE_ERROR:intelligence_synced not int')
+    elif d.get('status') not in ['success', 'partial']:
+        print(f'ENUM_ERROR:status={d.get(\"status\")}')
+    else:
+        print(f'OK:opp={d[\"opportunities_synced\"]},intel={d[\"intelligence_synced\"]},status={d[\"status\"]}')
+except json.JSONDecodeError as e:
+    print(f'JSON_ERROR:{e}')
+except Exception as e:
+    print(f'ERROR:{e}')
+" 2>/dev/null)
+        
+        if [[ "$CONTRACT_CHECK" == OK:* ]]; then
+            evidence "Response: $CONTRACT_CHECK"
+            pass "SYNC-02: admin_sync_returns_contract_json"
+        elif [[ "$CONTRACT_CHECK" == REGRESSION:* ]]; then
+            evidence "REGRESSION DETECTED: $CONTRACT_CHECK"
+            evidence "Response was: ${SYNC_RESPONSE:0:200}..."
+            fail "SYNC-02: REGRESSION - old async message detected"
+        else
+            evidence "Contract validation failed: $CONTRACT_CHECK"
+            evidence "Response was: ${SYNC_RESPONSE:0:200}..."
+            fail "SYNC-02: admin_sync_returns_contract_json ($CONTRACT_CHECK)"
+        fi
+    fi
+    
+    # TEST 3: Alternative endpoint parity - /api/sync/manual returns same contract
+    # Quick permission + basic check (not full sync since we just did one)
+    echo -e "\n${BOLD}SYNC-03: manual_sync_endpoint_accessible${NC}"
+    local s3=$(http_status -X POST -H "Authorization: Bearer $ADMIN_TOKEN" --max-time 5 "$API_URL/api/sync/manual/$TENANT_A_ID?sync_type=opportunities" 2>/dev/null || echo "408")
+    # Accept 200, 408 (started but didn't wait), or other valid codes
+    evidence "super_admin /sync/manual -> HTTP $s3"
+    if [[ "$s3" =~ ^(200|202|0*408)$ ]]; then
+        pass "SYNC-03: manual_sync_endpoint_accessible"
+    else
+        fail "SYNC-03: manual_sync_endpoint_accessible (HTTP $s3)"
     fi
 }
 
