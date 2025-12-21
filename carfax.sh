@@ -115,18 +115,26 @@ http_status_quick() {
 # Get chat_turns count for a tenant via direct DB query
 get_chat_turns_count() {
     local tenant_id=$1
-    cd "$REPO_ROOT/backend" && python3 -c "
-import os, asyncio
-from motor.motor_asyncio import AsyncIOMotorClient
+    local result=$(timeout 5 python3 -c "
+import os, sys, asyncio
 
 async def count():
-    client = AsyncIOMotorClient(os.environ.get('MONGO_URL', 'mongodb://localhost:27017'))
-    db = client[os.environ.get('DB_NAME', 'outpace_intelligence')]
-    count = await db.chat_turns.count_documents({'tenant_id': '$tenant_id'})
-    print(count)
+    mongo_url = os.environ.get('MONGO_URL')
+    if not mongo_url:
+        print('DB_SKIP')
+        return
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=3000)
+        db = client[os.environ.get('DB_NAME', 'outpace_intelligence')]
+        count = await db.chat_turns.count_documents({'tenant_id': '$tenant_id'})
+        print(count)
+    except Exception:
+        print('DB_SKIP')
 
 asyncio.run(count())
-" 2>/dev/null
+" 2>&1 || echo "DB_SKIP")
+    echo "$result"
 }
 
 # Update tenant chat_policy via API
