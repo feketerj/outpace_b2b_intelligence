@@ -708,6 +708,124 @@ asyncio.run(main())
 }
 
 #------------------------------------------------------------------------------
+# S11: Empty Input Handling (EMPTY stratum)
+#------------------------------------------------------------------------------
+
+test_S11_empty_inputs() {
+    section "S11_empty_input_handling (5 tests)"
+    
+    echo -e "\n${BOLD}EMPTY-01: null_body_rejected${NC}"
+    local status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        -H "Authorization: Bearer $TENANT_A_TOKEN" \
+        -H "Content-Type: application/json" \
+        "$API_URL/api/chat/message" -d 'null')
+    evidence "null body -> HTTP $status"
+    if [[ "$status" =~ ^(400|422)$ ]]; then pass "EMPTY-01: null_body_rejected"; else fail "EMPTY-01 ($status)"; fi
+    
+    echo -e "\n${BOLD}EMPTY-02: empty_object_rejected${NC}"
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        -H "Authorization: Bearer $TENANT_A_TOKEN" \
+        -H "Content-Type: application/json" \
+        "$API_URL/api/chat/message" -d '{}')
+    evidence "empty object {} -> HTTP $status"
+    if [[ "$status" =~ ^(400|422)$ ]]; then pass "EMPTY-02: empty_object_rejected"; else fail "EMPTY-02 ($status)"; fi
+    
+    echo -e "\n${BOLD}EMPTY-03: empty_string_message_rejected${NC}"
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        -H "Authorization: Bearer $TENANT_A_TOKEN" \
+        -H "Content-Type: application/json" \
+        "$API_URL/api/chat/message" -d '{"conversation_id":"empty-test","message":"","agent_type":"opportunities"}')
+    evidence "empty string message -> HTTP $status"
+    if [[ "$status" =~ ^(400|422)$ ]]; then pass "EMPTY-03: empty_string_message_rejected"; else fail "EMPTY-03 ($status)"; fi
+    
+    echo -e "\n${BOLD}EMPTY-04: empty_array_export_rejected${NC}"
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
+        -H "Content-Type: application/json" \
+        "$API_URL/api/exports/pdf" -d "{\"tenant_id\":\"$TENANT_A_ID\",\"opportunity_ids\":[],\"intelligence_ids\":[]}")
+    evidence "empty arrays export -> HTTP $status"
+    if [[ "$status" =~ ^(400|404|422)$ ]]; then pass "EMPTY-04: empty_array_export_rejected"; else fail "EMPTY-04 ($status)"; fi
+    
+    echo -e "\n${BOLD}EMPTY-05: missing_auth_header_rejected${NC}"
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X GET "$API_URL/api/opportunities")
+    evidence "no auth header -> HTTP $status"
+    if [[ "$status" =~ ^(401|403)$ ]]; then pass "EMPTY-05: missing_auth_header_rejected"; else fail "EMPTY-05 ($status)"; fi
+}
+
+#------------------------------------------------------------------------------
+# S12: Performance Tests (PERFORMANCE stratum)
+#------------------------------------------------------------------------------
+
+test_S12_performance() {
+    section "S12_performance (4 tests)"
+    
+    echo -e "\n${BOLD}PERF-01: health_under_500ms${NC}"
+    local start_ms=$(date +%s%3N)
+    local status=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/health")
+    local end_ms=$(date +%s%3N)
+    local duration=$((end_ms - start_ms))
+    evidence "health check: HTTP $status in ${duration}ms"
+    if [ "$status" = "200" ] && [ "$duration" -lt 500 ]; then
+        pass "PERF-01: health_under_500ms (${duration}ms)"
+    else
+        fail "PERF-01 (status=$status, duration=${duration}ms)"
+    fi
+    
+    echo -e "\n${BOLD}PERF-02: auth_under_1000ms${NC}"
+    start_ms=$(date +%s%3N)
+    local resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/login" \
+        -H "Content-Type: application/json" \
+        -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}")
+    end_ms=$(date +%s%3N)
+    duration=$((end_ms - start_ms))
+    status=$(echo "$resp" | tail -n1)
+    evidence "auth login: HTTP $status in ${duration}ms"
+    if [ "$status" = "200" ] && [ "$duration" -lt 1000 ]; then
+        pass "PERF-02: auth_under_1000ms (${duration}ms)"
+    else
+        fail "PERF-02 (status=$status, duration=${duration}ms)"
+    fi
+    
+    echo -e "\n${BOLD}PERF-03: list_under_2000ms${NC}"
+    start_ms=$(date +%s%3N)
+    status=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/api/opportunities")
+    end_ms=$(date +%s%3N)
+    duration=$((end_ms - start_ms))
+    evidence "list opportunities: HTTP $status in ${duration}ms"
+    if [ "$status" = "200" ] && [ "$duration" -lt 2000 ]; then
+        pass "PERF-03: list_under_2000ms (${duration}ms)"
+    else
+        fail "PERF-03 (status=$status, duration=${duration}ms)"
+    fi
+    
+    echo -e "\n${BOLD}PERF-04: concurrent_requests_handled${NC}"
+    # Fire 5 concurrent health checks using background jobs
+    local pids=()
+    local results_file="/tmp/carfax_concurrent_$$"
+    rm -f "$results_file"
+    
+    for i in {1..5}; do
+        (curl -s -o /dev/null -w "%{http_code}" "$API_URL/health" >> "$results_file" 2>&1; echo "" >> "$results_file") &
+        pids+=($!)
+    done
+    
+    # Wait for all background jobs
+    for pid in "${pids[@]}"; do
+        wait "$pid" 2>/dev/null
+    done
+    
+    # Count successful responses
+    local success_count=$(grep -c "200" "$results_file" 2>/dev/null || echo "0")
+    rm -f "$results_file"
+    evidence "5 concurrent requests: $success_count succeeded"
+    if [ "$success_count" -ge 4 ]; then
+        pass "PERF-04: concurrent_requests_handled ($success_count/5)"
+    else
+        fail "PERF-04 ($success_count/5 succeeded)"
+    fi
+}
+
+#------------------------------------------------------------------------------
 # Report Generation
 #------------------------------------------------------------------------------
 
