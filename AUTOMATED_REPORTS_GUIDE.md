@@ -141,7 +141,7 @@ Generates report every Monday at 9 AM
 
 ### To Configure Automated Reports:
 
-1. **Login:** https://sync-contract-fix.preview.emergentagent.com
+1. **Login:** https://integrity-shield-1.preview.emergentagent.com
 2. **Sidebar:** Click "Tenants"
 3. **Click "Configure"** on tenant
 4. **Search Tab:**
