@@ -878,7 +878,10 @@ generate_report() {
     "S6_exports_determinism (3) [INV-5]",
     "S7_sync (2)",
     "S8_upload (2)",
-    "S9_cf_config (2)"
+    "S9_cf_config (2)",
+    "S10_intelligence_sources (1)",
+    "S11_empty_inputs (5)",
+    "S12_performance (4)"
   ],
   "raw_evidence": $evidence_json,
   "status": "$([ $FAILED -eq 0 ] && echo 'CARFAX_VERIFIED' || echo 'REVIEW_REQUIRED')"
