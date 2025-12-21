@@ -75,7 +75,7 @@ jobs:
         id: iter
         run: |
           count=${{ steps.tier.outputs.iterations }}
-          list=$(seq 1 $count | jq -R . | jq -s .)
+          list=$(seq 1 $count | jq -R . | jq -sc .)
           echo "iteration_list=$list" >> $GITHUB_OUTPUT
 
   monte-carlo-tests:
