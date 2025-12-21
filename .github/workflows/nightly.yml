@@ -97,21 +97,15 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest pytest-asyncio
           pip install -r backend/requirements.txt
       
       - name: Run iteration ${{ matrix.iteration }} of ${{ needs.determine-tier.outputs.iterations }}
+        env:
+          API_URL: ${{ secrets.API_URL }}
         run: |
           echo "=== Monte Carlo Iteration ${{ matrix.iteration }}/${{ needs.determine-tier.outputs.iterations }} ==="
           echo "Tier: ${{ needs.determine-tier.outputs.tier_name }}"
-          
-          # Run contract validators with randomized seed
-          cd backend
-          SEED=$(( ${{ matrix.iteration }} * 1000 + $(date +%s) % 1000 ))
-          python -m pytest tests/validators/ -v --tb=short -p no:randomly
-          
-          # Run marker tamper tests
-          python -m pytest tests/validators/test_marker_tamper.py -v --tb=short
+          bash carfax.sh
       
       - name: Report iteration result
         if: always()
