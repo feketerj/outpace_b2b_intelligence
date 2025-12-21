@@ -24,7 +24,7 @@ import time
 import os
 
 # Configuration
-API_URL = os.environ.get("TEST_API_URL", "https://sync-contract-fix.preview.emergentagent.com")
+API_URL = os.environ.get("TEST_API_URL", "https://integrity-shield-1.preview.emergentagent.com")
 TEST_TENANT_ID = "8aa521eb-56ad-4727-8f09-c01fc7921c21"
 
 # Test credentials

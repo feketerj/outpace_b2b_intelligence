@@ -45,7 +45,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${GITHUB_WORKSPACE:-${REPO_ROOT:-$SCRIPT_DIR}}"
 
 # Single source of truth for API_URL (matches TEST_PLAN.json)
-API_URL="${API_URL:-https://sync-contract-fix.preview.emergentagent.com}"
+API_URL="${API_URL:-https://integrity-shield-1.preview.emergentagent.com}"
 REPORT_DIR="$REPO_ROOT/carfax_reports"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 REPORT_FILE="$REPORT_DIR/carfax_$TIMESTAMP.json"

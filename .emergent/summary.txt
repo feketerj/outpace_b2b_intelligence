@@ -125,7 +125,7 @@ tests/test_sync_frontend_contract.py::TestNoBrowserDependency::test_no_browser_a
 [0;34m║   OutPace Intelligence Platform                                          ║[0m
 [0;34m╚═══════════════════════════════════════════════════════════════════════════╝[0m
 
-API URL: https://sync-contract-fix.preview.emergentagent.com
+API URL: https://integrity-shield-1.preview.emergentagent.com
 
 
 [0;34m[1m═══════════════════════════════════════════════════════════════[0m
@@ -199,7 +199,7 @@ tests/test_sync_frontend_contract.py::TestNoBrowserDependency::test_no_browser_a
 [0;34m║   OutPace Intelligence Platform                                          ║[0m
 [0;34m╚═══════════════════════════════════════════════════════════════════════════╝[0m
 
-API URL: https://sync-contract-fix.preview.emergentagent.com
+API URL: https://integrity-shield-1.preview.emergentagent.com
 
 
 [0;34m[1m═══════════════════════════════════════════════════════════════[0m
@@ -1258,7 +1258,7 @@ tests/test_sync_frontend_contract.py::TestNoBrowserDependency::test_no_browser_a
 [0;34m║   OutPace Intelligence Platform                                          ║[0m
 [0;34m╚═══════════════════════════════════════════════════════════════════════════╝[0m
 
-API URL: https://sync-contract-fix.preview.emergentagent.com
+API URL: https://integrity-shield-1.preview.emergentagent.com
 
 
 [0;34m[1m═══════════════════════════════════════════════════════════════[0m
@@ -1301,7 +1301,7 @@ API URL: https://sync-contract-fix.preview.emergentagent.com
 [0;34m║   OutPace Intelligence Platform                                          ║[0m
 [0;34m╚═══════════════════════════════════════════════════════════════════════════╝[0m
 
-API URL: https://sync-contract-fix.preview.emergentagent.com
+API URL: https://integrity-shield-1.preview.emergentagent.com
 
 
 [0;34m[1m═══════════════════════════════════════════════════════════════[0m
@@ -1359,7 +1359,7 @@ tests/test_sync_frontend_contract.py::TestNoBrowserDependency::test_no_browser_a
 [0;34m║   OutPace Intelligence Platform                                          ║[0m
 [0;34m╚═══════════════════════════════════════════════════════════════════════════╝[0m
 
-API URL: https://sync-contract-fix.preview.emergentagent.com
+API URL: https://integrity-shield-1.preview.emergentagent.com
 
 
 [0;34m[1m═══════════════════════════════════════════════════════════════[0m
@@ -1420,7 +1420,7 @@ The last 10+ messages consist of a series of highly structured JSON prompts from
 [0;34m║      CARFAX SYNC CONTRACT REGRESSION TEST (CI-SAFE)           ║[0m
 [0;34m╚═══════════════════════════════════════════════════════════════╝[0m
 
-API URL: https://sync-contract-fix.preview.emergentagent.com
+API URL: https://integrity-shield-1.preview.emergentagent.com
 Tenant ID: 8aa521eb-56ad-4727-8f09-c01fc7921c21
 
 [0;33mAuthenticating...[0m
@@ -1462,7 +1462,7 @@ tests/test_sync_frontend_contract.py::TestNoBrowserDependency::test_no_browser_a
 [0;34m║   OutPace Intelligence Platform                                          ║[0m
 [0;34m╚═══════════════════════════════════════════════════════════════════════════╝[0m
 
-API URL: https://sync-contract-fix.preview.emergentagent.com
+API URL: https://integrity-shield-1.preview.emergentagent.com
 
 
 [0;34m[1m═══════════════════════════════════════════════════════════════[0m
@@ -1498,12 +1498,12 @@ API URL: https://sync-contract-fix.preview.emergentagent.com
 [0;34m[1m═══════════════════════════════════════════════════════════════[0m
 
 [1mISO-01: cross_tenant_get_opportunity_403[0m
-[0;36m   📋 Setup: Tenant A opp_id=99403e64-839c-474a-8118-cfbc846b991c[0m
+[0;36m   📋 Setup: Tenant A opp_id=integrity-shield-1[0m
 [0;36m   📋 Tenant B GET -> HTTP 403[0m
 [0;32m✅ PASS: ISO-01: cross_tenant_get_opportunity_403 [INV-1][0m
 
 [1mISO-02: cross_tenant_get_intelligence_403[0m
-[0;36m   📋 Setup: Tenant A intel_id=8a1c514b-13f6-43b0-9ead-ee78fa24541b[0m
+[0;36m   📋 Setup: Tenant A intel_id=integrity-shield-1[0m
 [0;36m   📋 Tenant B GET -> HTTP 403[0m
 [0;32m✅ PASS: ISO-02: cross_tenant_get_intelligence_403 [INV-1][0m
 
