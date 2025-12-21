@@ -281,12 +281,15 @@ test_S2_chat_atomicity() {
     # CHAT-02: quota_limit_429_no_persist (INV-2)
     echo -e "\n${BOLD}CHAT-02: quota_limit_429_no_persist [INV-2]${NC}"
     
+    # Use dynamic month for isolation across Monte Carlo runs
+    local current_month=$(date +%Y-%m)
+    
     # Set very low quota
     curl -s -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
         -H "Authorization: Bearer $ADMIN_TOKEN" \
         -H "Content-Type: application/json" \
-        -d '{"chat_policy":{"enabled":true,"monthly_message_limit":1},"chat_usage":{"month":"2025-12","messages_used":1}}' > /dev/null
-    evidence "Set monthly_message_limit=1, messages_used=1 (quota exhausted)"
+        -d "{\"chat_policy\":{\"enabled\":true,\"monthly_message_limit\":1},\"chat_usage\":{\"month\":\"$current_month\",\"messages_used\":1}}" > /dev/null
+    evidence "Set monthly_message_limit=1, messages_used=1 (quota exhausted, month=$current_month)"
     
     before_count=$(get_chat_turns_count "$TENANT_A_ID")
     evidence "BEFORE chat_turns count: $before_count"
@@ -304,12 +307,12 @@ test_S2_chat_atomicity() {
     after_count=$(get_chat_turns_count "$TENANT_A_ID")
     evidence "AFTER chat_turns count: $after_count"
     
-    # Reset quota
+    # Reset quota with dynamic month
     curl -s -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
         -H "Authorization: Bearer $ADMIN_TOKEN" \
         -H "Content-Type: application/json" \
-        -d '{"chat_policy":{"enabled":true,"monthly_message_limit":100},"chat_usage":{"month":"2025-12","messages_used":0}}' > /dev/null
-    evidence "Reset quota"
+        -d "{\"chat_policy\":{\"enabled\":true,\"monthly_message_limit\":100},\"chat_usage\":{\"month\":\"$current_month\",\"messages_used\":0}}" > /dev/null
+    evidence "Reset quota (month=$current_month)"
     
     if [ "$status" = "429" ] && [ "$before_count" = "$after_count" ]; then
         pass "CHAT-02: quota_limit_429_no_persist [INV-2]"
