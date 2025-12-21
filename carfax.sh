@@ -956,6 +956,8 @@ main() {
     test_S8_upload
     test_S9_cf_config
     test_S10_intelligence_sources
+    test_S11_empty_inputs
+    test_S12_performance
     
     # Generate report and summary
     generate_report
