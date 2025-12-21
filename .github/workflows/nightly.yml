@@ -85,7 +85,7 @@ jobs:
       matrix:
         iteration: ${{ fromJSON(needs.determine-tier.outputs.iteration_list) }}
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 1
     
     steps:
       - uses: actions/checkout@v4
