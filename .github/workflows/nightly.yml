@@ -40,6 +40,7 @@ jobs:
     outputs:
       iterations: ${{ steps.tier.outputs.iterations }}
       tier_name: ${{ steps.tier.outputs.tier_name }}
+      iteration_list: ${{ steps.iter.outputs.iteration_list }}
     steps:
       - id: tier
         run: |
@@ -69,15 +70,20 @@ jobs:
               ;;
           esac
           echo "tier_name=$TIER" >> $GITHUB_OUTPUT
+      
+      - name: Generate iteration list
+        id: iter
+        run: |
+          count=${{ steps.tier.outputs.iterations }}
+          list=$(seq 1 $count | jq -R . | jq -s .)
+          echo "iteration_list=$list" >> $GITHUB_OUTPUT
 
   monte-carlo-tests:
     needs: determine-tier
     runs-on: ubuntu-latest
     strategy:
-      # Matrix is generated dynamically based on tier
-      # nightly=9, twice-weekly=19, weekly=59 iterations
       matrix:
-        iteration: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        iteration: ${{ fromJSON(needs.determine-tier.outputs.iteration_list) }}
       fail-fast: false
       max-parallel: 3
     
