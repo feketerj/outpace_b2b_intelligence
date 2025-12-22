@@ -1,11 +1,11 @@
 # DELIVERABLE D: CI Wiring - Nightly Workflow
 # ============================================
 # Stratified Monte Carlo testing with configurable tiers.
-# Uses fixtures/replay for most tests - no real sync except optionally one.
+# Runs full E2E carfax.sh test suite for each iteration.
 #
 # Tiers (configurable):
 #   - nightly: 9 runs
-#   - twice-weekly: 19 runs  
+#   - twice-weekly: 19 runs
 #   - weekly: 59 runs
 #
 # NON-NEGOTIABLE: No additional sync calls beyond SYNC-02 in merge workflow.
@@ -57,7 +57,7 @@ jobs:
               TIER="nightly"
             fi
           fi
-          
+
           case "$TIER" in
             weekly)
               echo "iterations=${{ env.TIER_WEEKLY }}" >> $GITHUB_OUTPUT
@@ -70,7 +70,7 @@ jobs:
               ;;
           esac
           echo "tier_name=$TIER" >> $GITHUB_OUTPUT
-      
+
       - name: Generate iteration list
         id: iter
         run: |
@@ -86,19 +86,19 @@ jobs:
         iteration: ${{ fromJSON(needs.determine-tier.outputs.iteration_list) }}
       fail-fast: false
       max-parallel: 1
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: |
           pip install -r backend/requirements.txt
-      
+
       - name: Run iteration ${{ matrix.iteration }} of ${{ needs.determine-tier.outputs.iterations }}
         env:
           API_URL: ${{ secrets.API_URL }}
@@ -106,7 +106,7 @@ jobs:
           echo "=== Monte Carlo Iteration ${{ matrix.iteration }}/${{ needs.determine-tier.outputs.iterations }} ==="
           echo "Tier: ${{ needs.determine-tier.outputs.tier_name }}"
           bash carfax.sh
-      
+
       - name: Report iteration result
         if: always()
         run: |
@@ -116,14 +116,11 @@ jobs:
     needs: [determine-tier, monte-carlo-tests]
     runs-on: ubuntu-latest
     if: always()
-    
+
     steps:
       - name: Aggregate Monte Carlo results
         run: |
           echo "=== Monte Carlo Summary ==="
           echo "Tier: ${{ needs.determine-tier.outputs.tier_name }}"
           echo "Iterations: ${{ needs.determine-tier.outputs.iterations }}"
-          echo "SYNC-02: NOT RUN (nightly uses validators only)"
           echo "Status: Completed"
-          echo ""
-          echo "NOTE: Real sync calls only happen in merge-main workflow."
