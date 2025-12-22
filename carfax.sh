@@ -314,7 +314,7 @@ test_S2_chat_atomicity() {
     echo -e "\n${BOLD}CHAT-02: quota_limit_429_no_persist [INV-2]${NC}"
     
     # Use dynamic month for isolation across Monte Carlo runs
-    local current_month=$(date +%Y-%m)
+    local current_month=$(date -u +%Y-%m)
     
     # Set very low quota
     curl -s -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
