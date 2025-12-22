@@ -2,7 +2,7 @@
   "test_plan": "OutPace Carfax Test Plan",
   "as_of": "2025-12-18",
   "environments": {
-    "base_url": "https://sync-contract-fix.preview.emergentagent.com"
+    "base_url": "https://integrity-shield-1.preview.emergentagent.com"
   },
   "principles": [
     "Evidence-first: every test records curl + HTTP code + key log/db checks",

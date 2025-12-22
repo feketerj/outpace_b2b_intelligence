@@ -97,7 +97,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest pytest-asyncio
           pip install -r backend/requirements.txt
 
       - name: Run iteration ${{ matrix.iteration }} of ${{ needs.determine-tier.outputs.iterations }}
