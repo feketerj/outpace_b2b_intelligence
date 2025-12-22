@@ -101,10 +101,38 @@ section() {
 get_token() {
     local email=$1
     local password=$2
-    curl -s -X POST "$API_URL/api/auth/login" \
+    local response
+    local http_code
+
+    # Capture both response body AND HTTP status code
+    response=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/login" \
         -H "Content-Type: application/json" \
-        -d "{\"email\":\"$email\",\"password\":\"$password\"}" | \
-        python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null
+        -d "{\"email\":\"$email\",\"password\":\"$password\"}")
+
+    http_code=$(echo "$response" | tail -n1)
+    local body=$(echo "$response" | sed '$d')
+
+    # FAIL-LOUD: If not HTTP 200, print error details and return empty
+    if [ "$http_code" != "200" ]; then
+        echo -e "${RED}[FAIL-LOUD] Login failed for $email${NC}" >&2
+        echo -e "${RED}  HTTP Status: $http_code${NC}" >&2
+        echo -e "${RED}  API URL: $API_URL/api/auth/login${NC}" >&2
+        echo -e "${RED}  Response: $body${NC}" >&2
+        echo ""
+        return 1
+    fi
+
+    # Extract token from successful response
+    local token=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
+
+    if [ -z "$token" ]; then
+        echo -e "${RED}[FAIL-LOUD] Login succeeded but no access_token in response${NC}" >&2
+        echo -e "${RED}  Response: $body${NC}" >&2
+        echo ""
+        return 1
+    fi
+
+    echo "$token"
 }
 
 http_status() {
