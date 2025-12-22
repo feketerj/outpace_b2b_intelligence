@@ -1,12 +1,12 @@
 # DELIVERABLE D: CI Wiring - Nightly Workflow
 # ============================================
 # Stratified Monte Carlo testing with configurable tiers.
-# Runs full E2E carfax.sh test suite for each iteration.
+# Runs stratified test suites (happy, boundary, invalid, empty, performance).
 #
 # Tiers (configurable):
-#   - nightly: 9 runs
-#   - twice-weekly: 19 runs
-#   - weekly: 59 runs
+#   - nightly: 9 iterations × 5 strata = 45 runs
+#   - twice-weekly: 19 iterations × 5 strata = 95 runs
+#   - weekly: 59 iterations × 5 strata = 295 runs
 #
 # NON-NEGOTIABLE: No additional sync calls beyond SYNC-02 in merge workflow.
 
@@ -83,6 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        stratum: [happy, boundary, invalid, empty, performance]
         iteration: ${{ fromJSON(needs.determine-tier.outputs.iteration_list) }}
       fail-fast: false
       max-parallel: 1
@@ -99,18 +100,18 @@ jobs:
         run: |
           pip install -r backend/requirements.txt
 
-      - name: Run iteration ${{ matrix.iteration }} of ${{ needs.determine-tier.outputs.iterations }}
+      - name: Run ${{ matrix.stratum }} stratum - iteration ${{ matrix.iteration }}
         env:
           API_URL: ${{ secrets.API_URL }}
         run: |
-          echo "=== Monte Carlo Iteration ${{ matrix.iteration }}/${{ needs.determine-tier.outputs.iterations }} ==="
+          echo "=== Monte Carlo: ${{ matrix.stratum }} stratum - Iteration ${{ matrix.iteration }}/${{ needs.determine-tier.outputs.iterations }} ==="
           echo "Tier: ${{ needs.determine-tier.outputs.tier_name }}"
-          bash carfax.sh
+          bash carfax.sh ${{ matrix.stratum }}
 
       - name: Report iteration result
         if: always()
         run: |
-          echo "Iteration ${{ matrix.iteration }} completed"
+          echo "${{ matrix.stratum }} stratum - Iteration ${{ matrix.iteration }} completed"
 
   aggregate-results:
     needs: [determine-tier, monte-carlo-tests]
@@ -122,5 +123,7 @@ jobs:
         run: |
           echo "=== Monte Carlo Summary ==="
           echo "Tier: ${{ needs.determine-tier.outputs.tier_name }}"
-          echo "Iterations: ${{ needs.determine-tier.outputs.iterations }}"
+          echo "Iterations per stratum: ${{ needs.determine-tier.outputs.iterations }}"
+          echo "Strata: happy, boundary, invalid, empty, performance (5 total)"
+          echo "Total test runs: $(( ${{ needs.determine-tier.outputs.iterations }} * 5 ))"
           echo "Status: Completed"

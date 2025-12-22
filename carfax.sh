@@ -46,6 +46,10 @@ REPO_ROOT="${GITHUB_WORKSPACE:-${REPO_ROOT:-$SCRIPT_DIR}}"
 
 # Single source of truth for API_URL (matches TEST_PLAN.json)
 API_URL="${API_URL:-https://integrity-shield-1.preview.emergentagent.com}"
+
+# Stratum selection for stratified Monte Carlo testing (default: all)
+STRATUM="${1:-all}"
+
 REPORT_DIR="$REPO_ROOT/carfax_reports"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 REPORT_FILE="$REPORT_DIR/carfax_$TIMESTAMP.json"
@@ -829,6 +833,105 @@ test_S12_performance() {
 }
 
 #------------------------------------------------------------------------------
+# Stratified Monte Carlo - Stratum Runners
+#------------------------------------------------------------------------------
+
+run_happy_stratum() {
+    echo -e "${BLUE}${BOLD}Running HAPPY stratum (baseline functionality)${NC}"
+    test_S0_smoke
+}
+
+run_boundary_stratum() {
+    echo -e "${BLUE}${BOLD}Running BOUNDARY stratum (isolation, limits, edge cases)${NC}"
+    test_S1_tenant_isolation
+    test_S2_chat_atomicity    # Includes CHAT-01, CHAT-02
+    test_S5_master_restrictions
+
+    # SYNC-01 only - permission check
+    section "S7_integrations_sync (SYNC-01 only)"
+    echo -e "\n${BOLD}SYNC-01: sync_endpoints_require_super_admin${NC}"
+    local s1=$(http_status_quick -X POST -H "Authorization: Bearer $TENANT_A_TOKEN" "$API_URL/api/sync/manual/$TENANT_A_ID")
+    local s2=$(http_status_quick -X POST -H "Authorization: Bearer $TENANT_A_TOKEN" "$API_URL/api/admin/sync/$TENANT_A_ID")
+    evidence "tenant_user /sync/manual -> HTTP $s1, /admin/sync -> HTTP $s2"
+    if [ "$s1" = "403" ] && [ "$s2" = "403" ]; then
+        pass "SYNC-01: sync_endpoints_require_super_admin"
+    else
+        fail "SYNC-01 (manual=$s1, admin=$s2) - expected both 403"
+    fi
+
+    test_S8_upload
+    test_S9_cf_config
+    test_S10_intelligence_sources
+}
+
+run_invalid_stratum() {
+    echo -e "${BLUE}${BOLD}Running INVALID stratum (validation, rejection tests)${NC}"
+
+    # CHAT-05a and CHAT-05b only - validation tests
+    section "S2_chat_atomicity (CHAT-05a, CHAT-05b only)"
+    echo -e "\n${BOLD}CHAT-05a: conversation_id_spaces_rejected${NC}"
+    local status=$(http_status -X POST -H "Authorization: Bearer $TENANT_A_TOKEN" -H "Content-Type: application/json" \
+        "$API_URL/api/chat/message" -d '{"conversation_id":"test with spaces","message":"hi","agent_type":"opportunities"}')
+    evidence "conversation_id with spaces -> HTTP $status"
+    if [ "$status" = "400" ]; then pass "CHAT-05a: conversation_id_spaces_rejected"; else fail "CHAT-05a ($status)"; fi
+
+    echo -e "\n${BOLD}CHAT-05b: conversation_id_too_long_rejected${NC}"
+    local long_id=$(python3 -c "print('x'*200)")
+    status=$(http_status -X POST -H "Authorization: Bearer $TENANT_A_TOKEN" -H "Content-Type: application/json" \
+        "$API_URL/api/chat/message" -d "{\"conversation_id\":\"$long_id\",\"message\":\"hi\",\"agent_type\":\"opportunities\"}")
+    evidence "conversation_id > 128 chars -> HTTP $status"
+    if [ "$status" = "400" ]; then pass "CHAT-05b: conversation_id_too_long_rejected"; else fail "CHAT-05b ($status)"; fi
+
+    # EXP-02 and EXP-03 only - validation tests
+    section "S6_exports (EXP-02, EXP-03 only)"
+    echo -e "\n${BOLD}EXP-02: nonexistent_ids_404_pdf${NC}"
+    status=$(http_status -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
+        "$API_URL/api/exports/pdf" -d "{\"tenant_id\":\"$TENANT_A_ID\",\"opportunity_ids\":[\"bogus-id\"]}")
+    evidence "Bogus ID -> HTTP $status"
+    if [ "$status" = "404" ]; then pass "EXP-02: nonexistent_ids_404_pdf [INV-5]"; else fail "EXP-02 ($status)"; fi
+
+    echo -e "\n${BOLD}EXP-03: missing_tenant_id_super_admin_400${NC}"
+    status=$(http_status -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
+        "$API_URL/api/exports/pdf" -d '{"opportunity_ids":[]}')
+    evidence "Missing tenant_id -> HTTP $status"
+    if [ "$status" = "400" ]; then pass "EXP-03: missing_tenant_id_super_admin_400 [INV-5]"; else fail "EXP-03 ($status)"; fi
+}
+
+run_empty_stratum() {
+    echo -e "${BLUE}${BOLD}Running EMPTY stratum (empty inputs, missing data)${NC}"
+
+    # EXP-01 only - empty selection test
+    section "S6_exports (EXP-01 only)"
+    echo -e "\n${BOLD}EXP-01: empty_selection_404_pdf${NC}"
+    local status=$(http_status -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
+        "$API_URL/api/exports/pdf" -d "{\"tenant_id\":\"$TENANT_A_ID\",\"opportunity_ids\":[],\"intelligence_ids\":[]}")
+    evidence "Empty selection -> HTTP $status"
+    if [ "$status" = "404" ]; then pass "EXP-01: empty_selection_404_pdf [INV-5]"; else fail "EXP-01 ($status)"; fi
+
+    test_S11_empty_inputs
+}
+
+run_performance_stratum() {
+    echo -e "${BLUE}${BOLD}Running PERFORMANCE stratum (concurrency, load)${NC}"
+    test_S12_performance
+}
+
+run_all_strata() {
+    echo -e "${BLUE}${BOLD}Running ALL strata (full test suite)${NC}"
+    test_S0_smoke
+    test_S1_tenant_isolation
+    test_S2_chat_atomicity
+    test_S5_master_restrictions
+    test_S6_exports
+    test_S7_sync
+    test_S8_upload
+    test_S9_cf_config
+    test_S10_intelligence_sources
+    test_S11_empty_inputs
+    test_S12_performance
+}
+
+#------------------------------------------------------------------------------
 # Report Generation
 #------------------------------------------------------------------------------
 
@@ -945,30 +1048,45 @@ main() {
     echo -e "${BLUE}║  ╚██████╗██║  ██║██║  ██║██║     ██║  ██║██╔╝ ██╗                        ║${NC}"
     echo -e "${BLUE}║   ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝                        ║${NC}"
     echo -e "${BLUE}║                                                                           ║${NC}"
-    echo -e "${BLUE}║   Evidence-Based Test Runner - All 5 Invariants                          ║${NC}"
+    echo -e "${BLUE}║   Evidence-Based Test Runner - Stratified Monte Carlo                    ║${NC}"
     echo -e "${BLUE}║   OutPace Intelligence Platform                                          ║${NC}"
     echo -e "${BLUE}╚═══════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo "API URL: $API_URL"
+    echo "Stratum: $STRATUM"
     echo ""
-    
-    # Run all test suites
-    test_S0_smoke
-    test_S1_tenant_isolation
-    test_S2_chat_atomicity
-    test_S5_master_restrictions
-    test_S6_exports
-    test_S7_sync
-    test_S8_upload
-    test_S9_cf_config
-    test_S10_intelligence_sources
-    test_S11_empty_inputs
-    test_S12_performance
-    
+
+    # Run selected stratum
+    case "$STRATUM" in
+        happy)
+            run_happy_stratum
+            ;;
+        boundary)
+            run_boundary_stratum
+            ;;
+        invalid)
+            run_invalid_stratum
+            ;;
+        empty)
+            run_empty_stratum
+            ;;
+        performance)
+            run_performance_stratum
+            ;;
+        all)
+            run_all_strata
+            ;;
+        *)
+            echo -e "${RED}ERROR: Unknown stratum '$STRATUM'${NC}"
+            echo "Valid strata: happy, boundary, invalid, empty, performance, all"
+            exit 1
+            ;;
+    esac
+
     # Generate report and summary
     generate_report
     print_summary
-    
+
     [ $FAILED -eq 0 ] && exit 0 || exit 1
 }
 
