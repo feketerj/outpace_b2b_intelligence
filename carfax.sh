@@ -144,6 +144,28 @@ http_status_quick() {
     curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$@" 2>/dev/null || echo "408"
 }
 
+# PUT tenant config and fail fast on non-200
+tenant_put_or_fail() {
+    local tenant_id=$1
+    local payload=$2
+    local resp
+
+    resp=$(curl -s -w "\n%{http_code}" -X PUT "$API_URL/api/tenants/$tenant_id" \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "$payload")
+
+    TENANT_PUT_STATUS=$(echo "$resp" | tail -n1)
+    TENANT_PUT_BODY=$(echo "$resp" | sed '$d')
+
+    if [ "$TENANT_PUT_STATUS" != "200" ]; then
+        evidence "PUT /api/tenants/$tenant_id -> HTTP $TENANT_PUT_STATUS"
+        evidence "Response: $TENANT_PUT_BODY"
+        fail "Tenant PUT failed ($TENANT_PUT_STATUS)"
+        exit 1
+    fi
+}
+
 # Get chat_turns count for a tenant via direct DB query
 get_chat_turns_count() {
     local tenant_id=$1
@@ -173,10 +195,7 @@ asyncio.run(count())
 set_chat_policy() {
     local tenant_id=$1
     local enabled=$2
-    curl -s -X PUT "$API_URL/api/tenants/$tenant_id" \
-        -H "Authorization: Bearer $ADMIN_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d "{\"chat_policy\":{\"enabled\":$enabled,\"monthly_message_limit\":100}}" > /dev/null
+    tenant_put_or_fail "$tenant_id" "{\"chat_policy\":{\"enabled\":$enabled,\"monthly_message_limit\":100}}"
 }
 
 #------------------------------------------------------------------------------
@@ -317,10 +336,7 @@ test_S2_chat_atomicity() {
     local current_month=$(date -u +%Y-%m)
     
     # Set very low quota
-    curl -s -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
-        -H "Authorization: Bearer $ADMIN_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d "{\"chat_policy\":{\"enabled\":true,\"monthly_message_limit\":1},\"chat_usage\":{\"month\":\"$current_month\",\"messages_used\":1}}" > /dev/null
+    tenant_put_or_fail "$TENANT_A_ID" "{\"chat_policy\":{\"enabled\":true,\"monthly_message_limit\":1},\"chat_usage\":{\"month\":\"$current_month\",\"messages_used\":1}}"
     evidence "Set monthly_message_limit=1, messages_used=1 (quota exhausted, month=$current_month)"
     
     before_count=$(get_chat_turns_count "$TENANT_A_ID")
@@ -340,10 +356,7 @@ test_S2_chat_atomicity() {
     evidence "AFTER chat_turns count: $after_count"
     
     # Reset quota with dynamic month
-    curl -s -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
-        -H "Authorization: Bearer $ADMIN_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d "{\"chat_policy\":{\"enabled\":true,\"monthly_message_limit\":100},\"chat_usage\":{\"month\":\"$current_month\",\"messages_used\":0}}" > /dev/null
+    tenant_put_or_fail "$TENANT_A_ID" "{\"chat_policy\":{\"enabled\":true,\"monthly_message_limit\":100},\"chat_usage\":{\"month\":\"$current_month\",\"messages_used\":0}}"
     evidence "Reset quota (month=$current_month)"
     
     if [ "$status" = "429" ] && [ "$before_count" = "$after_count" ]; then
@@ -406,20 +419,20 @@ for x in t:
     
     # Policy change: Super admin CAN now modify master tenants
     echo -e "\n${BOLD}MASTER-01: super_admin_can_modify_master_chat_policy${NC}"
-    local status=$(http_status -X PUT -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
-        "$API_URL/api/tenants/$master_id" -d '{"chat_policy":{"enabled":true,"monthly_message_limit":100}}')
+    tenant_put_or_fail "$master_id" '{"chat_policy":{"enabled":true,"monthly_message_limit":100}}'
+    local status="$TENANT_PUT_STATUS"
     evidence "PUT chat_policy -> HTTP $status"
     if [ "$status" = "200" ]; then pass "MASTER-01: super_admin_can_modify_master_chat_policy [INV-4]"; else fail "MASTER-01 ($status)"; fi
     
     echo -e "\n${BOLD}MASTER-02: super_admin_can_modify_master_rag_policy${NC}"
-    status=$(http_status -X PUT -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
-        "$API_URL/api/tenants/$master_id" -d '{"rag_policy":{"enabled":true}}')
+    tenant_put_or_fail "$master_id" '{"rag_policy":{"enabled":true}}'
+    status="$TENANT_PUT_STATUS"
     evidence "PUT rag_policy -> HTTP $status"
     if [ "$status" = "200" ]; then pass "MASTER-02: super_admin_can_modify_master_rag_policy [INV-4]"; else fail "MASTER-02 ($status)"; fi
     
     echo -e "\n${BOLD}MASTER-03: super_admin_can_modify_master_tenant_knowledge${NC}"
-    status=$(http_status -X PUT -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
-        "$API_URL/api/tenants/$master_id" -d '{"tenant_knowledge":{"enabled":true}}')
+    tenant_put_or_fail "$master_id" '{"tenant_knowledge":{"enabled":true}}'
+    status="$TENANT_PUT_STATUS"
     evidence "PUT tenant_knowledge -> HTTP $status"
     if [ "$status" = "200" ]; then pass "MASTER-03: super_admin_can_modify_master_tenant_knowledge [INV-4]"; else fail "MASTER-03 ($status)"; fi
 }
@@ -636,11 +649,9 @@ test_S9_cf_config() {
     fi
     
     # Update config
-    local update_resp=$(curl -s -w "\n%{http_code}" -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
-        -H "Authorization: Bearer $ADMIN_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d "{\"chat_policy\":{\"enabled\":$new_enabled,\"monthly_message_limit\":100}}")
-    local update_status=$(echo "$update_resp" | tail -n1)
+    tenant_put_or_fail "$TENANT_A_ID" "{\"chat_policy\":{\"enabled\":$new_enabled,\"monthly_message_limit\":100}}"
+    local update_resp="$TENANT_PUT_BODY"
+    local update_status="$TENANT_PUT_STATUS"
     evidence "UPDATE -> HTTP $update_status"
     
     # Get config after update
@@ -669,11 +680,9 @@ test_S9_cf_config() {
     evidence "BEFORE name='$before_name', rag_policy.enabled=$before_rag_enabled"
     
     # Update only chat_policy, should not affect other fields
-    update_resp=$(curl -s -w "\n%{http_code}" -X PUT "$API_URL/api/tenants/$TENANT_A_ID" \
-        -H "Authorization: Bearer $ADMIN_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d '{"chat_policy":{"enabled":true,"monthly_message_limit":50}}')
-    update_status=$(echo "$update_resp" | tail -n1)
+    tenant_put_or_fail "$TENANT_A_ID" '{"chat_policy":{"enabled":true,"monthly_message_limit":50}}'
+    update_resp="$TENANT_PUT_BODY"
+    update_status="$TENANT_PUT_STATUS"
     evidence "UPDATE chat_policy only -> HTTP $update_status"
     
     # Get config after partial update

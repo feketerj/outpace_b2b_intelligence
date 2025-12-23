@@ -17,6 +17,30 @@ logger = logging.getLogger(__name__)
 def get_db():
     return get_database()
 
+def _sanitize_value(value):
+    if isinstance(value, dict):
+        return {k: _sanitize_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_sanitize_value(v) for v in value]
+    if value is None:
+        return None
+    try:
+        if pd.isna(value):
+            return None
+    except Exception:
+        pass
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    if hasattr(value, "item"):
+        try:
+            return value.item()
+        except Exception:
+            pass
+    return value
+
+def _sanitize_record(record: dict) -> dict:
+    return {k: _sanitize_value(v) for k, v in record.items()}
+
 @router.post("/opportunities/csv/{tenant_id}")
 async def upload_opportunities_csv(
     tenant_id: str,
@@ -77,7 +101,7 @@ async def upload_opportunities_csv(
                 "keywords": [],
                 "source_type": "manual",
                 "source_url": str(row.get("source_url")) if pd.notna(row.get("source_url")) else "",
-                "raw_data": row.to_dict(),
+                "raw_data": _sanitize_record(row.to_dict()),
                 "score": 0,
                 "ai_relevance_summary": None,
                 "captured_date": now,
