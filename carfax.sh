@@ -605,12 +605,12 @@ test_S8_upload() {
     local TMP_CSV="/tmp/carfax_upload.csv"
     printf "title,agency,due_date,estimated_value\nTest Opportunity,Test Agency,2026-01-01,1000\n" > "$TMP_CSV"
     
-    s1=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+    s1=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 -X POST \
         -H "Authorization: Bearer $TENANT_A_TOKEN" \
         -F "file=@$TMP_CSV;type=text/csv" \
         "$API_URL/api/upload/opportunities/csv/$TENANT_A_ID")
-    
-    s2=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+
+    s2=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 -X POST \
         -H "Authorization: Bearer $ADMIN_TOKEN" \
         -F "file=@$TMP_CSV;type=text/csv" \
         "$API_URL/api/upload/opportunities/csv/$TENANT_A_ID")
