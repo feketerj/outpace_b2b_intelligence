@@ -659,9 +659,10 @@ test_S9_cf_config() {
     local after_enabled=$(echo "$after_config" | python3 -c "import sys,json; print(json.load(sys.stdin).get('chat_policy',{}).get('enabled', True))" 2>/dev/null)
     evidence "AFTER chat_policy.enabled=$after_enabled"
     
-    # Restore original state
-    set_chat_policy "$TENANT_A_ID" "$before_enabled"
-    evidence "Restored original chat_policy.enabled=$before_enabled"
+    # Restore original state (convert Python True/False to JSON true/false)
+    local restore_enabled=$(echo "$before_enabled" | tr '[:upper:]' '[:lower:]')
+    set_chat_policy "$TENANT_A_ID" "$restore_enabled"
+    evidence "Restored original chat_policy.enabled=$restore_enabled"
     
     # Assert: config persisted the intended change (normalize boolean comparison)
     local normalized_after=$(echo "$after_enabled" | tr '[:upper:]' '[:lower:]')
