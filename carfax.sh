@@ -195,6 +195,10 @@ asyncio.run(count())
 set_chat_policy() {
     local tenant_id=$1
     local enabled=$2
+    local normalized=$(echo "$enabled" | tr '[:upper:]' '[:lower:]')
+    if [ "$normalized" = "true" ] || [ "$normalized" = "false" ]; then
+        enabled="$normalized"
+    fi
     tenant_put_or_fail "$tenant_id" "{\"chat_policy\":{\"enabled\":$enabled,\"monthly_message_limit\":100}}"
 }
 
