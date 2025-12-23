@@ -608,15 +608,23 @@ test_S8_upload() {
     echo -e "\n${BOLD}UPLOAD-02: opportunities_csv_upload_super_admin_only${NC}"
     local TMP_CSV="/tmp/carfax_upload.csv"
     printf "title,agency,due_date,estimated_value\nTest Opportunity,Test Agency,2026-01-01,1000\n" > "$TMP_CSV"
-    
+
+    # Convert to Windows path for curl on Windows/MSYS
+    local CURL_CSV="$TMP_CSV"
+    if command -v cygpath &>/dev/null; then
+        CURL_CSV=$(cygpath -w "$TMP_CSV")
+    elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
+        CURL_CSV=$(cd "$(dirname "$TMP_CSV")" && pwd -W)/$(basename "$TMP_CSV")
+    fi
+
     s1=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 -X POST \
         -H "Authorization: Bearer $TENANT_A_TOKEN" \
-        -F "file=@$TMP_CSV;type=text/csv" \
+        -F "file=@$CURL_CSV;type=text/csv" \
         "$API_URL/api/upload/opportunities/csv/$TENANT_A_ID")
 
     s2=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 -X POST \
         -H "Authorization: Bearer $ADMIN_TOKEN" \
-        -F "file=@$TMP_CSV;type=text/csv" \
+        -F "file=@$CURL_CSV;type=text/csv" \
         "$API_URL/api/upload/opportunities/csv/$TENANT_A_ID")
     
     rm -f "$TMP_CSV"
