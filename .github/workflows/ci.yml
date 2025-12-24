@@ -60,9 +60,17 @@ jobs:
           chmod +x carfax.sh
           ./carfax.sh all
 
-      - name: Upload test report
+      - name: Compute report hashes
+        if: always()
+        run: |
+          echo "=== ARTIFACT VERIFICATION ==="
+          for f in carfax_reports/*.json; do
+            sha256sum "$f"
+          done
+
+      - name: Upload test reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: carfax-report
+          name: carfax-reports
           path: carfax_reports/
