@@ -5,6 +5,28 @@ services:
     image: mongo:7.0
     ports:
       - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - test-net
+
+  seeder:
+    image: python:3.11-slim
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/app/scripts
+    working_dir: /app
+    command: bash -c "pip install pymongo bcrypt && python scripts/seed_carfax_users.py && python scripts/seed_carfax_tenants.py"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=outpace_intelligence
+    restart: "no"
     networks:
       - test-net
 
@@ -15,10 +37,13 @@ services:
       - "8000:8000"
     environment:
       - MONGO_URL=mongodb://mongodb:27017
-      - DB_NAME=outpace_test
+      - DB_NAME=outpace_intelligence
       - JWT_SECRET=test-secret-key
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+      seeder:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -35,6 +60,8 @@ services:
     environment:
       - API_URL=http://api:8000
     depends_on:
+      seeder:
+        condition: service_completed_successfully
       api:
         condition: service_healthy
     networks:
