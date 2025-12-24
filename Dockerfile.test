@@ -22,8 +22,8 @@ COPY carfax.sh /app/
 COPY scripts/ /app/scripts/
 COPY backend/ /app/backend/
 
-# Make test runner executable
-RUN chmod +x /app/carfax.sh
+# Fix line endings (Windows CRLF -> Unix LF) and make executable
+RUN sed -i 's/\r$//' /app/carfax.sh /app/scripts/*.sh && chmod +x /app/carfax.sh /app/scripts/*.sh
 
 # API_URL must be provided at runtime
 ENV API_URL=""
