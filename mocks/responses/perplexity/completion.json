@@ -1,0 +1,43 @@
+{
+  "id": "pplx-7e8f9a0b1c2d3e4f",
+  "model": "llama-3.1-sonar-large-128k-online",
+  "created": 1766544583,
+  "object": "chat.completion",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "According to recent government contracting trends and available data, here's what you should know about this opportunity:\n\n**Market Analysis:**\nThe federal cloud migration market is projected to reach $15 billion by 2026, with DoD accounting for approximately 40% of this spending[1]. DISA has been particularly active in modernization efforts following the JEDI/JWCC transitions[2].\n\n**Competition Landscape:**\nBased on similar recent awards, expect competition from major integrators including Booz Allen Hamilton, Leidos, and General Dynamics IT[3]. However, the small business set-aside creates opportunities for mid-tier contractors.\n\n**Key Success Factors:**\n- Demonstrated FedRAMP High experience\n- Existing IL5 authorization\n- Strong DevSecOps capabilities\n- Past performance on similar DoD modernization projects[4]\n\nThe evaluation will likely emphasize technical capability and past performance over price, given the complexity of the requirement."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 200,
+    "completion_tokens": 250,
+    "total_tokens": 450
+  },
+  "citations": [
+    {
+      "url": "https://federalnewsnetwork.com/cloud-computing/2024/federal-cloud-spending-trends",
+      "title": "Federal Cloud Spending Trends 2024",
+      "snippet": "The federal government's cloud spending continues to grow..."
+    },
+    {
+      "url": "https://www.defense.gov/News/Releases/Release/Article/disa-modernization",
+      "title": "DISA Announces Major Modernization Initiative",
+      "snippet": "DISA has outlined plans for enterprise-wide cloud migration..."
+    },
+    {
+      "url": "https://www.govwin.com/market-analysis/dod-it-services",
+      "title": "DoD IT Services Market Analysis",
+      "snippet": "Major contractors competing for DoD IT modernization work..."
+    },
+    {
+      "url": "https://www.fedscoop.com/cloud-requirements-defense",
+      "title": "Understanding DoD Cloud Requirements",
+      "snippet": "IL5 and FedRAMP High remain critical requirements..."
+    }
+  ]
+}

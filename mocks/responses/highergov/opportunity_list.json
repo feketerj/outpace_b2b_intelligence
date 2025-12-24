@@ -1,0 +1,112 @@
+[
+  {
+    "id": "HG-100000",
+    "title": "IT Modernization Services - Task Order 1",
+    "agency": "Department of Transportation",
+    "posted_date": "2025-12-13",
+    "due_date": "2026-03-12",
+    "value": 2397952,
+    "naics_code": "541990",
+    "set_aside": "Total Small Business",
+    "url": "https://highergov.com/opportunity/HG-100000"
+  },
+  {
+    "id": "HG-100001",
+    "title": "IT Modernization Services - Task Order 2",
+    "agency": "General Services Administration",
+    "posted_date": "2025-12-17",
+    "due_date": "2026-03-11",
+    "value": 2779385,
+    "naics_code": "541512",
+    "set_aside": "None",
+    "url": "https://highergov.com/opportunity/HG-100001"
+  },
+  {
+    "id": "HG-100002",
+    "title": "IT Modernization Services - Task Order 3",
+    "agency": "Department of Agriculture",
+    "posted_date": "2025-12-03",
+    "due_date": "2026-03-23",
+    "value": 3433108,
+    "naics_code": "561110",
+    "set_aside": "SDVOSB",
+    "url": "https://highergov.com/opportunity/HG-100002"
+  },
+  {
+    "id": "HG-100003",
+    "title": "IT Modernization Services - Task Order 4",
+    "agency": "Department of Education",
+    "posted_date": "2025-11-27",
+    "due_date": "2026-02-19",
+    "value": 3898656,
+    "naics_code": "561110",
+    "set_aside": "Small Business",
+    "url": "https://highergov.com/opportunity/HG-100003"
+  },
+  {
+    "id": "HG-100004",
+    "title": "IT Modernization Services - Task Order 5",
+    "agency": "Department of Energy",
+    "posted_date": "2025-12-22",
+    "due_date": "2026-03-16",
+    "value": 1571121,
+    "naics_code": "561110",
+    "set_aside": "WOSB",
+    "url": "https://highergov.com/opportunity/HG-100004"
+  },
+  {
+    "id": "HG-100005",
+    "title": "IT Modernization Services - Task Order 6",
+    "agency": "Department of the Treasury",
+    "posted_date": "2025-12-01",
+    "due_date": "2026-02-02",
+    "value": 766420,
+    "naics_code": "561110",
+    "set_aside": "WOSB",
+    "url": "https://highergov.com/opportunity/HG-100005"
+  },
+  {
+    "id": "HG-100006",
+    "title": "IT Modernization Services - Task Order 7",
+    "agency": "Department of Housing and Urban Development",
+    "posted_date": "2025-12-20",
+    "due_date": "2026-02-06",
+    "value": 4397981,
+    "naics_code": "561110",
+    "set_aside": "SDVOSB",
+    "url": "https://highergov.com/opportunity/HG-100006"
+  },
+  {
+    "id": "HG-100007",
+    "title": "IT Modernization Services - Task Order 8",
+    "agency": "Department of Housing and Urban Development",
+    "posted_date": "2025-12-16",
+    "due_date": "2026-02-12",
+    "value": 2742087,
+    "naics_code": "541613",
+    "set_aside": "None",
+    "url": "https://highergov.com/opportunity/HG-100007"
+  },
+  {
+    "id": "HG-100008",
+    "title": "IT Modernization Services - Task Order 9",
+    "agency": "Department of the Treasury",
+    "posted_date": "2025-11-23",
+    "due_date": "2026-03-01",
+    "value": 1811020,
+    "naics_code": "541519",
+    "set_aside": "Total Small Business",
+    "url": "https://highergov.com/opportunity/HG-100008"
+  },
+  {
+    "id": "HG-100009",
+    "title": "IT Modernization Services - Task Order 10",
+    "agency": "National Aeronautics and Space Administration",
+    "posted_date": "2025-11-24",
+    "due_date": "2026-03-14",
+    "value": 3673614,
+    "naics_code": "541330",
+    "set_aside": "SDVOSB",
+    "url": "https://highergov.com/opportunity/HG-100009"
+  }
+]
