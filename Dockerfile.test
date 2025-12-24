@@ -1,0 +1,32 @@
+FROM python:3.11-slim
+
+# Install required packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    curl \
+    jq \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install MongoDB tools (mongodb-database-tools for debian-based)
+RUN curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg \
+    && echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] http://repo.mongodb.org/apt/debian bookworm/mongodb-org/7.0 main" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends mongodb-database-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy test runner and supporting files
+COPY carfax.sh /app/
+COPY scripts/ /app/scripts/
+COPY backend/ /app/backend/
+
+# Make test runner executable
+RUN chmod +x /app/carfax.sh
+
+# API_URL must be provided at runtime
+ENV API_URL=""
+
+ENTRYPOINT ["./carfax.sh"]
+CMD ["all"]
