@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mongodb:
     image: mongo:7.0
@@ -16,6 +14,8 @@ services:
 
   seeder:
     image: python:3.11-slim
+    profiles:
+      - seed
     depends_on:
       mongodb:
         condition: service_healthy
@@ -42,8 +42,6 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
-      seeder:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -60,8 +58,6 @@ services:
     environment:
       - API_URL=http://api:8000
     depends_on:
-      seeder:
-        condition: service_completed_successfully
       api:
         condition: service_healthy
     networks:
