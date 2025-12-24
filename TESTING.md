@@ -115,6 +115,26 @@ The test suite validates these system invariants:
 | INV-4 | Master Tenant Restriction | Master tenant policy controls enforced |
 | INV-5 | Export Determinism | Exports produce consistent, valid output |
 
+## Two-Step Containerized Flow
+
+Due to Docker Compose lifecycle requirements with `--abort-on-container-exit`, run containerized tests in two steps:
+
+**Step 1: Seed the database**
+```bash
+docker-compose -f docker-compose.test.yml --profile seed up -d mongodb
+docker-compose -f docker-compose.test.yml --profile seed up seeder
+```
+
+**Step 2: Run tests**
+```bash
+docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
+```
+
+**Cleanup**
+```bash
+docker-compose -f docker-compose.test.yml down -v
+```
+
 ## CI Integration
 
 Tests run automatically on pull requests via GitHub Actions. See `.github/workflows/ci.yml` for configuration.
