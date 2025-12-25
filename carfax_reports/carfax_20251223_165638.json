@@ -1,0 +1,35 @@
+{
+  "report": "CARFAX - Comprehensive Auditable Report For Application eXecution",
+  "app": "OutPace Intelligence Platform",
+  "timestamp": "20251223_165638",
+  "api_url": "http://host.docker.internal:8000",
+  "test_plan": "TEST_PLAN.json",
+  "summary": {
+    "total_tests": 4,
+    "passed": 0,
+    "failed": 4,
+    "pass_rate": "0.0%"
+  },
+  "invariants_covered": {
+    "INV-1_tenant_isolation": true,
+    "INV-2_chat_atomicity": true,
+    "INV-3_paid_chat_enforcement": true,
+    "INV-4_master_tenant_restriction": true,
+    "INV-5_export_determinism": true
+  },
+  "suites_run": [
+    "S0_smoke (6)",
+    "S1_tenant_isolation (3) [INV-1]",
+    "S2_chat_atomicity (4) [INV-2, INV-3]",
+    "S5_master_restrictions (3) [INV-4]",
+    "S6_exports_determinism (3) [INV-5]",
+    "S7_sync (2)",
+    "S8_upload (2)",
+    "S9_cf_config (2)",
+    "S10_intelligence_sources (1)",
+    "S11_empty_inputs (5)",
+    "S12_performance (4)"
+  ],
+  "raw_evidence": ["conversation_id with spaces -> HTTP 403","conversation_id > 128 chars -> HTTP 403","Bogus ID -> HTTP 403","Missing tenant_id -> HTTP 403"],
+  "status": "REVIEW_REQUIRED"
+}

@@ -1,0 +1,225 @@
+#!/usr/bin/env python3
+"""
+DACE v1.7.8 - Hash Inserter
+Computes and inserts real SHA256 integrity hashes into JSON artifacts.
+
+Agents output "integrity_hash": "PENDING" - this script replaces PENDING
+with the actual computed hash.
+
+Usage:
+    python hash_inserter.py [artifacts_directory]
+    
+Default: ./artifacts
+"""
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+
+def compute_integrity_hash(data: dict) -> str:
+    """
+    Compute SHA256 hash for a JSON module.
+    
+    Algorithm:
+    1. Create content dict WITHOUT the integrity_hash field
+    2. Serialize to JSON with sort_keys=True, separators=(',', ':')
+    3. Encode as UTF-8 and compute SHA256
+    """
+    content = {k: v for k, v in data.items() if k != 'integrity_hash'}
+    json_str = json.dumps(content, sort_keys=True, separators=(',', ':'))
+    return hashlib.sha256(json_str.encode('utf-8')).hexdigest()
+
+
+def process_json_file(filepath: Path) -> tuple[bool, str]:
+    """
+    Process a single JSON file.
+    
+    Returns: (modified: bool, message: str)
+    """
+    try:
+        content = filepath.read_text(encoding='utf-8')
+        data = json.loads(content)
+    except json.JSONDecodeError as e:
+        return False, f"Invalid JSON: {e}"
+    except Exception as e:
+        return False, f"Read error: {e}"
+    
+    # Check if integrity_hash field exists
+    if 'integrity_hash' not in data:
+        return False, "No integrity_hash field"
+    
+    current_hash = data.get('integrity_hash', '')
+    
+    # Only process if PENDING or empty
+    if current_hash not in ('PENDING', '', None):
+        # Verify existing hash is correct
+        computed = compute_integrity_hash(data)
+        if current_hash == computed:
+            return False, "Hash already valid"
+        else:
+            # Hash exists but is wrong - replace it
+            data['integrity_hash'] = computed
+            filepath.write_text(json.dumps(data, indent=2), encoding='utf-8')
+            return True, f"Corrected: {current_hash[:16]}... → {computed[:16]}..."
+    
+    # Compute and insert hash
+    computed = compute_integrity_hash(data)
+    data['integrity_hash'] = computed
+    
+    # Write back with consistent formatting
+    filepath.write_text(json.dumps(data, indent=2), encoding='utf-8')
+    
+    return True, f"Inserted: {computed[:16]}..."
+
+
+def process_prd_file(filepath: Path, raw_req_path: Path = None) -> tuple[bool, str]:
+    """
+    Process PRD.md file hashes.
+    
+    PRD.md has:
+    - input_hash: SHA256 of raw requirements
+    - output_hash: SHA256 of PRD body (after metadata block)
+    
+    Handles both PENDING and incorrect existing hashes.
+    """
+    try:
+        content = filepath.read_text(encoding='utf-8')
+    except Exception as e:
+        return False, f"Read error: {e}"
+    
+    modified = False
+    
+    # Split into parts by ---
+    parts = content.split('---')
+    if len(parts) < 3:
+        return False, "Invalid PRD structure (missing metadata delimiters)"
+    
+    metadata = parts[1]
+    body = '---'.join(parts[2:]).strip()
+    
+    # Compute correct output_hash
+    correct_output_hash = hashlib.sha256(body.encode('utf-8')).hexdigest()
+    
+    # Extract current output_hash from metadata
+    current_output_hash = None
+    for line in metadata.split('\n'):
+        if line.strip().startswith('output_hash:'):
+            current_output_hash = line.split(':', 1)[1].strip()
+            break
+    
+    # Replace if PENDING or wrong
+    if current_output_hash != correct_output_hash:
+        if current_output_hash:
+            # Replace existing (wrong) hash
+            old_line = f'output_hash: {current_output_hash}'
+            new_line = f'output_hash: {correct_output_hash}'
+            metadata = metadata.replace(old_line, new_line)
+        else:
+            # No output_hash line found - this shouldn't happen but handle it
+            metadata = metadata.rstrip() + f'\noutput_hash: {correct_output_hash}\n'
+        modified = True
+    
+    # Handle input_hash if raw requirements directory provided
+    if raw_req_path and raw_req_path.exists():
+        raw_content = raw_req_path.read_text(encoding='utf-8')
+        correct_input_hash = hashlib.sha256(raw_content.encode('utf-8')).hexdigest()
+        
+        # Extract current input_hash
+        current_input_hash = None
+        for line in metadata.split('\n'):
+            if line.strip().startswith('input_hash:'):
+                current_input_hash = line.split(':', 1)[1].strip()
+                break
+        
+        # Replace if PENDING or wrong
+        if current_input_hash and current_input_hash != correct_input_hash:
+            old_line = f'input_hash: {current_input_hash}'
+            new_line = f'input_hash: {correct_input_hash}'
+            metadata = metadata.replace(old_line, new_line)
+            modified = True
+    
+    if modified:
+        new_content = f"---{metadata}---{'---'.join(parts[2:])}"
+        filepath.write_text(new_content, encoding='utf-8')
+        return True, f"PRD hashes updated (output: {correct_output_hash[:16]}...)"
+    
+    return False, "Hashes already correct"
+
+
+def main():
+    # Determine artifacts directory
+    if len(sys.argv) > 1:
+        artifacts_dir = Path(sys.argv[1])
+    else:
+        artifacts_dir = Path('./artifacts')
+    
+    if not artifacts_dir.exists():
+        print(f"[ERROR] Directory not found: {artifacts_dir}")
+        sys.exit(2)
+    
+    print("=" * 60)
+    print("DACE v1.7.8 - Hash Inserter")
+    print("=" * 60)
+    print(f"\nProcessing: {artifacts_dir.absolute()}\n")
+    
+    modified_count = 0
+    skipped_count = 0
+    error_count = 0
+    
+    # Process JSON files
+    json_files = list(artifacts_dir.glob('*.json'))
+    
+    if not json_files:
+        print("[WARNING] No JSON files found in artifacts directory")
+    
+    for filepath in sorted(json_files):
+        modified, message = process_json_file(filepath)
+        
+        status = "[UPDATED]" if modified else "[SKIPPED]"
+        print(f"  {status} {filepath.name}: {message}")
+        
+        if modified:
+            modified_count += 1
+        elif "error" in message.lower():
+            error_count += 1
+        else:
+            skipped_count += 1
+    
+    # Process PRD.md if exists
+    prd_path = artifacts_dir / 'PRD.md'
+    if prd_path.exists():
+        # Try to find raw requirements
+        raw_req_candidates = [
+            artifacts_dir.parent / 'raw_requirements',
+            artifacts_dir.parent.parent / 'raw_requirements',
+        ]
+        
+        raw_req_path = None
+        for candidate in raw_req_candidates:
+            if candidate.exists():
+                md_files = list(candidate.glob('*_raw_requirements.md'))
+                if md_files:
+                    raw_req_path = md_files[0]
+                    break
+        
+        modified, message = process_prd_file(prd_path, raw_req_path)
+        status = "[UPDATED]" if modified else "[SKIPPED]"
+        print(f"  {status} PRD.md: {message}")
+        
+        if modified:
+            modified_count += 1
+    
+    # Summary
+    print("\n" + "-" * 60)
+    print(f"Summary: {modified_count} updated, {skipped_count} skipped, {error_count} errors")
+    print("-" * 60)
+    
+    if error_count > 0:
+        sys.exit(1)
+    
+    sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()
