@@ -34,8 +34,8 @@ async def manual_sync_tenant(
         )
     
     # Import here to avoid circular dependency
-    from services.highergov_service import sync_highergov_opportunities
-    from services.perplexity_service import sync_perplexity_intelligence
+    from backend.services.highergov_service import sync_highergov_opportunities
+    from backend.services.perplexity_service import sync_perplexity_intelligence
     
     results = {
         "tenant_id": tenant_id,
@@ -119,7 +119,7 @@ async def fetch_opportunity_by_id(
             detail="opportunity_id required"
         )
     
-    from services.highergov_service import fetch_single_opportunity
+    from backend.services.highergov_service import fetch_single_opportunity
     
     try:
         opp_data = await fetch_single_opportunity(db, tenant, opportunity_id)

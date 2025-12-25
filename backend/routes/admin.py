@@ -79,8 +79,8 @@ async def trigger_manual_sync(
         )
     
     # Import here to avoid circular dependency
-    from services.highergov_service import sync_highergov_opportunities
-    from services.perplexity_service import sync_perplexity_intelligence
+    from backend.services.highergov_service import sync_highergov_opportunities
+    from backend.services.perplexity_service import sync_perplexity_intelligence
     
     results = {
         "tenant_id": tenant_id,
