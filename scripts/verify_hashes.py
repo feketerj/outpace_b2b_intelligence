@@ -1,27 +1,44 @@
 #!/usr/bin/env python3
 """
 DACE v1.7.8 - Hash Verification (OG6 Gate)
-Verifies integrity_hash for all JSON artifacts.
+Verifies integrity_hash for all JSON artifacts and manifest-tracked files.
 
 Usage:
     python verify_hashes.py [artifacts_directory]
-    
+
 Default: ./artifacts
 
 Exit Codes:
     0 - All hashes valid (OG6 PASS)
     1 - Hash verification failed (OG6 FAIL - ORCH-007)
     2 - Directory not found or other error
+
+Supports:
+    - JSON files: Verifies embedded integrity_hash
+    - PRD.md: Verifies output_hash in metadata
+    - All other files: Verifies against hash_manifest.json
 """
 import hashlib
 import json
 import sys
 from pathlib import Path
 
+# Files to exclude from manifest verification
+EXCLUDED_FILES = {'hash_manifest.json'}
+
 
 def compute_sha256(content: str) -> str:
     """Compute SHA256 hash of string content."""
     return hashlib.sha256(content.encode('utf-8')).hexdigest()
+
+
+def compute_file_hash(filepath: Path) -> str:
+    """Compute SHA256 hash of raw file bytes."""
+    sha256 = hashlib.sha256()
+    with open(filepath, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            sha256.update(chunk)
+    return sha256.hexdigest()
 
 
 def verify_json_integrity(filepath: Path) -> tuple[bool, str, str, str]:
@@ -94,25 +111,42 @@ def verify_prd_output_hash(filepath: Path) -> tuple[bool, str, str, str]:
         return False, "MISMATCH", claimed[:16] + '...', computed[:16] + '...'
 
 
+def verify_manifest_file(filepath: Path, claimed_hash: str) -> tuple[bool, str, str, str]:
+    """
+    Verify a file against its claimed hash from manifest.
+
+    Returns: (passed: bool, status: str, claimed: str, computed: str)
+    """
+    if not filepath.exists():
+        return False, "MISSING_FILE", claimed_hash[:16] + '...', "File not found"
+
+    computed = compute_file_hash(filepath)
+
+    if claimed_hash == computed:
+        return True, "VALID", claimed_hash[:16] + '...', computed[:16] + '...'
+    else:
+        return False, "MISMATCH", claimed_hash[:16] + '...', computed[:16] + '...'
+
+
 def main():
     # Determine artifacts directory
     if len(sys.argv) > 1:
         artifacts_dir = Path(sys.argv[1])
     else:
         artifacts_dir = Path('./artifacts')
-    
+
     if not artifacts_dir.exists():
         print(f"[ERROR] Directory not found: {artifacts_dir}")
         sys.exit(2)
-    
+
     print("=" * 70)
     print("DACE v1.7.8 - OG6 Hash Verification")
     print("=" * 70)
     print(f"\nVerifying: {artifacts_dir.absolute()}\n")
-    
+
     all_passed = True
     results = []
-    
+
     # Verify PRD.md if exists
     prd_path = artifacts_dir / 'PRD.md'
     if prd_path.exists():
@@ -120,44 +154,61 @@ def main():
         results.append(('PRD.md', passed, status, claimed, computed))
         if not passed:
             all_passed = False
-    
-    # Verify all JSON files
+
+    # Verify all JSON files (except manifest)
     json_files = sorted(artifacts_dir.glob('*.json'))
-    
+
     for filepath in json_files:
+        if filepath.name in EXCLUDED_FILES:
+            continue
         passed, status, claimed, computed = verify_json_integrity(filepath)
         results.append((filepath.name, passed, status, claimed, computed))
         if not passed:
             all_passed = False
-    
+
+    # Verify files in hash_manifest.json
+    manifest_path = artifacts_dir / 'hash_manifest.json'
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+            for filename, claimed_hash in sorted(manifest.items()):
+                filepath = artifacts_dir / filename
+                passed, status, claimed, computed = verify_manifest_file(filepath, claimed_hash)
+                results.append((filename, passed, status, claimed, computed))
+                if not passed:
+                    all_passed = False
+        except json.JSONDecodeError as e:
+            results.append(('hash_manifest.json', False, 'INVALID_JSON', str(e)[:16], 'N/A'))
+            all_passed = False
+
     if not results:
         print("[WARNING] No artifacts found to verify")
         sys.exit(0)
-    
+
     # Print results table
     print("-" * 70)
     print(f"{'File':<35} {'Status':<10} {'Claimed':<12} {'Computed':<12}")
     print("-" * 70)
-    
+
     for filename, passed, status, claimed, computed in results:
         # Truncate long filenames
         display_name = filename[:33] + '..' if len(filename) > 35 else filename
-        
+
         if passed:
             mark = "[OK]"
         elif status == "PENDING":
             mark = "[!!]"
         else:
             mark = "[FAIL]"
-        
+
         print(f"{display_name:<35} {mark:<10} {claimed:<12} {computed:<12}")
-    
+
     print("-" * 70)
-    
+
     # Summary
     passed_count = sum(1 for r in results if r[1])
     total_count = len(results)
-    
+
     if all_passed:
         print(f"\n[SUCCESS] {passed_count}/{total_count} artifacts verified. OG6 PASSED.")
         print("Ready for next agent.")
