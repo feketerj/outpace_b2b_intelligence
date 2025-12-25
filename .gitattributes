@@ -1,0 +1,8 @@
+# Force LF for shell scripts on all platforms
+*.sh text eol=lf
+
+# Force LF for other script types
+*.bash text eol=lf
+
+# Default text handling
+* text=auto
