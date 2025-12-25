@@ -4,9 +4,9 @@ from datetime import datetime, timezone, timedelta
 import os
 import logging
 
-from models import LoginRequest, Token, User, UserCreate, UserInDB, UserRole
-from utils.auth import verify_password, get_password_hash, create_access_token, get_current_user
-from database import get_database
+from backend.models import LoginRequest, Token, User, UserCreate, UserInDB, UserRole
+from backend.utils.auth import verify_password, get_password_hash, create_access_token, get_current_user
+from backend.database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

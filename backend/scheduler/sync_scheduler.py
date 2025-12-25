@@ -5,8 +5,8 @@ from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timezone
 import uuid
 
-from services.highergov_service import sync_highergov_opportunities
-from services.perplexity_service import sync_perplexity_intelligence
+from backend.services.highergov_service import sync_highergov_opportunities
+from backend.services.perplexity_service import sync_perplexity_intelligence
 
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()

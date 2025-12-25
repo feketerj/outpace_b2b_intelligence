@@ -13,8 +13,8 @@ import numpy as np
 from typing import List, Optional
 from mistralai import Mistral
 
-from utils.auth import get_current_super_admin, TokenData
-from database import get_database
+from backend.utils.auth import get_current_super_admin, TokenData
+from backend.database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

@@ -4,12 +4,12 @@ from datetime import datetime, timezone, timedelta
 import uuid
 import logging
 
-from models import (
+from backend.models import (
     Tenant, TenantCreate, TenantUpdate, PaginatedResponse, PaginationMetadata,
     TenantStatus
 )
-from utils.auth import get_current_super_admin, get_current_user, TokenData
-from database import get_database
+from backend.utils.auth import get_current_super_admin, get_current_user, TokenData
+from backend.database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

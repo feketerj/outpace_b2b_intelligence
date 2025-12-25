@@ -8,8 +8,8 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from routes import auth, tenants, opportunities, intelligence, users, admin, chat, exports, config, upload, sync, rag
-from scheduler.sync_scheduler import start_scheduler, stop_scheduler
+from backend.routes import auth, tenants, opportunities, intelligence, users, admin, chat, exports, config, upload, sync, rag
+from backend.scheduler.sync_scheduler import start_scheduler, stop_scheduler
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

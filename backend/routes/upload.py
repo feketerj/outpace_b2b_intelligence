@@ -8,8 +8,8 @@ import pandas as pd
 import uuid
 from datetime import datetime, timezone
 
-from utils.auth import get_current_tenant_admin, get_current_user, TokenData
-from database import get_database
+from backend.utils.auth import get_current_tenant_admin, get_current_user, TokenData
+from backend.database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
