@@ -4,9 +4,9 @@ from datetime import datetime, timezone
 import uuid
 import logging
 
-from models import User, UserCreate, UserUpdate, UserRole, PaginatedResponse, PaginationMetadata
-from utils.auth import get_current_tenant_admin, get_current_user, get_password_hash, TokenData
-from database import get_database
+from backend.models import User, UserCreate, UserUpdate, UserRole, PaginatedResponse, PaginationMetadata
+from backend.utils.auth import get_current_tenant_admin, get_current_user, get_password_hash, TokenData
+from backend.database import get_database
 
 def get_db():
     return get_database()

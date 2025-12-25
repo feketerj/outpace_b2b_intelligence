@@ -15,8 +15,8 @@ import base64
 from PIL import Image as PILImage
 import openpyxl.styles
 
-from utils.auth import get_current_user, TokenData
-from database import get_database
+from backend.utils.auth import get_current_user, TokenData
+from backend.database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

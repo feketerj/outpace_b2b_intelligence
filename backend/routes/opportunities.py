@@ -4,13 +4,13 @@ from datetime import datetime, timezone
 import uuid
 import logging
 
-from models import (
+from backend.models import (
     Opportunity, OpportunityCreate, OpportunitySource,
     PaginatedResponse, PaginationMetadata
 )
-from utils.auth import get_current_user, TokenData
-from utils.scoring import calculate_opportunity_score
-from database import get_database
+from backend.utils.auth import get_current_user, TokenData
+from backend.utils.scoring import calculate_opportunity_score
+from backend.database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

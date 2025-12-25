@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 import uuid
 from typing import Dict, Any
 
-from utils.scoring import calculate_opportunity_score
-from services.mistral_service import score_opportunity_with_ai
+from backend.utils.scoring import calculate_opportunity_score
+from backend.services.mistral_service import score_opportunity_with_ai
 
 logger = logging.getLogger(__name__)
 

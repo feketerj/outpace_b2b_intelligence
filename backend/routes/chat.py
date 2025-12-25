@@ -7,9 +7,9 @@ import os
 import re
 from mistralai import Mistral
 
-from models import ChatMessage, ChatTurn
-from utils.auth import get_current_user, TokenData
-from database import get_database
+from backend.models import ChatMessage, ChatTurn
+from backend.utils.auth import get_current_user, TokenData
+from backend.database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
