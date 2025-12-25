@@ -114,7 +114,7 @@ async def upload_opportunities_csv(
             }
             
             # Calculate score
-            from utils.scoring import calculate_opportunity_score
+            from backend.utils.scoring import calculate_opportunity_score
             opportunity["score"] = calculate_opportunity_score(opportunity, weights)
             
             await db.opportunities.insert_one(opportunity)
