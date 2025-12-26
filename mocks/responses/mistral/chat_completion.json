@@ -1,0 +1,23 @@
+{
+  "id": "cmpl-8f7a6b5c4d3e2f1a",
+  "object": "chat.completion",
+  "created": 1766544583,
+  "model": "mistral-large-latest",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Based on the government contracting opportunity you've described, here are the key points to consider:\n\n1. **Technical Requirements**: The solicitation requires expertise in cloud migration and DevSecOps practices. Ensure your proposal demonstrates relevant experience with similar federal modernization projects.\n\n2. **Compliance**: Pay special attention to the FedRAMP and IL5 security requirements. Your team should have existing clearances and certifications.\n\n3. **Pricing Strategy**: The best value evaluation criteria suggests you should balance competitive pricing with strong technical merit. Consider the total cost of ownership in your proposal.\n\n4. **Past Performance**: Highlight relevant contracts with similar scope and complexity, particularly those involving DoD or IC customers.\n\nWould you like me to elaborate on any of these areas?"
+      },
+      "finish_reason": "stop",
+      "logprobs": null
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 150,
+    "completion_tokens": 180,
+    "total_tokens": 330
+  },
+  "system_fingerprint": "fp_abc123def456"
+}

@@ -1,0 +1,2976 @@
+Large Document for RAG Chunking and Processing Tests
+====================================================
+
+This document contains extensive content designed to test the chunking and
+processing capabilities of RAG (Retrieval-Augmented Generation) systems.
+
+
+Section 1: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 1.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 1.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 1.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 2: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 2.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 2.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 2.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 3: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 3.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 3.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 3.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 4: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 4.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 4.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 4.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 5: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 5.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 5.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 5.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 6: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 6.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 6.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 6.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 7: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 7.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 7.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 7.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 8: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 8.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 8.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 8.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 9: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 9.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 9.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 9.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 10: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 10.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 10.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 10.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 11: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 11.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 11.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 11.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 12: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 12.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 12.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 12.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 13: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 13.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 13.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 13.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 14: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 14.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 14.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 14.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 15: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 15.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 15.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 15.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 16: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 16.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 16.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 16.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 17: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 17.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 17.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 17.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 18: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 18.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 18.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 18.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 19: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 19.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 19.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 19.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 20: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 20.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 20.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 20.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 21: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 21.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 21.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 21.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 22: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 22.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 22.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 22.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 23: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 23.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 23.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 23.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 24: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 24.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 24.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 24.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 25: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 25.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 25.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 25.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 26: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 26.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 26.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 26.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 27: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 27.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 27.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 27.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 28: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 28.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 28.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 28.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 29: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 29.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 29.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 29.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 30: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 30.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 30.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 30.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 31: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 31.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 31.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 31.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 32: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 32.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 32.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 32.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 33: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 33.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 33.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 33.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 34: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 34.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 34.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 34.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 35: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 35.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 35.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 35.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 36: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 36.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 36.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 36.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 37: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 37.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 37.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 37.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 38: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 38.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 38.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 38.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 39: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 39.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 39.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 39.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 40: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 40.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 40.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 40.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 41: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 41.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 41.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 41.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 42: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 42.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 42.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 42.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 43: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 43.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 43.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 43.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 44: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 44.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 44.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 44.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 45: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 45.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 45.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 45.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 46: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 46.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 46.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 46.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 47: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 47.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 47.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 47.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 48: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 48.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 48.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 48.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 49: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 49.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 49.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 49.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 50: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 50.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 50.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 50.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 51: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 51.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 51.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 51.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 52: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 52.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 52.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 52.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 53: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 53.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 53.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 53.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 54: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 54.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 54.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 54.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
+
+Section 55: Extended Content Block
+========================================
+
+This section contains detailed information about government contracting
+processes, procedures, and best practices. The content is designed to
+test how RAG systems handle large documents with multiple sections and
+varying content types.
+
+Subsection 55.1: Technical Requirements
+
+Government contracts often include detailed technical specifications that
+must be carefully analyzed and addressed in proposals. These requirements
+may cover hardware specifications, software capabilities, performance
+standards, and integration requirements.
+
+Key technical areas typically include:
+- System architecture and design
+- Security and compliance measures
+- Performance benchmarks and metrics
+- Integration with existing systems
+- Data migration and management
+- Testing and quality assurance
+- Documentation requirements
+
+Subsection 55.2: Management Approach
+
+Effective contract management requires a comprehensive approach that
+addresses all aspects of program execution. This includes resource
+planning, risk management, quality control, and stakeholder communication.
+
+Management best practices include:
+- Clear organizational structure
+- Defined roles and responsibilities
+- Regular progress reporting
+- Issue tracking and resolution
+- Change management procedures
+- Continuous improvement initiatives
+
+Subsection 55.3: Cost Considerations
+
+Accurate cost estimation is critical for government contract success.
+Contractors must develop detailed cost models that account for all
+direct and indirect costs while remaining competitive.
+
+Cost elements to consider:
+- Direct labor costs
+- Fringe benefits and overhead
+- Material and equipment costs
+- Subcontractor expenses
+- Travel and other direct costs
+- General and administrative expenses
+- Profit/fee calculations
+
