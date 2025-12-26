@@ -292,6 +292,17 @@ def main():
     manifest_updated = 0
     if manifest_mode == 'schema':
         artifacts = manifest.get('artifacts', [])
+        deduped_artifacts = []
+        seen_paths = set()
+        for entry in artifacts:
+            if not isinstance(entry, dict):
+                continue
+            path = entry.get('path')
+            if not path or path in seen_paths:
+                continue
+            seen_paths.add(path)
+            deduped_artifacts.append(entry)
+        artifacts = deduped_artifacts
         manifest_index = {
             entry.get('path'): idx
             for idx, entry in enumerate(artifacts)
