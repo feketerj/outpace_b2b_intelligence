@@ -1,6 +1,6 @@
 {
   "proof_id": "TH-MC-003",
-  "certification_date": "2025-12-25T19:01:20Z",
+  "certification_timestamp": "2025-12-25T19:01:20Z",
   "status": "CERTIFIED",
   "confidence": 0.95,
   "iterations": {
@@ -24,7 +24,7 @@
   ],
   "environment": {
     "shell": "Git Bash 5.2.37",
-    "platform": "MINGW64/Windows",
+    "platform": "Windows (MINGW64)",
     "api_url": "http://127.0.0.1:8000"
   },
   "reproduction": {

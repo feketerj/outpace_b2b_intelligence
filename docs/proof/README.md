@@ -91,7 +91,7 @@ Create `docs/proof/<TEST_ID>_ARTIFACT_INDEX.json` with:
 ### Step 5: Validate and Commit
 ```bash
 # Validate JSON
-python -c "import json; json.load(open('docs/proof/<TEST_ID>_ARTIFACT_INDEX.json'))"
+python -c "import json; json.load(open('docs/proof/<TEST_ID>_ARTIFACT_INDEX.json')); print('JSON is valid')"
 
 # Check no large files
 git diff --stat

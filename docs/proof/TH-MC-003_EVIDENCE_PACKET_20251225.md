@@ -139,3 +139,4 @@ echo "59/59 PASSED - Certification achieved"
 **Document Status:** IMMUTABLE
 **Created:** 2025-12-25
 **Author:** Test Advisor (Automated)
+This document becomes immutable upon commit to the main branch and must not be modified after that point except through a controlled, auditable process for correcting clerical errors.
