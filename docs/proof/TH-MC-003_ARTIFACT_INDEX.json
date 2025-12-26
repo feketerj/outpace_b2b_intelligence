@@ -1,0 +1,33 @@
+{
+  "proof_id": "TH-MC-003",
+  "certification_timestamp": "2025-12-25T19:01:20Z",
+  "status": "CERTIFIED",
+  "confidence": 0.95,
+  "iterations": {
+    "attempted": 59,
+    "passed": 59,
+    "failed": 0
+  },
+  "artifacts": [
+    {
+      "path": "mc_reports/mc_gitbash_20251225_184447.log",
+      "sha256": "1dfe921fa468893394704c2a7913192779a08d0dde90f293dc11899e97e220c5",
+      "type": "consolidated_log",
+      "description": "Full Monte Carlo run log (59 iterations)"
+    },
+    {
+      "path": "carfax_reports/carfax_20251225_190120.json",
+      "sha256": "2336ba0f3975840d8e408495c1f5d30bf28a3474ad3131745651ddc51883e192",
+      "type": "final_report",
+      "description": "Final baseline report (35/35 pass)"
+    }
+  ],
+  "environment": {
+    "shell": "Git Bash 5.2.37",
+    "platform": "Windows (MINGW64)",
+    "api_url": "http://127.0.0.1:8000"
+  },
+  "reproduction": {
+    "command": "& \"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"API_URL=\\\"http://127.0.0.1:8000\\\" bash carfax.sh all\""
+  }
+}
