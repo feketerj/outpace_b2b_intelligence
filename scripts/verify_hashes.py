@@ -25,6 +25,7 @@ from pathlib import Path
 
 # Files to exclude from manifest verification
 EXCLUDED_FILES = {'hash_manifest.json'}
+MANIFEST_METADATA_KEYS = {'manifest_version', 'created', 'updated', 'artifacts'}
 
 
 def compute_sha256(content: str) -> str:
@@ -171,12 +172,40 @@ def main():
     if manifest_path.exists():
         try:
             manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
-            for filename, claimed_hash in sorted(manifest.items()):
-                filepath = artifacts_dir / filename
-                passed, status, claimed, computed = verify_manifest_file(filepath, claimed_hash)
-                results.append((filename, passed, status, claimed, computed))
-                if not passed:
-                    all_passed = False
+            if isinstance(manifest, dict) and isinstance(manifest.get('artifacts'), list):
+                for index, entry in enumerate(manifest['artifacts']):
+                    if not isinstance(entry, dict):
+                        results.append(
+                            (f"manifest_entry_{index}", False, "INVALID_ENTRY", "N/A", "N/A")
+                        )
+                        all_passed = False
+                        continue
+                    filename = entry.get('path')
+                    claimed_hash = entry.get('sha256')
+                    if not filename or not claimed_hash:
+                        results.append(
+                            (f"manifest_entry_{index}", False, "INVALID_ENTRY", "N/A", "N/A")
+                        )
+                        all_passed = False
+                        continue
+                    filepath = artifacts_dir / filename
+                    passed, status, claimed, computed = verify_manifest_file(filepath, claimed_hash)
+                    results.append((filename, passed, status, claimed, computed))
+                    if not passed:
+                        all_passed = False
+            elif isinstance(manifest, dict):
+                for filename, claimed_hash in sorted(manifest.items()):
+                    if filename in MANIFEST_METADATA_KEYS:
+                        continue
+                    if not isinstance(claimed_hash, str):
+                        results.append((filename, False, "INVALID_ENTRY", "N/A", "N/A"))
+                        all_passed = False
+                        continue
+                    filepath = artifacts_dir / filename
+                    passed, status, claimed, computed = verify_manifest_file(filepath, claimed_hash)
+                    results.append((filename, passed, status, claimed, computed))
+                    if not passed:
+                        all_passed = False
         except json.JSONDecodeError as e:
             results.append(('hash_manifest.json', False, 'INVALID_JSON', str(e)[:16], 'N/A'))
             all_passed = False
