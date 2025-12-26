@@ -42,27 +42,6 @@ if [[ "$API_URL" == *"localhost"* ]] || [[ "$API_URL" == *"127.0.0.1"* ]]; then
     USES_LOOPBACK=1
 fi
 
-# WSL + loopback = likely namespace isolation issue
-if [[ $IS_WSL -eq 1 ]] && [[ $USES_LOOPBACK -eq 1 ]]; then
-    echo "WARNING: WSL detected with loopback API_URL"
-    echo "  API_URL: $API_URL"
-    echo "  This configuration may fail due to network namespace isolation."
-    echo "  WSL2's 127.0.0.1 is NOT the same as Windows host's 127.0.0.1."
-    echo ""
-    echo "Recommendations:"
-    echo "  1. Run tests via Git Bash (Windows-native) instead of WSL"
-    echo "  2. OR bind API to 0.0.0.0 and use host IP from WSL"
-    echo "  3. OR run API inside WSL/Docker"
-    echo ""
-
-    if [[ $STRICT_MODE -eq 1 ]]; then
-        echo "PREFLIGHT FAIL: Namespace isolation detected (strict mode)"
-        exit 1
-    else
-        echo "PREFLIGHT WARN: Proceeding despite namespace warning (non-strict mode)"
-    fi
-fi
-
 # Test API connectivity
 echo "API Connectivity Check:"
 echo "  URL: $API_URL/health"
@@ -79,6 +58,26 @@ if [[ "$HTTP_CODE" == "200" ]]; then
     echo "  Namespace: Unified (inferred from connectivity)"
     exit 0
 else
+    if [[ $IS_WSL -eq 1 ]] && [[ $USES_LOOPBACK -eq 1 ]]; then
+        echo "WARNING: WSL detected with loopback API_URL"
+        echo "  API_URL: $API_URL"
+        echo "  This configuration may fail due to network namespace isolation."
+        echo "  WSL2's 127.0.0.1 is NOT the same as Windows host's 127.0.0.1."
+        echo ""
+        echo "Recommendations:"
+        echo "  1. Run tests via Git Bash (Windows-native) instead of WSL"
+        echo "  2. OR bind API to 0.0.0.0 and use host IP from WSL"
+        echo "  3. OR run API inside WSL/Docker"
+        echo ""
+
+        if [[ $STRICT_MODE -eq 1 ]]; then
+            echo "PREFLIGHT FAIL: Namespace isolation detected (strict mode)"
+            exit 1
+        else
+            echo "PREFLIGHT WARN: Proceeding despite namespace warning (non-strict mode)"
+        fi
+    fi
+
     echo "=== PREFLIGHT FAIL ==="
     echo "  API not reachable at $API_URL/health"
     echo "  HTTP code: $HTTP_CODE"
