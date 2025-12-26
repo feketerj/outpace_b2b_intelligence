@@ -34,7 +34,7 @@ preflight() {
 
     # Check API health
     echo "Checking API health..." | tee -a "$LOG_FILE"
-    HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" "$API_URL/health" 2>&1) || true
+    HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" "$API_URL/health" 2>/dev/null) || true
 
     if [[ "$HTTP_CODE" != "200" ]]; then
         echo "PREFLIGHT FAIL: API health check returned $HTTP_CODE" | tee -a "$LOG_FILE"
@@ -91,7 +91,11 @@ run_monte_carlo() {
     echo "Iterations: $ITERATIONS" | tee -a "$LOG_FILE"
     echo "Consecutive passes: $passed" | tee -a "$LOG_FILE"
     echo "Duration: ${duration}s" | tee -a "$LOG_FILE"
-    echo "Confidence: 95% (Rule 59 satisfied)" | tee -a "$LOG_FILE"
+    if [[ "$ITERATIONS" -eq 59 ]]; then
+        echo "Confidence: 95% (Rule 59 satisfied)" | tee -a "$LOG_FILE"
+    else
+        echo "Confidence: varies (Rule 59 requires exactly 59 iterations)" | tee -a "$LOG_FILE"
+    fi
     echo "End: $(date -u +%Y-%m-%dT%H:%M:%SZ)" | tee -a "$LOG_FILE"
     echo "Log: $LOG_FILE" | tee -a "$LOG_FILE"
 }
