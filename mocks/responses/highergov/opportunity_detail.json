@@ -1,0 +1,62 @@
+{
+  "id": "HG-100001",
+  "title": "Enterprise Cloud Migration and Modernization Services",
+  "agency": "Department of Defense",
+  "sub_agency": "Defense Information Systems Agency",
+  "posted_date": "2025-01-15",
+  "due_date": "2025-03-15",
+  "response_deadline": "2025-03-15T17:00:00Z",
+  "value": 25000000,
+  "value_type": "estimated",
+  "naics_code": "541512",
+  "naics_description": "Computer Systems Design Services",
+  "set_aside": "Total Small Business",
+  "classification_code": "D302",
+  "solicitation_number": "DISA-2025-0001",
+  "url": "https://highergov.com/opportunity/HG-100001",
+  "description": "The Defense Information Systems Agency (DISA) requires enterprise\ncloud migration and modernization services to support the Department of Defense's\ndigital transformation initiatives. The contractor shall provide comprehensive\ncloud architecture design, migration planning, implementation, and ongoing\nmanaged services for mission-critical applications.\n\nScope of Work:\n1. Cloud architecture assessment and design\n2. Migration planning and execution\n3. Security implementation and compliance\n4. DevSecOps pipeline development\n5. Training and knowledge transfer\n6. Ongoing operations and maintenance support\n\nPeriod of Performance: Base year plus four option years.",
+  "attachments": [
+    {
+      "id": "ATT-001",
+      "filename": "Statement_of_Work.pdf",
+      "size_bytes": 2500000,
+      "url": "https://highergov.com/attachments/ATT-001"
+    },
+    {
+      "id": "ATT-002",
+      "filename": "Pricing_Template.xlsx",
+      "size_bytes": 150000,
+      "url": "https://highergov.com/attachments/ATT-002"
+    },
+    {
+      "id": "ATT-003",
+      "filename": "Security_Requirements.pdf",
+      "size_bytes": 800000,
+      "url": "https://highergov.com/attachments/ATT-003"
+    }
+  ],
+  "contact": {
+    "name": "John Smith",
+    "title": "Contracting Officer",
+    "email": "john.smith@disa.mil",
+    "phone": "703-555-0100"
+  },
+  "place_of_performance": {
+    "city": "Fort Meade",
+    "state": "MD",
+    "country": "USA",
+    "zip": "20755"
+  },
+  "history": [
+    {
+      "date": "2025-01-15",
+      "action": "Posted",
+      "description": "Initial solicitation posted"
+    },
+    {
+      "date": "2025-01-20",
+      "action": "Amendment",
+      "description": "Q&A responses added"
+    }
+  ]
+}
