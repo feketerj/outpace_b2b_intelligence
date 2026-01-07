@@ -150,6 +150,7 @@ async def check_system_health(
     try:
         await db.command("ping")
     except Exception as e:
+        logger.warning(f"[health.database] MongoDB ping failed: {type(e).__name__}: {e}")
         health_status["services"]["database"] = "unhealthy"
         health_status["status"] = "degraded"
     

@@ -23,8 +23,8 @@ def calculate_opportunity_score(
             # Normalize: $0-$10M maps to 0-40 points
             value_score = min((value / 10000000) * 40, 40) * value_weight / 0.4
             score += value_score
-        except:
-            pass
+        except (ValueError, AttributeError) as e:
+            logger.debug(f"Could not parse estimated_value '{opportunity.get('estimated_value')}': {e}")
     
     # Deadline urgency score (0-30 points based on weight)
     deadline_weight = weights.get("deadline_weight", 0.3)
@@ -46,8 +46,8 @@ def calculate_opportunity_score(
                 urgency_score = 5
             
             score += urgency_score * deadline_weight / 0.3
-        except:
-            pass
+        except (ValueError, TypeError, AttributeError) as e:
+            logger.debug(f"Could not parse due_date '{opportunity.get('due_date')}': {e}")
     
     # Keyword relevance score (0-30 points based on weight)
     relevance_weight = weights.get("relevance_weight", 0.3)
