@@ -66,7 +66,7 @@ class TestSyncButtonVisibilityContract:
         
         This is required to access isSuperAdmin() for role checking.
         """
-        with open(INTELLIGENCE_FEED_PATH, "r") as f:
+        with open(INTELLIGENCE_FEED_PATH, "r", encoding='utf-8') as f:
             code = f.read()
         
         # Check for useAuth import
@@ -85,7 +85,7 @@ class TestSyncButtonVisibilityContract:
         The pattern should be: {isSuperAdmin() && (<Button...Sync Now...)}
         This ensures tenant users cannot see the button.
         """
-        with open(INTELLIGENCE_FEED_PATH, "r") as f:
+        with open(INTELLIGENCE_FEED_PATH, "r", encoding='utf-8') as f:
             code = f.read()
         
         # Check isSuperAdmin is destructured from useAuth
@@ -119,7 +119,7 @@ class TestSyncButtonVisibilityContract:
         
         NOT a generic "Sync successful" without counts.
         """
-        with open(INTELLIGENCE_FEED_PATH, "r") as f:
+        with open(INTELLIGENCE_FEED_PATH, "r", encoding='utf-8') as f:
             code = f.read()
         
         # Find the handleSyncIntelligence function
@@ -156,7 +156,7 @@ class TestTenantsPageToastContract:
         The toast should show total synced items:
         - `Synced ${response.data.opportunities_synced + response.data.intelligence_synced} items!`
         """
-        with open(TENANTS_PAGE_PATH, "r") as f:
+        with open(TENANTS_PAGE_PATH, "r", encoding='utf-8') as f:
             code = f.read()
         
         # Verify both count fields are referenced
@@ -190,7 +190,7 @@ class TestNoBrowserDependency:
         This test file must NOT depend on browser automation.
         It should use static code inspection only.
         """
-        with open(__file__, "r") as f:
+        with open(__file__, "r", encoding='utf-8') as f:
             test_code = f.read()
         
         # Check imports section only (first 50 lines)
