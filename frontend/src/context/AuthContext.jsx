@@ -50,9 +50,12 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, user: userData };
     } catch (error) {
+      const detail = error.response?.data?.detail || 'Login failed';
+      const traceId = error.response?.data?.trace_id || error.response?.headers?.['x-trace-id'];
       return {
         success: false,
-        error: error.response?.data?.detail || 'Login failed'
+        error: detail,
+        traceId: traceId || null
       };
     }
   };

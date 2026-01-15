@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
@@ -33,7 +33,10 @@ export default function LoginPage() {
         }
       }, 100);
     } else {
-      toast.error(result.error || 'Login failed');
+      const errorMsg = result.traceId
+        ? `${result.error} (Ref: ${result.traceId})`
+        : result.error || 'Login failed';
+      toast.error(errorMsg);
     }
 
     setLoading(false);
@@ -91,7 +94,16 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-          <div className="mt-6 text-xs text-center text-[hsl(var(--foreground-muted))]">
+          <div className="mt-4 text-center">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-[hsl(var(--primary))] hover:underline"
+              data-testid="forgot-password-link"
+            >
+              Forgot your password?
+            </Link>
+          </div>
+          <div className="mt-4 text-xs text-center text-[hsl(var(--foreground-muted))]">
             Contact your administrator for access credentials
           </div>
         </CardContent>

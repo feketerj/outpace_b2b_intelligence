@@ -10,6 +10,7 @@ import { ExportModal } from '../components/custom/ExportModal';
 import { ChatAssistant } from '../components/custom/ChatAssistant';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { showApiError } from '../lib/api';
 import { FileText, RefreshCw, Search, Filter, Download } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -36,8 +37,7 @@ export default function TenantDashboard() {
       });
       setOpportunities(response.data.data || []);
     } catch (error) {
-      console.error('Failed to fetch opportunities:', error);
-      toast.error('Failed to load opportunities');
+      showApiError(error, 'Failed to load opportunities');
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ export default function TenantDashboard() {
       toast.success(`Synced ${response.data.opportunities_synced} new opportunities!`);
       fetchOpportunities();
     } catch (error) {
-      toast.error('Sync failed');
+      showApiError(error, 'Sync failed');
     } finally {
       setSyncing(false);
     }
