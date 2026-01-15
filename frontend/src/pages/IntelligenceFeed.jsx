@@ -9,6 +9,7 @@ import { ExportModal } from '../components/custom/ExportModal';
 import { ChatAssistant } from '../components/custom/ChatAssistant';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { showApiError } from '../lib/api';
 import { TrendingUp, ExternalLink, Calendar, Trash2, Download, RefreshCw } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -34,8 +35,7 @@ export default function IntelligenceFeed() {
       });
       setIntelligence(response.data.data || []);
     } catch (error) {
-      console.error('Failed to fetch intelligence:', error);
-      toast.error('Failed to load intelligence');
+      showApiError(error, 'Failed to load intelligence');
     } finally {
       setLoading(false);
     }
@@ -52,8 +52,7 @@ export default function IntelligenceFeed() {
       // Auto-refresh the list after sync
       await fetchIntelligence();
     } catch (error) {
-      console.error('Sync failed:', error);
-      toast.error(error.response?.data?.detail || 'Failed to sync intelligence');
+      showApiError(error, 'Failed to sync intelligence');
     } finally {
       setSyncing(false);
     }
@@ -61,13 +60,13 @@ export default function IntelligenceFeed() {
 
   const handleDeleteReport = async (reportId, reportTitle) => {
     if (!window.confirm(`Delete "${reportTitle}"?`)) return;
-    
+
     try {
       await axios.delete(`${API_URL}/api/intelligence/${reportId}`);
       toast.success('Report deleted');
       fetchIntelligence();
     } catch (error) {
-      toast.error('Failed to delete');
+      showApiError(error, 'Failed to delete');
     }
   };
 
@@ -79,7 +78,7 @@ export default function IntelligenceFeed() {
       toast.success('Report archived');
       fetchIntelligence();
     } catch (error) {
-      toast.error('Failed to archive');
+      showApiError(error, 'Failed to archive');
     }
   };
 

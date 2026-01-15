@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { showApiError } from '../lib/api';
 import { ArrowLeft, Save, Trash2, ExternalLink, Calendar, DollarSign, Building2 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -35,8 +36,7 @@ export default function OpportunityDetail() {
       setNotes(response.data.client_notes || '');
       setStatus(response.data.client_status || 'new');
     } catch (error) {
-      console.error('Failed to fetch opportunity:', error);
-      toast.error('Failed to load opportunity');
+      showApiError(error, 'Failed to load opportunity');
       navigate('/dashboard');
     } finally {
       setLoading(false);
@@ -51,7 +51,7 @@ export default function OpportunityDetail() {
       });
       toast.success('Saved!');
     } catch (error) {
-      toast.error('Failed to save');
+      showApiError(error, 'Failed to save');
     }
   };
 
@@ -62,7 +62,7 @@ export default function OpportunityDetail() {
       toast.success('Deleted');
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Failed to delete');
+      showApiError(error, 'Failed to delete');
     }
   };
 

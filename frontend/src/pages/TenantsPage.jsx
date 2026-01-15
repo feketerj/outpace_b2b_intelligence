@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Badge } from '../components/ui/badge';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { showApiError } from '../lib/api';
 import { Plus, Edit2, Trash2, Building2, Save, Palette, Code, Calendar, Zap } from 'lucide-react';
 import { ColorPicker } from '../components/custom/ColorPicker';
 
@@ -122,8 +123,7 @@ export default function TenantsPage() {
       const response = await axios.get(`${API_URL}/api/tenants`);
       setTenants(response.data.data || []);
     } catch (error) {
-      console.error('Failed to fetch tenants:', error);
-      toast.error('Failed to load tenants');
+      showApiError(error, 'Failed to load tenants');
     } finally {
       setLoading(false);
     }
@@ -198,15 +198,7 @@ export default function TenantsPage() {
       setFormData(getEmptyFormData());
       fetchTenants();
     } catch (error) {
-      // Display backend error message VERBATIM
-      const errorDetail = error.response?.data?.detail;
-      if (errorDetail) {
-        toast.error(`Backend error: ${errorDetail}`);
-      } else if (error.response?.status) {
-        toast.error(`Request failed (HTTP ${error.response.status}): ${error.message}`);
-      } else {
-        toast.error(`Network error: ${error.message}`);
-      }
+      showApiError(error, 'Failed to save tenant');
     }
   };
 
@@ -224,8 +216,7 @@ export default function TenantsPage() {
       setDeleteConfirm({ open: false, tenant: null });
       fetchTenants();
     } catch (error) {
-      console.error('Delete error:', error);
-      toast.error(error.response?.data?.detail || 'Delete failed');
+      showApiError(error, 'Failed to delete tenant');
     } finally {
       setDeleting(false);
     }
