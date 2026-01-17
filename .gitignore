@@ -1,10 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# IDE and editors
+# === IDE and editors ===
 .idea/
 .vscode/
+.history/
 
-# Dependencies
+# === Dependencies ===
 node_modules/
 /node_modules
 /.pnp
@@ -16,56 +17,60 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 
-# Testing
-/coverage
+# === Python ===
+__pycache__/
+*.pyc
+venv/
+.venv/
 
-# Next.js
+# === Test artifacts ===
+carfax_reports/*.json
+carfax_*.log
+*.log
+test_reports/
+evidence/
+mc_reports/
+
+# === Build outputs ===
+/coverage
 /.next/
 /out/
 next-env.d.ts
 *.tsbuildinfo
-
-# Production builds
 /build
 dist/
-dist
 
-# Environment files (comprehensive coverage)
+# === Environment ===
+.env
+.env.local
+.env.*.local
+# Keep .env.example for documentation
+!.env.example
 
+# === Secrets ===
 *token.json*
 *credentials.json*
+login.json
 
-# Logs and debug files
+# === System files ===
+.DS_Store
+*.pem
+nul
+
+# === Docker secrets ===
+docker/certs/*.pem
+docker/certs/*.crt
+docker/certs/*.key
+!docker/certs/.gitkeep
+
+# === Logs and debug files ===
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 dump.rdb
-mc_reports/
 
-# System files
-.DS_Store
-*.pem
-
-# Python
-__pycache__/
-*pyc*
-venv/
-.venv/
-
-# Development tools
-chainlit.md
-.chainlit
-.ipynb_checkpoints/
-.ac
-
-# Deployment
-.vercel
-
-# Data and databases
-agenthub/agents/youtube/db
-
-# Archive files and large assets
+# === Archives ===
 **/*.zip
 **/*.tar.gz
 **/*.tar
@@ -74,123 +79,30 @@ agenthub/agents/youtube/db
 *.deb
 *.dylib
 
-# Build caches
+# === Local development ===
+*.local
+artifacts/*.local
+artifacts/*.log
+artifacts/SOURCE_MAP.txt
+.emergent/
+
+# === Build caches ===
 .cache/
 
-# Mobile development
-android-sdk/ -e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
+# === Mobile development ===
+android-sdk/
+
+# === Deployment ===
+.vercel
+
+# === Data and databases ===
+agenthub/agents/youtube/db
+
+# === Development tools ===
+chainlit.md
+.chainlit
+.ipynb_checkpoints/
+.ac
+
+# Server logs
+backend/logs/

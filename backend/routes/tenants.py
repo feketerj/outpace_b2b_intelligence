@@ -1,21 +1,41 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query, Request
+from fastapi.responses import JSONResponse, StreamingResponse
 from typing import List, Optional, Set
 from datetime import datetime, timezone, timedelta
 import uuid
 import logging
+import json
+import io
 
 from backend.models import (
     Tenant, TenantCreate, TenantUpdate, PaginatedResponse, PaginationMetadata,
     TenantStatus
 )
 from backend.utils.auth import get_current_super_admin, get_current_user, TokenData
+from backend.utils.state_machines import validate_tenant_status_transition
 from backend.database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+TENANT_NOT_FOUND_DETAIL = "Tenant not found"
+INVALID_JSON_DETAIL = "Invalid JSON body"
+EMPTY_JSON_OBJECT_DETAIL = "Request body must be a non-empty JSON object"
+
 def get_db():
     return get_database()
+
+
+def _json_default(value):
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return str(value)
+
+
+async def _export_collection(db, name: str, tenant_id: str) -> List[dict]:
+    cursor = db[name].find({"tenant_id": tenant_id}, {"_id": 0})
+    docs = await cursor.to_list(length=None)
+    return docs
 
 @router.post("", response_model=Tenant, dependencies=[Depends(get_current_super_admin)])
 async def create_tenant(tenant_data: TenantCreate):
@@ -43,6 +63,7 @@ async def create_tenant(tenant_data: TenantCreate):
     }
     
     await db.tenants.insert_one(tenant_doc)
+    logger.info(f"[audit.tenant_create] tenant_id={tenant_doc['id']} slug={tenant_doc['slug']} name={tenant_doc['name']}")
     return Tenant(**tenant_doc)
 
 @router.get("", response_model=PaginatedResponse)
@@ -107,7 +128,7 @@ async def get_tenant(tenant_id: str, current_user: TokenData = Depends(get_curre
     if not tenant_doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tenant not found"
+            detail=TENANT_NOT_FOUND_DETAIL
         )
     
     return Tenant(**tenant_doc)
@@ -211,13 +232,13 @@ async def patch_tenant(
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid JSON body"
+            detail=INVALID_JSON_DETAIL
         )
     
     if not payload or not isinstance(payload, dict):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Request body must be a non-empty JSON object"
+            detail=EMPTY_JSON_OBJECT_DETAIL
         )
     
     # STEP 2: REJECT unknown fields BEFORE any processing
@@ -233,8 +254,10 @@ async def patch_tenant(
     if not existing_tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tenant not found"
+            detail=TENANT_NOT_FOUND_DETAIL
         )
+    if "status" in payload:
+        validate_tenant_status_transition(existing_tenant.get("status", ""), payload["status"])
     
     # STEP 4: Super admin can modify all tenants including master clients
     # (Policy change: master tenant restrictions removed for super_admin)
@@ -254,7 +277,8 @@ async def patch_tenant(
         {"id": tenant_id},
         {"$set": merged_data}
     )
-    
+
+    logger.info(f"[audit.tenant_patch] tenant_id={tenant_id} fields={list(payload.keys())} by={current_user.user_id}")
     updated_tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
     return Tenant(**updated_tenant)
 
@@ -280,13 +304,13 @@ async def update_tenant(
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid JSON body"
+            detail=INVALID_JSON_DETAIL
         )
     
     if not raw_body or not isinstance(raw_body, dict):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Request body must be a non-empty JSON object"
+            detail=EMPTY_JSON_OBJECT_DETAIL
         )
     
     # STEP 2: REJECT unknown fields BEFORE any processing
@@ -302,8 +326,10 @@ async def update_tenant(
     if not existing_tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tenant not found"
+            detail=TENANT_NOT_FOUND_DETAIL
         )
+    if "status" in raw_body:
+        validate_tenant_status_transition(existing_tenant.get("status", ""), raw_body["status"])
     
     # STEP 4: Check slug uniqueness if updating
     if raw_body.get("slug") and raw_body.get("slug") != existing_tenant.get("slug"):
@@ -332,7 +358,8 @@ async def update_tenant(
         {"id": tenant_id},
         {"$set": merged_data}
     )
-    
+
+    logger.info(f"[audit.tenant_update] tenant_id={tenant_id} fields={list(raw_body.keys())} by={current_user.user_id}")
     # Return updated tenant
     updated_tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
     return Tenant(**updated_tenant)
@@ -350,7 +377,7 @@ async def delete_tenant(
     if result.deleted_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tenant not found"
+            detail=TENANT_NOT_FOUND_DETAIL
         )
     
     # Also delete related data
@@ -359,8 +386,127 @@ async def delete_tenant(
     await db.intelligence.delete_many({"tenant_id": tenant_id})
     await db.chat_messages.delete_many({"tenant_id": tenant_id})
     await db.knowledge_snippets.delete_many({"tenant_id": tenant_id})
-    
+
+    logger.info(f"[audit.tenant_delete] tenant_id={tenant_id} by={current_user.user_id}")
     return None
+
+
+@router.get("/{tenant_id}/export")
+async def export_tenant_data(
+    tenant_id: str,
+    current_user: TokenData = Depends(get_current_user)
+):
+    """Export tenant data for GDPR data portability."""
+    db = get_db()
+
+    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+
+    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND_DETAIL)
+
+    export_data = {
+        "tenant": tenant,
+        "users": await _export_collection(db, "users", tenant_id),
+        "opportunities": await _export_collection(db, "opportunities", tenant_id),
+        "intelligence": await _export_collection(db, "intelligence", tenant_id),
+        "chat_messages": await _export_collection(db, "chat_messages", tenant_id),
+        "chat_turns": await _export_collection(db, "chat_turns", tenant_id),
+        "knowledge_snippets": await _export_collection(db, "knowledge_snippets", tenant_id),
+        "kb_documents": await _export_collection(db, "kb_documents", tenant_id),
+        "kb_chunks": await _export_collection(db, "kb_chunks", tenant_id),
+        "sync_logs": await _export_collection(db, "sync_logs", tenant_id),
+    }
+
+    await db.tenants.update_one(
+        {"id": tenant_id},
+        {"$set": {"gdpr_exported_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    payload = json.dumps(export_data, default=_json_default).encode("utf-8")
+    filename = f"tenant_export_{tenant_id}.json"
+    return StreamingResponse(
+        io.BytesIO(payload),
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+@router.post("/{tenant_id}/suspend", response_model=Tenant, dependencies=[Depends(get_current_super_admin)])
+async def suspend_tenant(tenant_id: str):
+    """Suspend a tenant without deleting data."""
+    db = get_db()
+    existing = await db.tenants.find_one({"id": tenant_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND_DETAIL)
+    validate_tenant_status_transition(existing.get("status", ""), TenantStatus.SUSPENDED.value)
+    await db.tenants.update_one(
+        {"id": tenant_id},
+        {"$set": {"status": TenantStatus.SUSPENDED.value, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    updated = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
+    return Tenant(**updated)
+
+
+@router.post("/{tenant_id}/activate", response_model=Tenant, dependencies=[Depends(get_current_super_admin)])
+async def activate_tenant(tenant_id: str):
+    """Activate a tenant (resume from suspended/inactive)."""
+    db = get_db()
+    existing = await db.tenants.find_one({"id": tenant_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND_DETAIL)
+    validate_tenant_status_transition(existing.get("status", ""), TenantStatus.ACTIVE.value)
+    await db.tenants.update_one(
+        {"id": tenant_id},
+        {"$set": {"status": TenantStatus.ACTIVE.value, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    updated = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
+    return Tenant(**updated)
+
+
+@router.post("/{tenant_id}/gdpr/delete")
+async def gdpr_delete_tenant_data(
+    tenant_id: str,
+    current_user: TokenData = Depends(get_current_user)
+):
+    """GDPR delete: purge tenant data but keep tenant record."""
+    db = get_db()
+    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    tenant = await db.tenants.find_one({"id": tenant_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND_DETAIL)
+
+    await db.users.delete_many({"tenant_id": tenant_id})
+    await db.opportunities.delete_many({"tenant_id": tenant_id})
+    await db.intelligence.delete_many({"tenant_id": tenant_id})
+    await db.chat_messages.delete_many({"tenant_id": tenant_id})
+    await db.chat_turns.delete_many({"tenant_id": tenant_id})
+    await db.knowledge_snippets.delete_many({"tenant_id": tenant_id})
+    await db.kb_documents.delete_many({"tenant_id": tenant_id})
+    await db.kb_chunks.delete_many({"tenant_id": tenant_id})
+    await db.sync_logs.delete_many({"tenant_id": tenant_id})
+    await db.external_api_usage.delete_many({"tenant_id": tenant_id})
+    await db.tenant_costs.delete_many({"tenant_id": tenant_id})
+
+    await db.tenants.update_one(
+        {"id": tenant_id},
+        {
+            "$set": {
+                "status": TenantStatus.INACTIVE.value,
+                "gdpr_deleted_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+
+    logger.info(f"[audit.tenant_gdpr_delete] tenant_id={tenant_id} by={current_user.user_id}")
+    return JSONResponse({"status": "deleted", "tenant_id": tenant_id})
 
 
 # ==================== KNOWLEDGE SNIPPETS (SUPER ADMIN ONLY) ====================
@@ -403,10 +549,10 @@ async def create_knowledge_snippet(
     try:
         snippet_data = await request.json()
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
+        raise HTTPException(status_code=400, detail=INVALID_JSON_DETAIL)
     
     if not snippet_data or not isinstance(snippet_data, dict):
-        raise HTTPException(status_code=400, detail="Request body must be a non-empty JSON object")
+        raise HTTPException(status_code=400, detail=EMPTY_JSON_OBJECT_DETAIL)
     
     # STEP 2: REJECT unknown fields
     unknown_fields = [k for k in snippet_data.keys() if k not in ALLOWED_SNIPPET_FIELDS]
@@ -419,7 +565,7 @@ async def create_knowledge_snippet(
     # STEP 3: Check tenant exists and is not master
     tenant = await db.tenants.find_one({"id": tenant_id})
     if not tenant:
-        raise HTTPException(status_code=404, detail="Tenant not found")
+        raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND_DETAIL)
     if tenant.get("is_master_client"):
         raise HTTPException(status_code=403, detail="Knowledge snippets not allowed for master tenants")
     
@@ -457,10 +603,10 @@ async def update_knowledge_snippet(
     try:
         snippet_data = await request.json()
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
+        raise HTTPException(status_code=400, detail=INVALID_JSON_DETAIL)
     
     if not snippet_data or not isinstance(snippet_data, dict):
-        raise HTTPException(status_code=400, detail="Request body must be a non-empty JSON object")
+        raise HTTPException(status_code=400, detail=EMPTY_JSON_OBJECT_DETAIL)
     
     # STEP 2: REJECT unknown fields
     unknown_fields = [k for k in snippet_data.keys() if k not in ALLOWED_SNIPPET_FIELDS]

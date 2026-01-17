@@ -1,0 +1,222 @@
+# docs/INDEX.yaml
+# Context Routing Table - Read THIS FIRST to find what you need
+#
+# Purpose: Eliminate search waste. Go directly to the authoritative source.
+# Updated: 2026-01-07
+#
+# Usage: Match your question type to a route. Stop when you find your answer.
+# Don't read everything - that burns context tokens unnecessarily.
+
+---
+
+# =============================================================================
+# PRIMARY ROUTING TABLE
+# =============================================================================
+
+routing:
+
+  # --- Current State Questions ---
+
+  "what is the current state":
+    file: PROJECT_STATUS.md
+    stop_if: "Need current test results, blocking issues, what works/doesn't"
+    authority: "Living document - updated after each work session"
+
+  "what happened last session":
+    file: PROJECT_MEMORY.md
+    stop_if: "Need session history, decisions made, lessons learned, patterns discovered"
+    authority: "Append-only log with dated entries"
+
+  "what are the project requirements":
+    file: PRD.md
+    stop_if: "Need product requirements, user stories, acceptance criteria"
+    authority: "Product requirements document"
+
+  # --- Debugging Questions ---
+
+  "debugging an error":
+    file: FAILURE_PATTERNS.md
+    stop_if: "Seeing cryptic errors, need known failure->fix mappings"
+    authority: "Error pattern database with root causes and fixes"
+
+  "why did a test fail":
+    file: FAILURE_PATTERNS.md
+    stop_if: "Test failure with unclear cause"
+    also_check: "PROJECT_MEMORY.md for recent similar failures"
+
+  # --- Testing Questions ---
+
+  "how to run tests":
+    file: TESTING.md
+    stop_if: "Need test commands, harness usage, seed scripts"
+    authority: "Test execution guide"
+
+  "what is rule 59":
+    file: testing/rule59.md
+    stop_if: "Need Monte Carlo confidence interval methodology"
+    authority: "Statistical confidence requirements"
+
+  "how to set up test environment":
+    file: testing/environment.md
+    stop_if: "Need env vars, Docker setup, database config"
+
+  # --- API Questions ---
+
+  "api contract questions":
+    file: API_CONTRACT.json
+    stop_if: "Need endpoint specs, request/response schemas"
+    authority: "Machine-readable API specification"
+    format: "JSON - parse programmatically"
+
+  "what features are implemented":
+    file: FEATURES.json
+    stop_if: "Need list of implemented features, capabilities"
+    format: "JSON - parse programmatically"
+
+  # --- Design Questions ---
+
+  "ui design guidelines":
+    file: DESIGN_GUIDELINES.json
+    stop_if: "Need frontend styling, component patterns"
+    format: "JSON - parse programmatically"
+
+  # --- CI/CD Questions ---
+
+  "github actions setup":
+    file: github_actions_proof_runbook.md
+    stop_if: "Need CI pipeline configuration, workflow setup"
+
+  "verification contracts":
+    file: verification_contract.md
+    stop_if: "Need test contract definitions, verification criteria"
+
+  # --- Operations Questions ---
+
+  "production incidents":
+    file: RUNBOOK.md
+    stop_if: "Need incident response, troubleshooting, maintenance procedures"
+    authority: "Operations runbook for production support"
+
+  "monitoring setup":
+    file: MONITORING_DR.md
+    stop_if: "Need Prometheus, Grafana, alerting, observability stack"
+    authority: "Monitoring and disaster recovery guide"
+
+  "disaster recovery":
+    file: MONITORING_DR.md
+    stop_if: "Need backup, restore, RTO/RPO, business continuity"
+    authority: "DR procedures and planning"
+
+  "secrets management":
+    file: SECRETS_MANAGEMENT.md
+    stop_if: "Need AWS Secrets Manager, Vault, secret rotation"
+    authority: "Secrets provider integration guide"
+
+  # --- Doc Navigation ---
+
+  "how is the docs folder organized":
+    file: README.md
+    stop_if: "Need a quick map of the docs"
+    authority: "Docs folder index"
+
+  # --- Evidence/Proof Questions ---
+
+  "where is test evidence":
+    file: proof/README.md
+    stop_if: "Need test artifacts, evidence packets for audits"
+    also_check: "proof/TH-MC-003_ARTIFACT_INDEX.json"
+
+# =============================================================================
+# REFERENCE LIBRARY (Read-only - patterns from other projects)
+# =============================================================================
+
+reference_library:
+  path: UNIVERSAL_LESSONS_LEARNED/
+  purpose: "Patterns learned from concurrent/prior projects - read-only reference"
+  note: "Do not modify. Used to cross-pollinate lessons across projects."
+  key_files:
+    - ENGINEERING_PATTERNS.md    # Reusable engineering patterns
+    - LESSONS_LEARNED.md         # Cross-project lessons
+    - FAILURE_PATTERNS.md        # Common failure modes
+    - TESTING_STRATEGY.md        # Testing approaches
+
+# =============================================================================
+# CONSOLIDATION STATUS
+# =============================================================================
+
+consolidation:
+
+  # These files are ACTIVE and authoritative
+  active:
+    - PROJECT_STATUS.md          # Current state
+    - PROJECT_MEMORY.md          # Session log
+    - FAILURE_PATTERNS.md        # Error patterns
+    - TESTING.md                 # Test guide
+    - PRD.md                     # Requirements
+    - API_CONTRACT.json          # API spec
+    - FEATURES.json              # Feature inventory
+    - DESIGN_GUIDELINES.json     # UI guidelines
+    - RUNBOOK.md                 # Operations runbook
+    - MONITORING_DR.md           # Monitoring & DR guide
+    - SECRETS_MANAGEMENT.md      # Secrets management guide
+    - README.md                  # Docs index
+    - PRODUCTION_READINESS_AUDIT_V2.md # Latest audit report
+
+  # These files should be ARCHIVED (superseded)
+  archive_candidates:
+    - file: PR_DESCRIPTION.md
+      reason: "Point-in-time PR description, now stale"
+      action: "Move to archive/ or delete"
+
+    - file: test_result.md
+      reason: "Superseded by PROJECT_STATUS.md"
+      action: "Move to archive/ or delete"
+
+    - file: test-plan-v3.md
+      reason: "Plan is now in execution, covered by TESTING.md"
+      action: "Merge useful parts into TESTING.md, then archive"
+
+    - file: HOW_TO_VIEW_PERSPECTIVES.md
+      reason: "Review for relevance - may be obsolete"
+      action: "Review and decide"
+
+    - file: AUTOMATED_REPORTS_GUIDE.md
+      reason: "Overlaps with TESTING.md"
+      action: "Merge into TESTING.md"
+
+  # These stay as-is (specialized purpose)
+  specialized:
+    - path: testing/
+      purpose: "Detailed testing methodology"
+
+    - path: proof/
+      purpose: "Audit evidence packets"
+
+    - path: UNIVERSAL_LESSONS_LEARNED/
+      purpose: "Cross-project reference library (read-only)"
+
+# =============================================================================
+# QUICK REFERENCE
+# =============================================================================
+
+quick_reference:
+
+  cold_start_sequence:
+    1: "CLAUDE.md (root) - Project instructions"
+    2: "docs/INDEX.yaml (this file) - Find what you need"
+    3: "docs/PROJECT_STATUS.md - Current state"
+    4: "docs/FAILURE_PATTERNS.md - If debugging"
+
+  before_coding:
+    - "Read PROJECT_STATUS.md - what's the baseline?"
+    - "Read PROJECT_MEMORY.md - what was done recently?"
+
+  after_coding:
+    - "Update PROJECT_STATUS.md with test results"
+    - "Update PROJECT_MEMORY.md with session notes"
+    - "Update FAILURE_PATTERNS.md if new pattern discovered"
+
+  commands:
+    health_check: "python scripts/doctor.py"
+    unit_tests: "pytest backend/tests/ -v"
+    start_server: "MONGO_URL=mongodb://localhost:27017 DB_NAME=outpace_intelligence JWT_SECRET=REDACTED_LOCAL_JWT_SECRET python -m uvicorn backend.server:app --port 8000"

@@ -30,26 +30,39 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "asyncio: marks test as async"
     )
+    config.addinivalue_line(
+        "markers", "external_sync: marks test as requiring external sync service (auto-skipped locally)"
+    )
 
 
 def pytest_collection_modifyitems(config, items):
     """
-    P0 HARDENING: Automatically skip SYNC-02 tests in PR mode.
+    P0 HARDENING: Automatically skip external/network tests in local mode.
 
     PR mode is determined by:
     - PR_MODE=true environment variable
     - --pr-mode command line flag
+
+    External sync tests are ALWAYS skipped unless EXTERNAL_SYNC_TESTS=true.
     """
     pr_mode = (
         os.environ.get('PR_MODE', '').lower() in ('true', '1', 'yes') or
         config.getoption("--pr-mode", default=False)
     )
 
-    if pr_mode:
-        skip_sync02 = pytest.mark.skip(reason="SYNC-02 tests excluded in PR mode")
-        skip_network = pytest.mark.skip(reason="Network tests excluded in PR mode")
+    # External sync tests require explicit opt-in
+    run_external = os.environ.get('EXTERNAL_SYNC_TESTS', '').lower() in ('true', '1', 'yes')
 
-        for item in items:
+    skip_sync02 = pytest.mark.skip(reason="SYNC-02 tests excluded in PR mode")
+    skip_network = pytest.mark.skip(reason="Network tests excluded in PR mode")
+    skip_external = pytest.mark.skip(reason="External sync tests require EXTERNAL_SYNC_TESTS=true")
+
+    for item in items:
+        # Always skip external_sync unless explicitly enabled
+        if "external_sync" in item.keywords and not run_external:
+            item.add_marker(skip_external)
+
+        if pr_mode:
             if "sync02" in item.keywords:
                 item.add_marker(skip_sync02)
             if "requires_network" in item.keywords:

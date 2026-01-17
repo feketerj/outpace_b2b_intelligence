@@ -113,6 +113,49 @@ async def _check_mongodb_connectivity(result: PreflightResult, timeout_seconds: 
         result.add_error(f"MongoDB connection failed: {type(e).__name__}: {e}")
 
 
+def _check_cors_security(result: PreflightResult) -> None:
+    """
+    Check CORS configuration security.
+
+    In production (ENV=production): Wildcard CORS is a CRITICAL ERROR - server won't start.
+    In development: Wildcard CORS is a WARNING - server starts but logs the risk.
+    """
+    cors_origins = os.environ.get("CORS_ORIGINS", "")
+    environment = os.environ.get("ENV", "development").lower()
+    is_production = environment in ("production", "prod")
+
+    is_wildcard = not cors_origins or cors_origins.strip() == "*"
+
+    if is_wildcard and is_production:
+        # PRODUCTION: This is a critical security error - fail hard
+        result.add_error(
+            "CORS_ORIGINS is wildcard ('*') in production environment. "
+            "This allows ANY website to make authenticated API calls. "
+            "Set CORS_ORIGINS to your allowed domains (e.g., https://yourdomain.com). "
+            "Server will NOT start until this is fixed."
+        )
+    elif is_wildcard:
+        # DEVELOPMENT: Warn but allow startup
+        result.add_warning(
+            "CORS_ORIGINS not set or is '*' - allowing ANY origin. "
+            "This is acceptable for local development but WILL FAIL in production (ENV=production). "
+            "Set CORS_ORIGINS=http://localhost:3000 for dev."
+        )
+    else:
+        result.add_pass("CORS_ORIGINS_CONFIGURED")
+
+
+def _check_secrets_backend(result: PreflightResult) -> None:
+    """Validate secrets backend configuration for production."""
+    backend = os.environ.get("SECRETS_BACKEND", "env").lower()
+    if backend == "gcp":
+        project_id = os.environ.get("GCP_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT")
+        if not project_id:
+            result.add_error("GCP Secret Manager selected but GCP_PROJECT_ID/GOOGLE_CLOUD_PROJECT not set")
+        else:
+            result.add_pass("GCP_PROJECT_ID_SET")
+
+
 def _check_canaries(result: PreflightResult) -> None:
     """Run canary detection on environment (optional)."""
     try:
@@ -127,6 +170,36 @@ def _check_canaries(result: PreflightResult) -> None:
     except ImportError:
         # Canaries module not available - skip this check
         logger.debug("[PREFLIGHT_SKIP] Canaries module not available, skipping env canary check")
+
+
+def _check_rate_limit_storage(result: PreflightResult) -> None:
+    """
+    Check rate limit storage configuration for production readiness.
+
+    In production (ENV=production): In-memory storage is a WARNING because:
+    - Rate limits reset on server restart
+    - Each instance has independent limits (defeats purpose in multi-instance)
+
+    In development: In-memory storage is acceptable.
+    """
+    rate_limit_storage = os.environ.get("RATE_LIMIT_STORAGE", "memory://")
+    environment = os.environ.get("ENV", "development").lower()
+    is_production = environment in ("production", "prod")
+
+    is_memory = rate_limit_storage.startswith("memory://") or not rate_limit_storage
+
+    if is_memory and is_production:
+        result.add_warning(
+            "RATE_LIMIT_STORAGE is using in-memory storage in production. "
+            "Rate limits will reset on restart and won't be shared across instances. "
+            "Set RATE_LIMIT_STORAGE=redis://redis:6379/0 for production deployments."
+        )
+    elif is_memory:
+        # Development - just note it
+        logger.debug("[PREFLIGHT_INFO] Using in-memory rate limiting (OK for development)")
+        result.add_pass("RATE_LIMIT_STORAGE_DEV")
+    else:
+        result.add_pass("RATE_LIMIT_STORAGE_CONFIGURED")
 
 
 async def run_preflight_checks(
@@ -151,6 +224,9 @@ async def run_preflight_checks(
     # Sync checks
     _check_required_env_vars(result)
     _check_jwt_secret_quality(result)
+    _check_cors_security(result)
+    _check_secrets_backend(result)
+    _check_rate_limit_storage(result)
     _check_canaries(result)
 
     # Async checks

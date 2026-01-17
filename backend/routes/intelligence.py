@@ -9,6 +9,7 @@ from backend.models import (
     PaginatedResponse, PaginationMetadata
 )
 from backend.utils.auth import get_current_user, TokenData
+from backend.utils.invariants import assert_tenant_match
 from backend.database import get_database
 
 router = APIRouter()
@@ -83,6 +84,10 @@ async def list_intelligence(
     cursor = db.intelligence.find(query, {"_id": 0}).skip(skip).limit(per_page).sort("created_at", -1)
     intelligence_items = await cursor.to_list(length=per_page)
     
+    # Only enforce tenant match for non-super_admin users
+    if current_user.role != "super_admin":
+        assert_tenant_match(intelligence_items, current_user.tenant_id, context="list_intelligence")
+    
     pages = (total + per_page - 1) // per_page
     
     _audit_access("list_intelligence", query.get("tenant_id", "all"), count=len(intelligence_items))
@@ -113,12 +118,16 @@ async def get_intelligence(
             detail="Intelligence item not found"
         )
     
-    # Access control
+    # Access control - check FIRST, return 403 for cross-tenant access
     if current_user.role != "super_admin" and intel_doc.get("tenant_id") != current_user.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
+    
+    # Defense-in-depth assertion AFTER access control
+    if current_user.role != "super_admin":
+        assert_tenant_match([intel_doc], current_user.tenant_id, context="get_intelligence")
     
     _audit_access("get_intelligence", intel_doc.get("tenant_id"), object_id=intel_id)
     return Intelligence(**intel_doc)
@@ -139,6 +148,7 @@ async def delete_intelligence(
             detail="Intelligence item not found"
         )
     
+    # Access control - check FIRST
     if intel_doc.get("tenant_id") != current_user.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -164,19 +174,23 @@ async def update_intelligence(
             detail="Intelligence item not found"
         )
     
+    # Access control - check FIRST
     if intel_doc.get("tenant_id") != current_user.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
     
-    # Only allow updating client-editable fields
+    # Only allow updating client-editable fields - REJECT unknown fields (contract enforcement)
     allowed_fields = {"is_archived", "client_notes"}
-    requested_fields = set(update_data.keys())
-    ignored_fields = requested_fields - allowed_fields
-    
-    if ignored_fields:
-        logger.info(f"[audit.patch_ignored] endpoint=intelligence tenant_id={current_user.tenant_id} object_id={intel_id} fields={list(ignored_fields)}")
+    unknown_fields = set(update_data.keys()) - allowed_fields
+
+    if unknown_fields:
+        logger.warning(f"[audit.patch_rejected] endpoint=intelligence tenant_id={current_user.tenant_id} object_id={intel_id} unknown_fields={list(unknown_fields)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown fields not allowed: {list(unknown_fields)}"
+        )
     
     update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
     update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()

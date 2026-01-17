@@ -3,10 +3,8 @@ import { SuperAdminLayout } from '../components/layout/SuperAdminLayout';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import axios from 'axios';
+import { apiClient } from '../lib/api';
 import { Building2, Users, FileText, TrendingUp, Plus } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
@@ -19,7 +17,7 @@ export default function SuperAdminDashboard() {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/admin/dashboard`);
+      const response = await apiClient.get('/api/admin/dashboard');
       setStats(response.data);
     } catch (error) {
       console.error('Failed to fetch dashboard stats:', error);

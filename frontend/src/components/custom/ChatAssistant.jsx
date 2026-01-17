@@ -2,12 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card } from '../ui/card';
-import axios from 'axios';
+import { apiClient, showApiError } from '../../lib/api';
 import { MessageCircle, X, Send } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
-
-export const ChatAssistant = ({ agentType = 'opportunities', primaryColor }) => {
+export const ChatAssistant = ({ agentType = 'opportunities', primaryColor, tenantId = null }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -34,19 +32,27 @@ export const ChatAssistant = ({ agentType = 'opportunities', primaryColor }) => 
     setSending(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/chat/message`, {
+      const payload = {
         conversation_id: conversationId,
         message: userMessage,
         agent_type: agentType
-      });
+      };
+      // Include tenant_id for super_admin preview mode
+      if (tenantId) {
+        payload.tenant_id = tenantId;
+      }
+      const response = await apiClient.post('/api/chat/message', payload);
 
       // Add assistant response
       setMessages(prev => [...prev, { role: 'assistant', content: response.data.content }]);
     } catch (error) {
       console.error('Chat error:', error);
+      const traceId = error.response?.data?.trace_id || error.response?.headers?.['x-trace-id'];
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.' 
+        content: traceId 
+          ? `Sorry, I encountered an error. Please try again. (Ref: ${traceId})` 
+          : 'Sorry, I encountered an error. Please try again.'
       }]);
     } finally {
       setSending(false);

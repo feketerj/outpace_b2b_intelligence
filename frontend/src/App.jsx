@@ -1,11 +1,15 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TenantProvider } from './context/TenantContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages
 import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import TenantDashboard from './pages/TenantDashboard';
 import OpportunityDetail from './pages/OpportunityDetail';
@@ -14,6 +18,7 @@ import UsersPage from './pages/UsersPage';
 import TenantsPage from './pages/TenantsPage';
 import DatabaseManager from './pages/DatabaseManager';
 import TenantPreview from './pages/TenantPreview';
+import UserProfilePage from './pages/UserProfilePage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requireSuperAdmin = false }) => {
@@ -38,11 +43,18 @@ const ProtectedRoute = ({ children, requireSuperAdmin = false }) => {
   return children;
 };
 
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  requireSuperAdmin: PropTypes.bool
+};
+
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+
       {/* Super Admin Routes */}
       <Route
         path="/admin"
@@ -110,7 +122,15 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <UserProfilePage />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Default Route */}
       <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
@@ -119,23 +139,27 @@ function AppRoutes() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <TenantProvider>
-          <AppRoutes />
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                background: 'hsl(var(--background-elevated))',
-                color: 'hsl(var(--foreground))',
-                border: '1px solid hsl(var(--border))'
-              }
-            }}
-          />
-        </TenantProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <TenantProvider>
+            <ErrorBoundary>
+              <AppRoutes />
+            </ErrorBoundary>
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: 'hsl(var(--background-elevated))',
+                  color: 'hsl(var(--foreground))',
+                  border: '1px solid hsl(var(--border))'
+                }
+              }}
+            />
+          </TenantProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

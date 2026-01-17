@@ -72,7 +72,7 @@ async def export_branded_pdf(
         intelligence_items = await cursor.to_list(length=len(intelligence_ids))
     
     if not opportunities and not intelligence_items:
-        raise HTTPException(status_code=404, detail="No data to export")
+        raise HTTPException(status_code=400, detail="No data to export - provide opportunity_ids or intelligence_ids")
     
     # Generate PDF
     buffer = io.BytesIO()
@@ -199,7 +199,7 @@ async def export_branded_excel(
     
     # Check if there's any data to export
     if not opportunity_ids and not intelligence_ids:
-        raise HTTPException(status_code=404, detail="No data to export")
+        raise HTTPException(status_code=400, detail="No data to export - provide opportunity_ids or intelligence_ids")
     
     buffer = io.BytesIO()
     has_data = False

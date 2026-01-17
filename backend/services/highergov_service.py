@@ -3,22 +3,37 @@ import logging
 import os
 from datetime import datetime, timezone
 import uuid
+import time
 from typing import Dict, Any
 
 from backend.utils.scoring import calculate_opportunity_score
 from backend.services.mistral_service import score_opportunity_with_ai
+from backend.utils.resilience import (
+    RetryableClient,
+    circuit_protected,
+    highergov_circuit,
+    CircuitOpenError
+)
+from backend.utils.usage import record_external_usage
+from backend.utils.secrets import get_secret
 
 logger = logging.getLogger(__name__)
 
-HIGHERGOV_BASE_URL = "https://www.highergov.com/api-external"
-DEFAULT_HIGHERGOV_KEY = os.getenv("HIGHERGOV_API_KEY")  # Default/fallback key
+# Retry-enabled HTTP client for HigherGov
+_http_client = RetryableClient(timeout=30.0, max_retries=3)
 
+HIGHERGOV_BASE_URL = "https://www.highergov.com/api-external"
+DEFAULT_HIGHERGOV_KEY = get_secret("HIGHERGOV_API_KEY")  # Default/fallback key
+
+@circuit_protected(highergov_circuit)
 async def sync_highergov_opportunities(db, tenant: dict) -> int:
     """
     Fetch opportunities from HigherGov API for a tenant using Search ID.
     Uses saved search from HigherGov platform (not keywords - too many results).
     Runs AI scoring BEFORE displaying opportunities.
     Returns number of new opportunities added.
+
+    Protected by circuit breaker - fails fast if HigherGov is down.
     """
     tenant_id = tenant["id"]
     tenant_name = tenant["name"]
@@ -45,131 +60,166 @@ async def sync_highergov_opportunities(db, tenant: dict) -> int:
     new_count = 0
     
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            # Poll saved search endpoint
-            # HigherGov search endpoints can vary - try multiple formats
-            params = {
+        # Poll saved search endpoint with retry logic
+        # HigherGov search endpoints can vary - try multiple formats
+        params = {
+            "api_key": highergov_api_key,
+            "searchID": search_id,  # Note: capital ID
+            "page_size": 100,
+            "page": 1
+        }
+
+        if fetch_full_docs:
+            params["include_documents"] = "true"
+        if fetch_nsn:
+            params["include_nsn"] = "true"
+
+        # Try the contract-opportunity endpoint with searchID parameter
+        # _http_client has built-in retry with exponential backoff
+        try:
+            start_time = time.monotonic()
+            response = await _http_client.get(
+                f"{HIGHERGOV_BASE_URL}/contract-opportunity/",
+                params=params
+            )
+            response.raise_for_status()
+            duration_ms = (time.monotonic() - start_time) * 1000
+            await record_external_usage(
+                db,
+                tenant_id,
+                "highergov",
+                "search_contract_opportunity",
+                "success",
+                duration_ms=duration_ms,
+                metadata={"status_code": response.status_code, "search_id": search_id}
+            )
+        except httpx.HTTPStatusError as e:
+            # Log error and try alternate endpoint
+            duration_ms = (time.monotonic() - start_time) * 1000 if "start_time" in locals() else None
+            status_code = e.response.status_code if e.response else None
+            await record_external_usage(
+                db,
+                tenant_id,
+                "highergov",
+                "search_contract_opportunity",
+                "error",
+                duration_ms=duration_ms,
+                metadata={"status_code": status_code, "search_id": search_id}
+            )
+            # If that fails, try without the search endpoint
+            logger.warning(f"Primary endpoint failed ({status_code}), trying alternative: {e}")
+            params_alt = {
                 "api_key": highergov_api_key,
-                "searchID": search_id,  # Note: capital ID
-                "page_size": 100,
-                "page": 1
+                "search_id": search_id,
+                "limit": 100
+            }
+            start_time = time.monotonic()
+            response = await _http_client.get(
+                f"{HIGHERGOV_BASE_URL}/opportunity/",
+                params=params_alt
+            )
+            response.raise_for_status()
+            duration_ms = (time.monotonic() - start_time) * 1000
+            await record_external_usage(
+                db,
+                tenant_id,
+                "highergov",
+                "search_opportunity",
+                "success",
+                duration_ms=duration_ms,
+                metadata={"status_code": response.status_code, "search_id": search_id}
+            )
+        
+        # Process the response data (moved OUTSIDE the except block)
+        data = response.json()
+        
+        opportunities_list = data.get("results", []) or data.get("data", [])
+        logger.info(f"Fetched {len(opportunities_list)} opportunities from search_id {search_id}")
+        
+        # Get scoring weights
+        weights = tenant.get("scoring_weights", {})
+        keywords = search_profile.get("keywords", [])
+        
+        # Process each opportunity with AI scoring BEFORE inserting
+        for opp_data in opportunities_list:
+            external_id = str(opp_data.get("id") or opp_data.get("opportunity_id") or uuid.uuid4())
+            
+            # Check if already exists
+            existing = await db.opportunities.find_one({
+                "tenant_id": tenant_id,
+                "external_id": external_id
+            })
+            
+            if existing:
+                continue
+            
+            # Parse and normalize data
+            now = datetime.now(timezone.utc).isoformat()
+            
+            # Handle nested agency object
+            agency_value = opp_data.get("agency")
+            if isinstance(agency_value, dict):
+                agency_str = agency_value.get("name") or agency_value.get("agency_name") or str(agency_value.get("agency_key", ""))
+            else:
+                agency_str = str(agency_value) if agency_value else ""
+            
+            # Handle nested naics_code object
+            naics_value = opp_data.get("naics_code")
+            if isinstance(naics_value, dict):
+                naics_str = str(naics_value.get("naics_code", ""))
+            else:
+                naics_str = str(naics_value) if naics_value else None
+            
+            opportunity = {
+                "id": str(uuid.uuid4()),
+                "tenant_id": tenant_id,
+                "external_id": external_id,
+                "title": opp_data.get("title", "Untitled"),
+                "description": opp_data.get("description", ""),
+                "agency": agency_str or opp_data.get("organization", ""),
+                "due_date": opp_data.get("due_date") or opp_data.get("deadline"),
+                "estimated_value": opp_data.get("estimated_value") or opp_data.get("amount"),
+                "naics_code": naics_str,
+                "keywords": keywords,
+                "source_type": "highergov",
+                "source_url": opp_data.get("url", "") or opp_data.get("link", "") or (f"https://www.highergov.com/contract-opportunity/{opp_data.get('source_id', '')}/" if opp_data.get('source_id') else ""),
+                "raw_data": opp_data,
+                "score": 0,
+                "ai_relevance_summary": None,
+                "captured_date": now,
+                "created_at": now,
+                "updated_at": now
             }
             
-            if fetch_full_docs:
-                params["include_documents"] = "true"
-            if fetch_nsn:
-                params["include_nsn"] = "true"
+            # Calculate base score
+            opportunity["score"] = calculate_opportunity_score(opportunity, weights)
             
-            # Try the contract-opportunity endpoint with searchID parameter
+            # AI SCORING BEFORE DISPLAY
             try:
-                response = await client.get(
-                    f"{HIGHERGOV_BASE_URL}/contract-opportunity/",
-                    params=params
-                )
-                response.raise_for_status()
-            except httpx.HTTPStatusError as e:
-                # If that fails, try without the search endpoint
-                logger.warning(f"Trying alternative endpoint format: {e}")
-                params_alt = {
-                    "api_key": highergov_api_key,
-                    "search_id": search_id,
-                    "limit": 100
-                }
-                response = await client.get(
-                    f"{HIGHERGOV_BASE_URL}/opportunity/",
-                    params=params_alt
-                )
-                response.raise_for_status()
+                ai_result = await score_opportunity_with_ai(opportunity, tenant, db=db)
+                opportunity["ai_relevance_summary"] = ai_result.get("relevance_summary")
+                
+                # Apply AI score adjustment
+                adjustment = ai_result.get("suggested_score_adjustment", 0)
+                opportunity["score"] = max(0, min(100, opportunity["score"] + adjustment))
+                
+                # Store full AI analysis if schema provided
+                if "key_highlights" in ai_result:
+                    opportunity["ai_analysis"] = ai_result
+                
+                logger.info(f"AI scored: {opportunity['title'][:40]} - Score: {opportunity['score']}")
+            except Exception as e:
+                logger.error(f"AI scoring failed: {e}")
             
-            data = response.json()
-            
-            opportunities_list = data.get("results", []) or data.get("data", [])
-            logger.info(f"Fetched {len(opportunities_list)} opportunities from search_id {search_id}")
-            
-            # Get scoring weights
-            weights = tenant.get("scoring_weights", {})
-            keywords = search_profile.get("keywords", [])
-            
-            # Process each opportunity with AI scoring BEFORE inserting
-            for opp_data in opportunities_list:
-                external_id = str(opp_data.get("id") or opp_data.get("opportunity_id") or uuid.uuid4())
-                
-                # Check if already exists
-                existing = await db.opportunities.find_one({
-                    "tenant_id": tenant_id,
-                    "external_id": external_id
-                })
-                
-                if existing:
-                    continue
-                
-                # Parse and normalize data
-                now = datetime.now(timezone.utc).isoformat()
-                
-                # Handle nested agency object
-                agency_value = opp_data.get("agency")
-                if isinstance(agency_value, dict):
-                    agency_str = agency_value.get("name") or agency_value.get("agency_name") or str(agency_value.get("agency_key", ""))
-                else:
-                    agency_str = str(agency_value) if agency_value else ""
-                
-                # Handle nested naics_code object
-                naics_value = opp_data.get("naics_code")
-                if isinstance(naics_value, dict):
-                    naics_str = str(naics_value.get("naics_code", ""))
-                else:
-                    naics_str = str(naics_value) if naics_value else None
-                
-                opportunity = {
-                    "id": str(uuid.uuid4()),
-                    "tenant_id": tenant_id,
-                    "external_id": external_id,
-                    "title": opp_data.get("title", "Untitled"),
-                    "description": opp_data.get("description", ""),
-                    "agency": agency_str or opp_data.get("organization", ""),
-                    "due_date": opp_data.get("due_date") or opp_data.get("deadline"),
-                    "estimated_value": opp_data.get("estimated_value") or opp_data.get("amount"),
-                    "naics_code": naics_str,
-                    "keywords": keywords,
-                    "source_type": "highergov",
-                    "source_url": opp_data.get("url", "") or opp_data.get("link", "") or (f"https://www.highergov.com/contract-opportunity/{opp_data.get('source_id', '')}/" if opp_data.get('source_id') else ""),
-                    "raw_data": opp_data,
-                    "score": 0,
-                    "ai_relevance_summary": None,
-                    "captured_date": now,
-                    "created_at": now,
-                    "updated_at": now
-                }
-                
-                # Calculate base score
-                opportunity["score"] = calculate_opportunity_score(opportunity, weights)
-                
-                # AI SCORING BEFORE DISPLAY
-                try:
-                    ai_result = await score_opportunity_with_ai(opportunity, tenant)
-                    opportunity["ai_relevance_summary"] = ai_result.get("relevance_summary")
-                    
-                    # Apply AI score adjustment
-                    adjustment = ai_result.get("suggested_score_adjustment", 0)
-                    opportunity["score"] = max(0, min(100, opportunity["score"] + adjustment))
-                    
-                    # Store full AI analysis if schema provided
-                    if "key_highlights" in ai_result:
-                        opportunity["ai_analysis"] = ai_result
-                    
-                    logger.info(f"AI scored: {opportunity['title'][:40]} - Score: {opportunity['score']}")
-                except Exception as e:
-                    logger.error(f"AI scoring failed: {e}")
-                
-                # Insert into database
-                await db.opportunities.insert_one(opportunity)
-                new_count += 1
-            
-            # Update tenant rate limit
-            await db.tenants.update_one(
-                {"id": tenant_id},
-                {"$inc": {"rate_limit_used": len(opportunities_list)}}
-            )
+            # Insert into database
+            await db.opportunities.insert_one(opportunity)
+            new_count += 1
+        
+        # Update tenant rate limit
+        await db.tenants.update_one(
+            {"id": tenant_id},
+            {"$inc": {"rate_limit_used": len(opportunities_list)}}
+        )
             
     except Exception as e:
         logger.error(f"HigherGov API error for tenant {tenant_id}: {e}")
@@ -182,7 +232,6 @@ async def fetch_single_opportunity(db, tenant: dict, opportunity_id: str) -> Dic
     Fetch a single opportunity by ID from HigherGov.
     For manual entry of specific opportunity numbers.
     """
-    tenant_id = tenant["id"]
     search_profile = tenant.get("search_profile", {})
     
     highergov_api_key = search_profile.get("highergov_api_key") or DEFAULT_HIGHERGOV_KEY
@@ -201,140 +250,3 @@ async def fetch_single_opportunity(db, tenant: dict, opportunity_id: str) -> Dic
     except Exception as e:
         logger.error(f"Failed to fetch opportunity {opportunity_id}: {e}")
         raise
-    
-    naics_codes = search_profile.get("naics_codes", [])
-    keywords = search_profile.get("keywords", [])
-    fetch_full_docs = search_profile.get("fetch_full_documents", False)
-    fetch_nsn = search_profile.get("fetch_nsn", False)
-    fetch_grants = search_profile.get("fetch_grants", True)
-    fetch_contracts = search_profile.get("fetch_contracts", True)
-    
-    if not naics_codes and not keywords:
-        logger.warning(f"No search criteria for tenant {tenant_id}")
-        return 0
-    
-    new_count = 0
-    
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            # Build query parameters
-            params = {
-                "api_key": highergov_api_key,
-                "page_size": 50,
-                "page_number": 1
-            }
-            
-            if naics_codes:
-                params["naics_codes"] = ",".join(naics_codes)
-            if keywords:
-                params["keywords"] = " ".join(keywords)
-            if fetch_full_docs:
-                params["include_documents"] = "true"
-            if fetch_nsn:
-                params["include_nsn"] = "true"
-            
-            # Fetch contracts if enabled
-            opportunities_list = []
-            if fetch_contracts:
-                try:
-                    response = await client.get(
-                        f"{HIGHERGOV_BASE_URL}/opportunity/",
-                        params=params
-                    )
-                    response.raise_for_status()
-                    data = response.json()
-                    opportunities_list.extend(data.get("results", []))
-                    logger.info(f"Fetched {len(data.get('results', []))} contracts for tenant {tenant_id}")
-                except Exception as e:
-                    logger.error(f"Failed to fetch contracts: {e}")
-            
-            # Fetch grants if enabled
-            if fetch_grants:
-                try:
-                    grants_params = params.copy()
-                    grants_params["source_type"] = "grants"
-                    response = await client.get(
-                        f"{HIGHERGOV_BASE_URL}/opportunity/",
-                        params=grants_params
-                    )
-                    response.raise_for_status()
-                    data = response.json()
-                    opportunities_list.extend(data.get("results", []))
-                    logger.info(f"Fetched {len(data.get('results', []))} grants for tenant {tenant_id}")
-                except Exception as e:
-                    logger.error(f"Failed to fetch grants: {e}")
-            
-            # Get scoring weights
-            weights = tenant.get("scoring_weights", {})
-            
-            # Process each opportunity with AI scoring BEFORE inserting
-            for opp_data in opportunities_list:
-                external_id = opp_data.get("id") or str(uuid.uuid4())
-                
-                # Check if already exists
-                existing = await db.opportunities.find_one({
-                    "tenant_id": tenant_id,
-                    "external_id": external_id
-                })
-                
-                if existing:
-                    continue
-                
-                # Parse and normalize data
-                now = datetime.now(timezone.utc).isoformat()
-                opportunity = {
-                    "id": str(uuid.uuid4()),
-                    "tenant_id": tenant_id,
-                    "external_id": external_id,
-                    "title": opp_data.get("title", "Untitled"),
-                    "description": opp_data.get("description", ""),
-                    "agency": opp_data.get("agency", ""),
-                    "due_date": opp_data.get("due_date"),
-                    "estimated_value": opp_data.get("estimated_value"),
-                    "naics_code": opp_data.get("naics_code"),
-                    "keywords": keywords,
-                    "source_type": "highergov",
-                    "source_url": opp_data.get("url", "") or (f"https://www.highergov.com/contract-opportunity/{opp_data.get('source_id', '')}/" if opp_data.get('source_id') else ""),
-                    "raw_data": opp_data,
-                    "score": 0,
-                    "ai_relevance_summary": None,
-                    "captured_date": now,
-                    "created_at": now,
-                    "updated_at": now
-                }
-                
-                # Calculate base score
-                opportunity["score"] = calculate_opportunity_score(opportunity, weights)
-                
-                # AI SCORING BEFORE DISPLAY
-                try:
-                    ai_result = await score_opportunity_with_ai(opportunity, tenant)
-                    opportunity["ai_relevance_summary"] = ai_result.get("relevance_summary")
-                    
-                    # Apply AI score adjustment
-                    adjustment = ai_result.get("suggested_score_adjustment", 0)
-                    opportunity["score"] = max(0, min(100, opportunity["score"] + adjustment))
-                    
-                    # Store full AI analysis if schema provided
-                    if "key_highlights" in ai_result:
-                        opportunity["ai_analysis"] = ai_result
-                    
-                    logger.info(f"AI scored opportunity: {opportunity['title'][:50]} - Score: {opportunity['score']}")
-                except Exception as e:
-                    logger.error(f"AI scoring failed: {e}")
-                
-                # Insert into database
-                await db.opportunities.insert_one(opportunity)
-                new_count += 1
-            
-            # Update tenant rate limit
-            await db.tenants.update_one(
-                {"id": tenant_id},
-                {"$inc": {"rate_limit_used": len(opportunities_list)}}
-            )
-            
-    except Exception as e:
-        logger.error(f"HigherGov API error for tenant {tenant_id}: {e}")
-        raise
-    
-    return new_count

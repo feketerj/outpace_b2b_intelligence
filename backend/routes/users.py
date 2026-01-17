@@ -5,7 +5,7 @@ import uuid
 import logging
 
 from backend.models import User, UserCreate, UserUpdate, UserRole, PaginatedResponse, PaginationMetadata
-from backend.utils.auth import get_current_tenant_admin, get_current_user, get_password_hash, TokenData
+from backend.utils.auth import get_current_tenant_admin, get_current_user, get_password_hash, TokenData, validate_password_policy
 from backend.database import get_database
 
 def get_db():
@@ -21,6 +21,14 @@ async def create_user(
 ):
     """Create new user"""
     db = get_db()
+    
+    # Validate password policy
+    is_valid, errors = validate_password_policy(user_data.password)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"message": "Password does not meet requirements", "errors": errors}
+        )
     
     # Check if email already exists
     existing_user = await db.users.find_one({"email": user_data.email})
@@ -169,8 +177,14 @@ async def update_user(
     # Update user
     update_data = {k: v for k, v in user_data.model_dump(exclude_unset=True).items() if v is not None}
     
-    # Hash password if updating
+    # Validate and hash password if updating
     if "password" in update_data:
+        is_valid, errors = validate_password_policy(update_data["password"])
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"message": "Password does not meet requirements", "errors": errors}
+            )
         update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
     
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()

@@ -7,12 +7,9 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { ExportModal } from '../components/custom/ExportModal';
 import { ChatAssistant } from '../components/custom/ChatAssistant';
-import axios from 'axios';
 import { toast } from 'sonner';
-import { showApiError } from '../lib/api';
+import { apiClient, showApiError } from '../lib/api';
 import { TrendingUp, ExternalLink, Calendar, Trash2, Download, RefreshCw } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function IntelligenceFeed() {
   const { currentTenant, brandingStyles } = useTenant();
@@ -30,7 +27,7 @@ export default function IntelligenceFeed() {
 
   const fetchIntelligence = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/intelligence`, {
+      const response = await apiClient.get('/api/intelligence', {
         params: { tenant_id: currentTenant?.id, per_page: 50 }
       });
       setIntelligence(response.data.data || []);
@@ -44,7 +41,7 @@ export default function IntelligenceFeed() {
   const handleSyncIntelligence = async () => {
     setSyncing(true);
     try {
-      const response = await axios.post(`${API_URL}/api/admin/sync/${currentTenant?.id}`, null, {
+      const response = await apiClient.post(`/api/admin/sync/${currentTenant?.id}`, null, {
         params: { sync_type: 'intelligence' }
       });
       const result = response.data;
@@ -62,7 +59,7 @@ export default function IntelligenceFeed() {
     if (!window.confirm(`Delete "${reportTitle}"?`)) return;
 
     try {
-      await axios.delete(`${API_URL}/api/intelligence/${reportId}`);
+      await apiClient.delete(`/api/intelligence/${reportId}`);
       toast.success('Report deleted');
       fetchIntelligence();
     } catch (error) {
@@ -72,7 +69,7 @@ export default function IntelligenceFeed() {
 
   const handleArchiveReport = async (reportId) => {
     try {
-      await axios.patch(`${API_URL}/api/intelligence/${reportId}`, {
+      await apiClient.patch(`/api/intelligence/${reportId}`, {
         is_archived: true
       });
       toast.success('Report archived');

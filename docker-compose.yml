@@ -1,0 +1,144 @@
+# OutPace B2B Intelligence - Production Docker Compose
+#
+# Usage:
+#   1. Copy .env.example to .env and fill in your values
+#   2. docker compose up -d
+#   3. Access at http://localhost (or your domain with HTTPS)
+#
+# For HTTPS: Use the docker-compose.ssl.yml override or put behind a reverse proxy
+
+services:
+  # ===========================================
+  # MongoDB with Authentication
+  # ===========================================
+  mongodb:
+    image: mongo:7.0
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      DB_NAME: ${DB_NAME:-outpace_intelligence}
+      MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:-outpace_app}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+      - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "${MONGO_INITDB_ROOT_USERNAME:-admin}", "-p", "${MONGO_INITDB_ROOT_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - outpace-net
+    # MongoDB port NOT exposed to host - only accessible within Docker network
+
+  # ===========================================
+  # Redis (Rate Limiting + Caching)
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - outpace-net
+    # Redis port NOT exposed to host - only accessible within Docker network
+
+  # ===========================================
+  # Backend API (FastAPI + Uvicorn)
+  # ===========================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - MONGO_URL=mongodb://${MONGO_APP_USERNAME:-outpace_app}:${MONGO_APP_PASSWORD}@mongodb:27017/${DB_NAME:-outpace_intelligence}?authSource=${DB_NAME:-outpace_intelligence}
+      - DB_NAME=${DB_NAME:-outpace_intelligence}
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost}
+      - RATE_LIMIT_DEFAULT=${RATE_LIMIT_DEFAULT:-100/minute}
+      - RATE_LIMIT_AUTH=${RATE_LIMIT_AUTH:-10/minute}
+      - RATE_LIMIT_UPLOAD=${RATE_LIMIT_UPLOAD:-20/minute}
+      - RATE_LIMIT_STORAGE=${RATE_LIMIT_STORAGE:-redis://redis:6379/0}
+      - SECRETS_BACKEND=${SECRETS_BACKEND:-env}
+      - ENV=${ENV:-production}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      - LOG_TO_FILE=${LOG_TO_FILE:-false}
+      - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - HIGHERGOV_API_KEY=${HIGHERGOV_API_KEY}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - outpace-net
+    # API port NOT exposed to host - accessed via reverse proxy
+
+  # ===========================================
+  # Frontend (Nginx serving static files)
+  # ===========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_BACKEND_URL: ""
+    restart: unless-stopped
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/nginx-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - outpace-net
+
+  # ===========================================
+  # Reverse Proxy (Nginx) - TLS termination + routing
+  # ===========================================
+  proxy:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx-proxy.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/certs:/etc/nginx/certs:ro
+    depends_on:
+      - api
+      - frontend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - outpace-net
+
+volumes:
+  mongo_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  outpace-net:
+    driver: bridge

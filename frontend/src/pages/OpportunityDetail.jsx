@@ -7,12 +7,9 @@ import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import axios from 'axios';
 import { toast } from 'sonner';
-import { showApiError } from '../lib/api';
+import { apiClient, showApiError } from '../lib/api';
 import { ArrowLeft, Save, Trash2, ExternalLink, Calendar, DollarSign, Building2 } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function OpportunityDetail() {
   const { id } = useParams();
@@ -31,7 +28,7 @@ export default function OpportunityDetail() {
 
   const fetchOpportunity = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/opportunities/${id}`);
+      const response = await apiClient.get(`/api/opportunities/${id}`);
       setOpportunity(response.data);
       setNotes(response.data.client_notes || '');
       setStatus(response.data.client_status || 'new');
@@ -45,7 +42,7 @@ export default function OpportunityDetail() {
 
   const handleSave = async () => {
     try {
-      await axios.patch(`${API_URL}/api/opportunities/${id}`, {
+      await apiClient.patch(`/api/opportunities/${id}`, {
         client_status: status,
         client_notes: notes
       });
@@ -58,7 +55,7 @@ export default function OpportunityDetail() {
   const handleDelete = async () => {
     if (!window.confirm('Delete this opportunity?')) return;
     try {
-      await axios.delete(`${API_URL}/api/opportunities/${id}`);
+      await apiClient.delete(`/api/opportunities/${id}`);
       toast.success('Deleted');
       navigate('/dashboard');
     } catch (error) {
