@@ -2,12 +2,14 @@ from fastapi import APIRouter, HTTPException, status, Depends, Body, Request
 from typing import Dict, Any, Set
 import logging
 from datetime import datetime, timezone
+from cachetools import TTLCache
 
 from backend.utils.auth import get_current_super_admin, get_current_tenant_admin, TokenData
 from backend.database import get_database
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+_tenant_config_cache = TTLCache(maxsize=256, ttl=60)
 
 def get_db():
     return get_database()
@@ -113,19 +115,31 @@ async def update_intelligence_config(
             }
         }
     )
+    _tenant_config_cache.pop(f"{tenant_id}:intelligence_config", None)
     
     # If schedule changed, reload scheduler
+    scheduler_reload_failed = False
     if "schedule_cron" in config_data:
         try:
             from scheduler.sync_scheduler import scheduler, setup_tenant_schedules
             import asyncio
-            
+
             # Reload tenant schedules
             asyncio.create_task(setup_tenant_schedules(db))
-            logger.info(f"Reloaded schedules after updating tenant {tenant_id}")
+            logger.info(f"[config.scheduler] Reloaded schedules for tenant {tenant_id}")
         except Exception as e:
-            logger.error(f"Failed to reload schedules: {e}")
-    
+            logger.error(f"[config.scheduler] RELOAD_FAILED for tenant {tenant_id}: {e}")
+            scheduler_reload_failed = True
+
+    # Response indicates partial success if scheduler reload failed
+    if scheduler_reload_failed:
+        return {
+            "status": "partial",
+            "message": "Config updated but scheduler reload failed - old schedule may still be active",
+            "config": updated_config,
+            "warnings": ["scheduler_reload_failed"]
+        }
+
     return {
         "status": "success",
         "message": "Intelligence configuration updated",
@@ -139,6 +153,10 @@ async def get_intelligence_config(
 ):
     """Get current intelligence configuration for a tenant"""
     db = get_db()
+    cache_key = f"{tenant_id}:intelligence_config"
+    cached = _tenant_config_cache.get(cache_key)
+    if cached:
+        return cached
     
     # Access control
     if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
@@ -154,8 +172,10 @@ async def get_intelligence_config(
             detail="Tenant not found"
         )
     
-    return {
+    response = {
         "tenant_id": tenant_id,
         "tenant_name": tenant["name"],
         "intelligence_config": tenant.get("intelligence_config", {})
     }
+    _tenant_config_cache[cache_key] = response
+    return response

@@ -116,6 +116,79 @@ class TestJWTSecretQuality:
         assert result.checks_passed == 1
 
 
+class TestCORSSecurity:
+    """Test CORS security - warnings in dev, HARD FAIL in production."""
+
+    def test_missing_cors_origins_warns_in_development(self):
+        """Missing CORS_ORIGINS in development mode should warn but not error."""
+        from backend.utils.preflight import PreflightResult, _check_cors_security
+
+        result = PreflightResult()
+
+        # Development mode (default) - should warn, not error
+        with patch.dict(os.environ, {"ENV": "development"}, clear=True):
+            _check_cors_security(result)
+
+        assert len(result.warnings) > 0
+        assert not result.critical_failure  # Should NOT be a critical error in dev
+        assert any("ANY origin" in w for w in result.warnings)
+
+    def test_wildcard_cors_warns_in_development(self):
+        """Explicit CORS_ORIGINS='*' in development should warn but not error."""
+        from backend.utils.preflight import PreflightResult, _check_cors_security
+
+        result = PreflightResult()
+
+        with patch.dict(os.environ, {"CORS_ORIGINS": "*", "ENV": "development"}, clear=True):
+            _check_cors_security(result)
+
+        assert len(result.warnings) > 0
+        assert not result.critical_failure  # Should NOT be a critical error in dev
+
+    def test_wildcard_cors_fails_hard_in_production(self):
+        """CRITICAL: Wildcard CORS in production must be a HARD FAILURE."""
+        from backend.utils.preflight import PreflightResult, _check_cors_security
+
+        result = PreflightResult()
+
+        # Production mode with wildcard - must FAIL
+        with patch.dict(os.environ, {"CORS_ORIGINS": "*", "ENV": "production"}, clear=True):
+            _check_cors_security(result)
+
+        assert result.critical_failure  # MUST be a critical error
+        assert any("production" in e.lower() for e in result.errors)
+        assert any("will not start" in e.lower() for e in result.errors)
+
+    def test_missing_cors_fails_hard_in_production(self):
+        """CRITICAL: Missing CORS_ORIGINS in production must be a HARD FAILURE."""
+        from backend.utils.preflight import PreflightResult, _check_cors_security
+
+        result = PreflightResult()
+
+        # Production mode with no CORS config - must FAIL
+        with patch.dict(os.environ, {"ENV": "prod"}, clear=True):
+            _check_cors_security(result)
+
+        assert result.critical_failure  # MUST be a critical error
+        assert len(result.errors) > 0
+
+    def test_explicit_origin_passes_in_production(self):
+        """Explicit CORS_ORIGINS in production should pass."""
+        from backend.utils.preflight import PreflightResult, _check_cors_security
+
+        result = PreflightResult()
+
+        with patch.dict(os.environ, {
+            "CORS_ORIGINS": "https://myapp.com",
+            "ENV": "production"
+        }, clear=True):
+            _check_cors_security(result)
+
+        assert not result.critical_failure
+        assert len(result.warnings) == 0
+        assert result.checks_passed == 1
+
+
 class TestMongoDBConnectivity:
     """Test MongoDB connectivity checks."""
 

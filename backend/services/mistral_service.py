@@ -1,19 +1,34 @@
 import logging
+import time
 import os
 from datetime import datetime, timezone
 from typing import Dict, Any
 from mistralai import Mistral
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+from backend.utils.resilience import (
+    circuit_protected,
+    mistral_circuit,
+    CircuitOpenError
+)
+from backend.utils.usage import record_external_usage
+from backend.utils.secrets import get_secret
 
 logger = logging.getLogger(__name__)
 
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
+MISTRAL_API_KEY = get_secret("MISTRAL_API_KEY")
 
-async def score_opportunity_with_ai(opportunity: dict, tenant: dict) -> Dict[str, Any]:
+
+@circuit_protected(mistral_circuit)
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), reraise=True)
+async def score_opportunity_with_ai(opportunity: dict, tenant: dict, db=None) -> Dict[str, Any]:
     """
     Use Mistral agent to analyze and score an opportunity BEFORE display.
     Supports both Agent ID (pre-created) OR dynamic instructions.
     Uses configurable output schema per client.
     Returns: AI analysis matching the configured schema
+
+    Protected by circuit breaker and retry logic.
     """
     agent_config = tenant.get("agent_config", {})
     agent_id = agent_config.get("scoring_agent_id")
@@ -60,22 +75,17 @@ Provide a structured analysis following the schema above.
 """
         
         client = Mistral(api_key=MISTRAL_API_KEY)
-        
-        # Use standard chat.complete API (not beta conversations)
+
+        start_time = time.monotonic()
         if agent_id:
-            logger.info(f"Using Mistral agent ID: {agent_id}")
-            # For now, use chat.complete with instructions in system message
-            # Agent ID functionality would require different SDK method
-            response = client.chat.complete(
-                model="mistral-small-latest",
-                messages=[
-                    {"role": "system", "content": instructions},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.3,
-                max_tokens=1000
+            # Use Mistral Agents API for pre-created agents
+            logger.info(f"Using Mistral Agent: {agent_id}")
+            response = client.agents.complete(
+                agent_id=agent_id,
+                messages=[{"role": "user", "content": prompt}]
             )
         else:
+            # Fallback to chat.complete with dynamic instructions
             logger.info(f"Using dynamic instructions for scoring")
             response = client.chat.complete(
                 model="mistral-small-latest",
@@ -86,6 +96,20 @@ Provide a structured analysis following the schema above.
                 temperature=0.3,
                 max_tokens=1000
             )
+        duration_ms = (time.monotonic() - start_time) * 1000
+        await record_external_usage(
+            db,
+            tenant.get("id"),
+            "mistral",
+            "score_opportunity",
+            "success",
+            duration_ms=duration_ms,
+            metadata={
+                "agent_id": agent_id,
+                "model": "mistral-small-latest",
+                "has_agent": bool(agent_id)
+            }
+        )
         
         # Extract content - standard format
         content = response.choices[0].message.content
@@ -160,5 +184,21 @@ Provide a structured analysis following the schema above.
             }
     
     except Exception as e:
-        logger.error(f"Mistral API error: {e}")
-        return {"relevance_summary": None, "suggested_score_adjustment": 0}
+        # Log error via usage tracking
+        duration_ms = (time.monotonic() - start_time) * 1000 if "start_time" in locals() else None
+        await record_external_usage(
+            db,
+            tenant.get("id"),
+            "mistral",
+            "score_opportunity",
+            "error",
+            duration_ms=duration_ms,
+            metadata={"error": str(e), "agent_id": tenant.get("agent_config", {}).get("scoring_agent_id")}
+        )
+        logger.error(f"[mistral.scoring] API_ERROR: {e}")
+        return {
+            "relevance_summary": None,
+            "suggested_score_adjustment": 0,
+            "ai_scoring_failed": True,
+            "ai_error": str(e)
+        }

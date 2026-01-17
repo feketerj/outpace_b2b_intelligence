@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File, Request
 from typing import Optional
 import base64
 import logging
@@ -7,9 +7,11 @@ import io
 import pandas as pd
 import uuid
 from datetime import datetime, timezone
+import csv
 
 from backend.utils.auth import get_current_tenant_admin, get_current_user, TokenData
 from backend.database import get_database
+from backend.utils.rate_limit import limiter, UPLOAD_RATE_LIMIT
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -27,22 +29,46 @@ def _sanitize_value(value):
     try:
         if pd.isna(value):
             return None
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"[upload.sanitize] pd.isna() failed for value type {type(value).__name__}: {e}")
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
     if hasattr(value, "item"):
         try:
             return value.item()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"[upload.sanitize] value.item() failed for type {type(value).__name__}: {e}")
     return value
 
 def _sanitize_record(record: dict) -> dict:
     return {k: _sanitize_value(v) for k, v in record.items()}
 
+
+def _validate_csv_bytes(contents: bytes) -> None:
+    if b"\x00" in contents:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid CSV content (binary data detected)"
+        )
+    try:
+        sample = contents[:4096].decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid CSV encoding (expected UTF-8)"
+        )
+    try:
+        csv.Sniffer().sniff(sample)
+    except csv.Error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid CSV structure"
+        )
+
 @router.post("/opportunities/csv/{tenant_id}")
+@limiter.limit(UPLOAD_RATE_LIMIT)
 async def upload_opportunities_csv(
+    request: Request,
     tenant_id: str,
     current_user: TokenData = Depends(get_current_user),
     file: UploadFile = File(...)
@@ -60,16 +86,26 @@ async def upload_opportunities_csv(
             detail="Super admin access required"
         )
     
-    # Validate file type
+    # Validate file type - extension AND MIME type
     if not file.filename.endswith('.csv'):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File must be CSV format"
         )
-    
+
+    # Validate MIME type (security: prevent disguised files)
+    allowed_csv_mimes = ['text/csv', 'application/csv', 'text/plain', 'application/vnd.ms-excel']
+    if file.content_type and file.content_type not in allowed_csv_mimes:
+        logger.warning(f"[upload.csv] Rejected file with MIME type: {file.content_type}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid file type: {file.content_type}. Expected CSV."
+        )
+
     try:
         # Read CSV
         contents = await file.read()
+        _validate_csv_bytes(contents)
         df = pd.read_csv(io.BytesIO(contents))
         
         # Get tenant for scoring
@@ -119,7 +155,8 @@ async def upload_opportunities_csv(
             
             await db.opportunities.insert_one(opportunity)
             imported_count += 1
-        
+
+        logger.info(f"[audit.csv_import] tenant_id={tenant_id} rows={imported_count} filename={file.filename} by={current_user.user_id}")
         return {
             "status": "success",
             "imported_count": imported_count,
@@ -134,7 +171,9 @@ async def upload_opportunities_csv(
         )
 
 @router.post("/logo/{tenant_id}")
+@limiter.limit(UPLOAD_RATE_LIMIT)
 async def upload_tenant_logo(
+    request: Request,
     tenant_id: str,
     file: UploadFile = File(...),
     current_user: TokenData = Depends(get_current_tenant_admin)
@@ -171,23 +210,25 @@ async def upload_tenant_logo(
         )
     
     # Resize image if too large (except SVG)
+    resize_failed = False
     if file.content_type != 'image/svg+xml':
         try:
             img = Image.open(io.BytesIO(contents))
-            
+
             # Resize if larger than 500px
             max_size = 500
             if img.width > max_size or img.height > max_size:
                 img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
-                
+
                 # Convert back to bytes
                 output = io.BytesIO()
                 img_format = 'PNG' if file.content_type == 'image/png' else 'JPEG'
                 img.save(output, format=img_format)
                 contents = output.getvalue()
-                logger.info(f"Resized logo to {img.width}x{img.height}")
+                logger.info(f"[upload.logo] Resized to {img.width}x{img.height}")
         except Exception as e:
-            logger.error(f"Failed to process image: {e}")
+            logger.error(f"[upload.logo] RESIZE_FAILED: {e} - returning original image")
+            resize_failed = True
     
     # Encode to base64
     logo_base64 = base64.b64encode(contents).decode('utf-8')
@@ -210,8 +251,11 @@ async def upload_tenant_logo(
             detail="Tenant not found"
         )
     
-    return {
+    response = {
         "status": "success",
         "logo_data_uri": logo_data_uri,
         "size_kb": len(contents) / 1024
     }
+    if resize_failed:
+        response["warning"] = "Image resize failed - original size used"
+    return response

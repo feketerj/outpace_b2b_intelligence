@@ -276,15 +276,19 @@ async def retrieve_rag_context(
 ) -> tuple:
     """
     Retrieve relevant chunks via cosine similarity.
-    
+
     Semantics:
     - max_chunks = max chunks INJECTED into prompt (not search scope)
     - Search scope = ALL tenant chunks (up to SEARCH_SCOPE_HARD_CAP)
     - top_k = how many to consider after scoring
-    
+
+    INVARIANT: Query ALWAYS includes tenant_id filter.
+    INVARIANT: Results validated with assert_tenant_match().
+
     Returns: (context_text: str, debug_info: dict)
     Debug info is ALWAYS deterministic (never empty {}).
     """
+    from backend.utils.invariants import assert_tenant_match
     # Base debug info - always populated
     debug_info = {
         "rag_enabled": False,
@@ -317,9 +321,10 @@ async def retrieve_rag_context(
     try:
         query_embedding = _get_embeddings([query], model=embed_model)[0]
     except Exception as e:
-        logger.error(f"[rag] Failed to embed query: {e}")
+        logger.error(f"[rag.retrieve] EMBED_FAILED: {e} - RAG disabled for this request")
         debug_info["reason"] = "embed_error"
         debug_info["error"] = str(e)
+        debug_info["rag_degraded"] = True
         return "", debug_info
     
     # Fetch ALL tenant chunks (up to hard cap) - NOT limited by max_chunks
@@ -330,18 +335,25 @@ async def retrieve_rag_context(
     
     chunks = await cursor.to_list(length=SEARCH_SCOPE_HARD_CAP)
     debug_info["chunks_searched"] = len(chunks)
-    
+
+    # DEFENSE-IN-DEPTH: Verify tenant isolation on chunks
+    assert_tenant_match(chunks, tenant_id, "rag_chunks")
+
     if not chunks:
         debug_info["reason"] = "no_chunks"
         return "", debug_info
-    
+
     # Get document titles for provenance (tenant-scoped for defense-in-depth)
     doc_ids = list(set(c.get("document_id") for c in chunks))
     docs_cursor = db.kb_documents.find(
         {"tenant_id": tenant_id, "id": {"$in": doc_ids}},
-        {"_id": 0, "id": 1, "title": 1}
+        {"_id": 0, "id": 1, "title": 1, "tenant_id": 1}
     )
     docs = await docs_cursor.to_list(length=len(doc_ids))
+
+    # DEFENSE-IN-DEPTH: Verify tenant isolation on documents
+    assert_tenant_match(docs, tenant_id, "rag_documents")
+
     doc_titles = {d["id"]: d.get("title", "Unknown") for d in docs}
     
     # Score chunks by cosine similarity

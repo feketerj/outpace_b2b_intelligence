@@ -8,11 +8,9 @@ import {
 } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import axios from 'axios';
 import { toast } from 'sonner';
+import { apiClient, showApiError } from '../../lib/api';
 import { Download, FileText, FileSpreadsheet } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export const ExportModal = ({ 
   open, 
@@ -58,8 +56,8 @@ export const ExportModal = ({
     setExporting(true);
     
     try {
-      const response = await axios.post(
-        `${API_URL}/api/exports/${format}`,
+      const response = await apiClient.post(
+        `/api/exports/${format}`,
         {
           opportunity_ids: oppIds,
           intelligence_ids: intelIds,
@@ -82,8 +80,7 @@ export const ExportModal = ({
       toast.success(`${format.toUpperCase()} downloaded!`);
       onOpenChange(false);
     } catch (error) {
-      console.error('Export failed:', error);
-      toast.error('Export failed');
+      showApiError(error, 'Export failed');
     } finally {
       setExporting(false);
     }

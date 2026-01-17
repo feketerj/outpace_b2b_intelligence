@@ -5,11 +5,9 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
-import axios from 'axios';
 import { toast } from 'sonner';
+import { apiClient } from '../lib/api';
 import { Database, Trash2, RefreshCw, Search } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function DatabaseManager() {
   const [activeTab, setActiveTab] = useState('opportunities');
@@ -27,18 +25,18 @@ export default function DatabaseManager() {
     setLoading(true);
     try {
       if (activeTab === 'opportunities') {
-        const response = await axios.get(`${API_URL}/api/opportunities`, {
+        const response = await apiClient.get(`/api/opportunities`, {
           params: { per_page: 100 }
         });
         setOpportunities(response.data.data || []);
       } else if (activeTab === 'intelligence') {
-        const response = await axios.get(`${API_URL}/api/intelligence`, {
+        const response = await apiClient.get(`/api/intelligence`, {
           params: { per_page: 100 }
         });
         setIntelligence(response.data.data || []);
       } else if (activeTab === 'chat') {
         // Get all tenants and their chat messages
-        const tenantsRes = await axios.get(`${API_URL}/api/tenants`);
+        const tenantsRes = await apiClient.get(`/api/tenants`);
         const tenants = tenantsRes.data.data || [];
         
         let allMessages = [];
@@ -46,7 +44,7 @@ export default function DatabaseManager() {
           try {
             const convIds = ['test-conv-1', 'smoke-test-123', 'final-test'];
             for (const convId of convIds) {
-              const res = await axios.get(`${API_URL}/api/chat/history/${convId}`);
+              const res = await apiClient.get(`/api/chat/history/${convId}`);
               allMessages = allMessages.concat(res.data || []);
             }
           } catch (e) {}
@@ -65,7 +63,7 @@ export default function DatabaseManager() {
     if (!window.confirm(`Delete this ${type}?`)) return;
     
     try {
-      await axios.delete(`${API_URL}/api/${type}/${id}`);
+      await apiClient.delete(`/api/${type}/${id}`);
       toast.success('Deleted');
       fetchData();
     } catch (error) {

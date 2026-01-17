@@ -1,0 +1,8 @@
+# Place your SSL certificates here:
+# - fullchain.pem (certificate + chain)
+# - privkey.pem (private key)
+#
+# For Let's Encrypt, use certbot:
+# certbot certonly --standalone -d your-domain.com
+#
+# Then copy from /etc/letsencrypt/live/your-domain.com/

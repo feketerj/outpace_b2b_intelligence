@@ -19,12 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import axios from 'axios';
 import { toast } from 'sonner';
-import { showApiError } from '../lib/api';
+import { apiClient, showApiError } from '../lib/api';
 import { Users as UsersIcon, Mail, Shield, Plus, Pencil, Trash2 } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -51,7 +48,7 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/users`);
+      const response = await apiClient.get('/api/users');
       setUsers(response.data.data || []);
     } catch (error) {
       showApiError(error, 'Failed to load users');
@@ -62,7 +59,7 @@ export default function UsersPage() {
 
   const fetchTenants = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/tenants`);
+      const response = await apiClient.get('/api/tenants');
       setTenants(response.data.data || []);
     } catch (error) {
       showApiError(error, 'Failed to load tenants');
@@ -113,10 +110,10 @@ export default function UsersPage() {
       if (editingUser) {
         const updateData = { ...formData };
         if (!updateData.password) delete updateData.password;
-        await axios.put(`${API_URL}/api/users/${editingUser.id}`, updateData);
+        await apiClient.put(`/api/users/${editingUser.id}`, updateData);
         toast.success('User updated successfully');
       } else {
-        await axios.post(`${API_URL}/api/users`, formData);
+        await apiClient.post('/api/users', formData);
         toast.success('User created successfully');
       }
       setModalOpen(false);
@@ -132,7 +129,7 @@ export default function UsersPage() {
     if (!userToDelete) return;
     setSaving(true);
     try {
-      await axios.delete(`${API_URL}/api/users/${userToDelete.id}`);
+      await apiClient.delete(`/api/users/${userToDelete.id}`);
       toast.success('User deleted successfully');
       setDeleteModalOpen(false);
       setUserToDelete(null);

@@ -6,14 +6,12 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { ExportModal } from '../components/custom/ExportModal';
 import { ChatAssistant } from '../components/custom/ChatAssistant';
-import axios from 'axios';
 import { toast } from 'sonner';
+import { apiClient } from '../lib/api';
 import { FileText, RefreshCw, Download } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useNavigate } from 'react-router-dom';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function TenantPreview() {
   const [searchParams] = useSearchParams();
@@ -35,17 +33,17 @@ export default function TenantPreview() {
   const fetchTenantData = async () => {
     try {
       // Fetch tenant info
-      const tenantRes = await axios.get(`${API_URL}/api/tenants/${tenantId}`);
+      const tenantRes = await apiClient.get(`/api/tenants/${tenantId}`);
       setTenant(tenantRes.data);
       
       // Fetch opportunities
-      const oppsRes = await axios.get(`${API_URL}/api/opportunities`, {
+      const oppsRes = await apiClient.get(`/api/opportunities`, {
         params: { tenant_id: tenantId, per_page: 50 }
       });
       setOpportunities(oppsRes.data.data || []);
       
       // Fetch intelligence
-      const intelRes = await axios.get(`${API_URL}/api/intelligence`, {
+      const intelRes = await apiClient.get(`/api/intelligence`, {
         params: { tenant_id: tenantId, per_page: 50 }
       });
       setIntelligence(intelRes.data.data || []);
@@ -263,6 +261,7 @@ export default function TenantPreview() {
       <ChatAssistant
         agentType="opportunities"
         primaryColor={primaryColor}
+        tenantId={tenantId}
       />
     </div>
   );

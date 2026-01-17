@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Building2, Users, LayoutDashboard, LogOut, Settings } from 'lucide-react';
+import { Building2, Users, LayoutDashboard, LogOut, Settings, UserCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 
 export const SuperAdminLayout = ({ children }) => {
@@ -61,11 +61,15 @@ export const SuperAdminLayout = ({ children }) => {
 
         {/* User Info & Logout */}
         <div className="p-4 border-t border-[hsl(var(--border))]">
-          <div className="flex items-center gap-3 mb-3">
+          <button
+            onClick={() => navigate('/profile')}
+            className="w-full flex items-center gap-3 mb-3 p-2 -m-2 rounded-lg hover:bg-[hsl(var(--background-tertiary))] transition-colors"
+            data-testid="profile-link"
+          >
             <div className="h-10 w-10 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center text-white font-semibold">
               {user?.full_name?.charAt(0) || 'A'}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-left">
               <p className="text-sm font-medium text-[hsl(var(--foreground))] truncate">
                 {user?.full_name}
               </p>
@@ -73,7 +77,8 @@ export const SuperAdminLayout = ({ children }) => {
                 {user?.email}
               </p>
             </div>
-          </div>
+            <UserCircle className="h-4 w-4 text-[hsl(var(--foreground-secondary))]" />
+          </button>
           <Button
             variant="outline"
             size="sm"

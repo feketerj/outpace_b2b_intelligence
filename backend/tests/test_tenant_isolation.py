@@ -146,6 +146,38 @@ class TestTenantIsolationQueryPatterns:
         assert "tenant_id" in source, \
             "get_chat_history must filter by tenant_id"
 
+    def test_rag_chunks_query_includes_tenant_filter(self):
+        """RAG chunk queries MUST include tenant_id filter."""
+        import inspect
+        from backend.routes import rag
+
+        source = inspect.getsource(rag.retrieve_rag_context)
+
+        # Must have tenant_id in query
+        assert '{"tenant_id": tenant_id}' in source or '"tenant_id": tenant_id' in source, \
+            "retrieve_rag_context must filter chunks by tenant_id"
+
+    def test_rag_chunks_has_assert_tenant_match(self):
+        """RAG chunk retrieval MUST have assert_tenant_match defense-in-depth."""
+        import inspect
+        from backend.routes import rag
+
+        source = inspect.getsource(rag.retrieve_rag_context)
+
+        assert "assert_tenant_match" in source, \
+            "retrieve_rag_context must call assert_tenant_match for defense-in-depth"
+
+    def test_rag_documents_query_includes_tenant_filter(self):
+        """RAG document queries MUST include tenant_id filter."""
+        import inspect
+        from backend.routes import rag
+
+        source = inspect.getsource(rag.retrieve_rag_context)
+
+        # Must have tenant_id in document query
+        assert "tenant_id" in source and "kb_documents" in source, \
+            "retrieve_rag_context must filter documents by tenant_id"
+
 
 class TestCrossTenantAccessDenied:
     """

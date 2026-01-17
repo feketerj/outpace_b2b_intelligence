@@ -1,20 +1,30 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { apiClient, setAuthTokens, clearAuthTokens, getRefreshToken } from '../lib/api';
 
 const AuthContext = createContext(null);
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
+  // Handle logout triggered by API interceptor (e.g., refresh token expired)
+  const handleAuthLogout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    clearAuthTokens();
+  }, []);
+
+  useEffect(() => {
+    // Listen for auth:logout events from API interceptor
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => {
+      window.removeEventListener('auth:logout', handleAuthLogout);
+    };
+  }, [handleAuthLogout]);
+
   useEffect(() => {
     if (token) {
-      // Set default axios header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
       // Fetch user info
       fetchUser();
     } else {
@@ -24,11 +34,19 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/auth/me`);
+      const response = await apiClient.get('/api/auth/me');
       setUser(response.data);
     } catch (error) {
-      console.error('Failed to fetch user:', error);
-      logout();
+      // Only logout on 401 (unauthorized)
+      // Other errors (network, 500) should not trigger logout
+      if (error.response?.status === 401) {
+        console.error('Auth token invalid:', error);
+        handleAuthLogout();
+      } else {
+        console.error('Failed to fetch user (non-auth error):', error);
+        // Keep the user logged in but mark as potentially stale
+        // The user can retry or the page will show an error state
+      }
     } finally {
       setLoading(false);
     }
@@ -36,35 +54,68 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/login`, {
+      const response = await apiClient.post('/api/auth/login', {
         email,
         password
       });
       
-      const { access_token, user: userData } = response.data;
+      const { access_token, refresh_token, user: userData } = response.data;
       
+      // Store tokens
+      setAuthTokens(access_token, refresh_token);
       setToken(access_token);
       setUser(userData);
-      localStorage.setItem('token', access_token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       
       return { success: true, user: userData };
     } catch (error) {
       const detail = error.response?.data?.detail || 'Login failed';
       const traceId = error.response?.data?.trace_id || error.response?.headers?.['x-trace-id'];
+      
+      // Handle structured error responses (e.g., password policy)
+      let errorMessage = detail;
+      if (typeof detail === 'object' && detail !== null) {
+        errorMessage = detail.message || JSON.stringify(detail);
+      }
+      
       return {
         success: false,
-        error: detail,
+        error: errorMessage,
         traceId: traceId || null
       };
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Try to revoke refresh token on server
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      try {
+        await apiClient.post('/api/auth/logout', {
+          refresh_token: refreshToken
+        });
+      } catch (error) {
+        // Ignore errors - we're logging out anyway
+        console.debug('Logout API call failed (ignored):', error);
+      }
+    }
+    
+    // Clear local state
     setToken(null);
     setUser(null);
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    clearAuthTokens();
+  };
+
+  const logoutAllDevices = async () => {
+    try {
+      await apiClient.post('/api/auth/logout-all');
+    } catch (error) {
+      console.error('Failed to logout all devices:', error);
+    }
+    
+    // Clear local state
+    setToken(null);
+    setUser(null);
+    clearAuthTokens();
   };
 
   const isSuperAdmin = () => user?.role === 'super_admin';
@@ -77,9 +128,11 @@ export const AuthProvider = ({ children }) => {
       loading,
       login,
       logout,
+      logoutAllDevices,
       isSuperAdmin,
       isTenantAdmin,
-      isAuthenticated: !!token
+      isAuthenticated: !!token,
+      refreshUser: fetchUser,
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,7 +1,23 @@
-from pydantic import BaseModel, Field, EmailStr, ConfigDict
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, EmailStr, ConfigDict, field_validator
+from typing import Optional, List, Dict, Any, Annotated
 from datetime import datetime
 from enum import Enum
+import re
+
+# Custom email type that allows .test TLD for development/testing
+# EmailStr is too strict - it rejects test TLDs like .test
+def validate_email_permissive(v: str) -> str:
+    """Validate email allowing .test TLD for testing"""
+    if not v or not isinstance(v, str):
+        raise ValueError("Email must be a non-empty string")
+    # Basic email pattern that allows any TLD including .test
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(pattern, v):
+        raise ValueError(f"Invalid email format: {v}")
+    return v.lower()
+
+# Type alias for permissive email validation
+PermissiveEmail = Annotated[str, Field(description="Email address (allows .test TLD)")]
 
 class UserRole(str, Enum):
     SUPER_ADMIN = "super_admin"
@@ -30,19 +46,31 @@ class MongoModel(BaseModel):
 
 # User Models
 class UserBase(MongoModel):
-    email: EmailStr
+    email: str  # Using str instead of EmailStr to allow .test TLD
     full_name: str
     role: UserRole = UserRole.TENANT_USER
     tenant_id: Optional[str] = None
+
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        return validate_email_permissive(v)
 
 class UserCreate(UserBase):
     password: str
 
 class UserUpdate(MongoModel):
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None  # Using str instead of EmailStr
     full_name: Optional[str] = None
     role: Optional[UserRole] = None
     password: Optional[str] = None
+
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        return validate_email_permissive(v)
 
 class User(UserBase):
     id: str
@@ -57,17 +85,42 @@ class UserInDB(User):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    expires_in: int  # Seconds until access token expires
+    refresh_token: Optional[str] = None  # Only included on login, not refresh
     user: User
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+class RefreshTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int  # Seconds until access token expires
+
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str  # Using str instead of EmailStr to allow .test TLD
     password: str
+
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        return validate_email_permissive(v)
 
 class TokenData(BaseModel):
     user_id: str
     email: str
     role: UserRole
     tenant_id: Optional[str] = None
+
+# Refresh Token Storage Model (for database)
+class RefreshTokenRecord(MongoModel):
+    id: str
+    user_id: str
+    token_hash: str  # SHA-256 hash of the refresh token
+    expires_at: str  # ISO datetime
+    created_at: str  # ISO datetime
+    revoked: bool = False
+    revoked_at: Optional[str] = None  # ISO datetime when revoked
 
 # Tenant Models
 class BrandingConfig(MongoModel):
@@ -221,6 +274,8 @@ class TenantBase(MongoModel):
     tenant_knowledge: Optional[TenantKnowledge] = None  # Mini-RAG knowledge base
     rag_policy: Optional[RAGPolicy] = None  # Real embeddings RAG (super-admin only)
     status: TenantStatus = TenantStatus.ACTIVE
+    gdpr_exported_at: Optional[str] = None
+    gdpr_deleted_at: Optional[str] = None
 
 class TenantCreate(TenantBase):
     pass

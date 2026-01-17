@@ -10,6 +10,7 @@ from backend.models import (
 )
 from backend.utils.auth import get_current_user, TokenData
 from backend.utils.scoring import calculate_opportunity_score
+from backend.utils.invariants import assert_tenant_match
 from backend.database import get_database
 
 router = APIRouter()
@@ -37,16 +38,16 @@ async def create_opportunity(
             detail="Access denied"
         )
     
-    # Check for duplicate
+    # Check for duplicate - return existing for idempotency (safe retries)
     existing = await db.opportunities.find_one({
         "tenant_id": opp_data.tenant_id,
         "external_id": opp_data.external_id
     })
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Opportunity already exists"
-        )
+        logger.info(f"[audit.create_idempotent] tenant_id={opp_data.tenant_id} external_id={opp_data.external_id} returning_existing_id={existing.get('id')}")
+        # Remove MongoDB _id field if present
+        existing.pop("_id", None)
+        return Opportunity(**existing)
     
     # Get tenant's scoring weights
     tenant = await db.tenants.find_one({"id": opp_data.tenant_id})
@@ -129,6 +130,10 @@ async def list_opportunities(
     cursor = db.opportunities.find(query, {"_id": 0}).skip(skip).limit(per_page).sort("score", -1)
     opportunities = await cursor.to_list(length=per_page)
     
+    # Only enforce tenant match for non-super_admin users
+    if current_user.role != "super_admin":
+        assert_tenant_match(opportunities, current_user.tenant_id, context="list_opportunities")
+    
     # Add solicitation_id to each opportunity
     for opp in opportunities:
         opp['solicitation_id'] = extract_solicitation_id(opp)
@@ -163,12 +168,16 @@ async def get_opportunity(
             detail="Opportunity not found"
         )
     
-    # Access control
+    # Access control - check FIRST, return 403 for cross-tenant access
     if current_user.role != "super_admin" and opp_doc.get("tenant_id") != current_user.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
+    
+    # Defense-in-depth assertion AFTER access control (should never trigger if above is correct)
+    if current_user.role != "super_admin":
+        assert_tenant_match([opp_doc], current_user.tenant_id, context="get_opportunity")
     
     _audit_access("get_opportunity", opp_doc.get("tenant_id"), object_id=opp_id)
     
@@ -193,11 +202,16 @@ async def delete_opportunity(
             detail="Opportunity not found"
         )
     
+    # Access control - check FIRST
     if current_user.role != "super_admin" and opp_doc.get("tenant_id") != current_user.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
+    
+    # Defense-in-depth assertion
+    if current_user.role != "super_admin":
+        assert_tenant_match([opp_doc], current_user.tenant_id, context="delete_opportunity")
     
     await db.opportunities.delete_one({"id": opp_id})
     return None
@@ -228,14 +242,18 @@ async def update_opportunity_status(
             detail="Access denied"
         )
     
-    # Only allow updating client-editable fields
+    # Only allow updating client-editable fields - REJECT unknown fields
     allowed_fields = {"client_status", "client_notes", "client_tags", "is_archived"}
     requested_fields = set(update_data.keys())
-    ignored_fields = requested_fields - allowed_fields
-    
-    if ignored_fields:
-        logger.info(f"[audit.patch_ignored] endpoint=opportunities tenant_id={current_user.tenant_id} object_id={opp_id} fields={list(ignored_fields)}")
-    
+    unknown_fields = requested_fields - allowed_fields
+
+    if unknown_fields:
+        logger.warning(f"[audit.patch_rejected] endpoint=opportunities tenant_id={current_user.tenant_id} object_id={opp_id} unknown_fields={list(unknown_fields)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown fields rejected: {', '.join(unknown_fields)}. Allowed: {', '.join(allowed_fields)}"
+        )
+
     update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
     update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     

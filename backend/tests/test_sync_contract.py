@@ -267,6 +267,7 @@ class TestSyncContract:
             "sync_type=opportunities should not sync intelligence"
 
 
+@pytest.mark.external_sync
 class TestSyncDataIntegrity:
     """Tests that data types are stored correctly."""
     

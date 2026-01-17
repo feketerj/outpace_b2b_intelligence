@@ -1,4 +1,5 @@
 import asyncio
+import os
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -7,6 +8,7 @@ import uuid
 
 from backend.services.highergov_service import sync_highergov_opportunities
 from backend.services.perplexity_service import sync_perplexity_intelligence
+from backend.utils.retention import apply_retention_policies
 
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
@@ -23,6 +25,28 @@ def start_scheduler(db):
         name="Daily Data Sync (Default)",
         replace_existing=True
     )
+
+    if os.environ.get("RETENTION_ENABLED", "false").lower() == "true":
+        retention_cron = os.environ.get("RETENTION_CRON", "0 3 * * *")
+        parts = retention_cron.split()
+        if len(parts) == 5:
+            minute, hour, day, month, day_of_week = parts
+            scheduler.add_job(
+                lambda: asyncio.run(apply_retention_policies(db)),
+                trigger=CronTrigger(
+                    minute=minute,
+                    hour=hour,
+                    day=day,
+                    month=month,
+                    day_of_week=day_of_week
+                ),
+                id="data_retention_job",
+                name="Data Retention Cleanup",
+                replace_existing=True
+            )
+            logger.info(f"Retention job scheduled: {retention_cron}")
+        else:
+            logger.warning(f"Invalid RETENTION_CRON format: {retention_cron}")
     
     # Note: Per-tenant custom schedules will be loaded on first sync
     # Cannot use asyncio.run() here as we're in an event loop

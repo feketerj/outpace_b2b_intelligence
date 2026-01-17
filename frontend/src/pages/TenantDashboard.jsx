@@ -8,12 +8,9 @@ import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { ExportModal } from '../components/custom/ExportModal';
 import { ChatAssistant } from '../components/custom/ChatAssistant';
-import axios from 'axios';
 import { toast } from 'sonner';
-import { showApiError } from '../lib/api';
+import { apiClient, showApiError } from '../lib/api';
 import { FileText, RefreshCw, Search, Filter, Download } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function TenantDashboard() {
   const navigate = useNavigate();
@@ -32,7 +29,7 @@ export default function TenantDashboard() {
 
   const fetchOpportunities = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/opportunities`, {
+      const response = await apiClient.get('/api/opportunities', {
         params: { tenant_id: currentTenant?.id, per_page: 50 }
       });
       setOpportunities(response.data.data || []);
@@ -47,7 +44,7 @@ export default function TenantDashboard() {
     setSyncing(true);
     try {
       toast.info('Syncing new opportunities...');
-      const response = await axios.post(`${API_URL}/api/sync/manual/${currentTenant.id}`);
+      const response = await apiClient.post(`/api/sync/manual/${currentTenant.id}`);
       toast.success(`Synced ${response.data.opportunities_synced} new opportunities!`);
       fetchOpportunities();
     } catch (error) {

@@ -9,6 +9,8 @@ from backend.database import get_database
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+TENANT_NOT_FOUND_DETAIL = "Tenant not found"
+
 def get_db():
     return get_database()
 
@@ -30,7 +32,7 @@ async def manual_sync_tenant(
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tenant not found"
+            detail=TENANT_NOT_FOUND_DETAIL
         )
     
     # Import here to avoid circular dependency
@@ -109,7 +111,7 @@ async def fetch_opportunity_by_id(
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tenant not found"
+            detail=TENANT_NOT_FOUND_DETAIL
         )
     
     opportunity_id = opportunity_data.get("opportunity_id")
@@ -132,6 +134,8 @@ async def fetch_opportunity_by_id(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch opportunity: {str(e)}"
         )
+
+@router.get("/status/{tenant_id}")
 async def get_sync_status(
     tenant_id: str,
     current_user: TokenData = Depends(get_current_user)
@@ -150,7 +154,7 @@ async def get_sync_status(
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tenant not found"
+            detail=TENANT_NOT_FOUND_DETAIL
         )
     
     # Get latest sync log

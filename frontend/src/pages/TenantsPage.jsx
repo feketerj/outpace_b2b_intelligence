@@ -21,13 +21,10 @@ import {
 } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
-import axios from 'axios';
 import { toast } from 'sonner';
-import { showApiError } from '../lib/api';
+import { apiClient, showApiError } from '../lib/api';
 import { Plus, Edit2, Trash2, Building2, Save, Palette, Code, Calendar, Zap } from 'lucide-react';
 import { ColorPicker } from '../components/custom/ColorPicker';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState([]);
@@ -120,7 +117,7 @@ export default function TenantsPage() {
 
   const fetchTenants = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/tenants`);
+      const response = await apiClient.get(`/api/tenants`);
       setTenants(response.data.data || []);
     } catch (error) {
       showApiError(error, 'Failed to load tenants');
@@ -162,16 +159,16 @@ export default function TenantsPage() {
       let savedTenant;
       if (editingTenant) {
         // Update existing tenant
-        const response = await axios.put(`${API_URL}/api/tenants/${editingTenant.id}`, editableData);
+        const response = await apiClient.put(`/api/tenants/${editingTenant.id}`, editableData);
         savedTenant = response.data;
       } else {
         // Create new tenant
-        const response = await axios.post(`${API_URL}/api/tenants`, editableData);
+        const response = await apiClient.post(`/api/tenants`, editableData);
         savedTenant = response.data;
       }
       
       // CRITICAL: Reload and verify persistence BEFORE showing success
-      const verifyResponse = await axios.get(`${API_URL}/api/tenants/${savedTenant.id}`);
+      const verifyResponse = await apiClient.get(`/api/tenants/${savedTenant.id}`);
       const persistedTenant = verifyResponse.data;
       
       // Verify key fields were persisted (not silently dropped)
@@ -211,7 +208,7 @@ export default function TenantsPage() {
     
     setDeleting(true);
     try {
-      await axios.delete(`${API_URL}/api/tenants/${deleteConfirm.tenant.id}`);
+      await apiClient.delete(`/api/tenants/${deleteConfirm.tenant.id}`);
       toast.success('Tenant deleted successfully');
       setDeleteConfirm({ open: false, tenant: null });
       fetchTenants();
@@ -381,7 +378,7 @@ export default function TenantsPage() {
                           formData.append('file', file);
                           try {
                             toast.info(`Uploading opportunities for ${tenant.name}...`);
-                            const response = await axios.post(`${API_URL}/api/upload/opportunities/csv/${tenant.id}`, formData);
+                            const response = await apiClient.post(`/api/upload/opportunities/csv/${tenant.id}`, formData);
                             toast.success(`Imported ${response.data.imported_count} opportunities for ${tenant.name}!`);
                             fetchTenants();
                           } catch (error) {
@@ -397,7 +394,7 @@ export default function TenantsPage() {
                       onClick={async () => {
                         try {
                           toast.info('Syncing data...');
-                          const response = await axios.post(`${API_URL}/api/sync/manual/${tenant.id}`);
+                          const response = await apiClient.post(`/api/sync/manual/${tenant.id}`);
                           toast.success(`Synced ${response.data.opportunities_synced + response.data.intelligence_synced} items!`);
                           fetchTenants();
                         } catch (error) {
@@ -542,7 +539,7 @@ export default function TenantsPage() {
                               const formDataUpload = new FormData();
                               formDataUpload.append('file', file);
                               try {
-                                const response = await axios.post(`${API_URL}/api/upload/logo/${editingTenant.id}`, formDataUpload);
+                                const response = await apiClient.post(`/api/upload/logo/${editingTenant.id}`, formDataUpload);
                                 setFormData({...formData, master_branding: {...(formData.master_branding || {}), logo_base64: response.data.logo_data_uri}});
                                 toast.success('Sub-client logo uploaded!');
                               } catch (error) {
@@ -623,15 +620,15 @@ export default function TenantsPage() {
                           formDataUpload.append('file', file);
                           
                           try {
-                            const response = await axios.post(
-                              `${API_URL}/api/upload/logo/${editingTenant?.id || 'temp'}`,
+                            const response = await apiClient.post(
+                              `/api/upload/logo/${editingTenant?.id || 'temp'}`,
                               formDataUpload,
                               { headers: { 'Content-Type': 'multipart/form-data' } }
                             );
                             setFormData({...formData, branding: {...formData.branding, logo_base64: response.data.logo_data_uri, logo_url: null}});
                             toast.success('Logo uploaded!');
                           } catch (error) {
-                            toast.error('Logo upload failed');
+                            showApiError(error, 'Logo upload failed');
                           }
                         }
                       }}

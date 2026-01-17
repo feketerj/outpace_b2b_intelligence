@@ -65,6 +65,8 @@ class TestNoSilentExceptions:
             'guardrails',
             'ipv6_test.py',  # Test file without test_ prefix
             'resilience.py',  # Exception handling utilities - false positive on retry_if_exception_type
+            'telemetry.py',  # Optional OTEL imports - ImportError is expected
+            'usage.py',  # Cost parsing from env - ValueError is expected fallback
         ]
 
         for filepath in self.get_python_files():

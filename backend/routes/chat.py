@@ -3,6 +3,7 @@ from typing import List, Optional
 from datetime import datetime, timezone
 import uuid
 import logging
+import time
 import os
 import re
 from mistralai import Mistral
@@ -10,6 +11,8 @@ from mistralai import Mistral
 from backend.models import ChatMessage, ChatTurn
 from backend.utils.auth import get_current_user, TokenData
 from backend.database import get_database
+from backend.utils.usage import record_external_usage
+from backend.utils.secrets import get_secret
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -21,7 +24,7 @@ MAX_CONVERSATION_ID_LENGTH = 128
 def get_db():
     return get_database()
 
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
+MISTRAL_API_KEY = get_secret("MISTRAL_API_KEY")
 
 
 class LLMServiceError(Exception):
@@ -127,6 +130,155 @@ async def _build_knowledge_context(db, tenant: dict, user_message: str) -> tuple
     return knowledge_context, snippet_ids_used
 
 
+async def _retrieve_opportunities_context(
+    db, tenant_id: str, agent_config: dict, debug: bool = False
+) -> tuple:
+    """
+    Retrieve opportunities for context injection.
+    Returns: (context_str, debug_info)
+
+    INVARIANT: Query ALWAYS includes tenant_id filter.
+    INVARIANT: Results validated with assert_tenant_match().
+    """
+    from backend.utils.invariants import assert_tenant_match
+
+    debug_info = {"enabled": True, "reason": None, "items_searched": 0,
+                  "items_used": 0, "context_chars": 0}
+
+    # Config (with sensible defaults)
+    max_items = agent_config.get("opportunities_context_max_items", 10)
+    min_score = agent_config.get("opportunities_context_min_score", 0)
+    max_chars = agent_config.get("opportunities_context_max_chars", 3000)
+    exclude_archived = agent_config.get("opportunities_context_exclude_archived", True)
+
+    # Check if disabled
+    if not agent_config.get("opportunities_context_enabled", True):
+        debug_info["enabled"] = False
+        debug_info["reason"] = "disabled"
+        return "", debug_info
+
+    # Build query - tenant_id MANDATORY
+    query = {"tenant_id": tenant_id}
+    if min_score > 0:
+        query["score"] = {"$gte": min_score}
+    if exclude_archived:
+        query["is_archived"] = {"$ne": True}
+
+    # Fetch opportunities
+    cursor = db.opportunities.find(
+        query,
+        {"_id": 0, "id": 1, "title": 1, "agency": 1, "due_date": 1,
+         "estimated_value": 1, "score": 1, "client_status": 1, "tenant_id": 1}
+    ).sort("score", -1).limit(max_items)
+
+    opportunities = await cursor.to_list(length=max_items)
+    debug_info["items_searched"] = len(opportunities)
+
+    # DEFENSE-IN-DEPTH: Verify tenant isolation
+    assert_tenant_match(opportunities, tenant_id, "opportunities_context")
+
+    if not opportunities:
+        debug_info["reason"] = "no_items"
+        return "", debug_info
+
+    # Build context string with char limit
+    context_parts = ["Current Opportunities:"]
+    total_chars = len(context_parts[0])
+    items_used = 0
+
+    for opp in opportunities:
+        due_str = opp.get("due_date", "TBD")
+        if hasattr(due_str, 'strftime'):
+            due_str = due_str.strftime("%Y-%m-%d")
+
+        line = (f"- [{opp.get('client_status', 'new').upper()}] {opp['title']} "
+                f"(Agency: {opp.get('agency', 'Unknown')}, "
+                f"Value: {opp.get('estimated_value', 'Unknown')}, "
+                f"Due: {due_str}, Score: {opp.get('score', 0)})")
+
+        if total_chars + len(line) + 1 > max_chars:
+            break
+
+        context_parts.append(line)
+        total_chars += len(line) + 1
+        items_used += 1
+
+    debug_info["items_used"] = items_used
+    debug_info["context_chars"] = total_chars
+    debug_info["reason"] = "success"
+    if debug:
+        debug_info["opp_ids"] = [o["id"] for o in opportunities[:items_used]]
+
+    return "\n".join(context_parts), debug_info
+
+
+async def _retrieve_intelligence_context(
+    db, tenant_id: str, agent_config: dict, debug: bool = False
+) -> tuple:
+    """
+    Retrieve intelligence items for context injection.
+    Returns: (context_str, debug_info)
+
+    INVARIANT: Query ALWAYS includes tenant_id filter.
+    INVARIANT: Results validated with assert_tenant_match().
+    """
+    from backend.utils.invariants import assert_tenant_match
+
+    debug_info = {"enabled": True, "reason": None, "items_searched": 0,
+                  "items_used": 0, "context_chars": 0}
+
+    max_items = agent_config.get("intelligence_context_max_items", 5)
+    max_chars = agent_config.get("intelligence_context_max_chars", 3000)
+    exclude_archived = agent_config.get("intelligence_context_exclude_archived", True)
+
+    if not agent_config.get("intelligence_context_enabled", True):
+        debug_info["enabled"] = False
+        debug_info["reason"] = "disabled"
+        return "", debug_info
+
+    query = {"tenant_id": tenant_id}
+    if exclude_archived:
+        query["is_archived"] = {"$ne": True}
+
+    cursor = db.intelligence.find(
+        query,
+        {"_id": 0, "id": 1, "title": 1, "summary": 1, "type": 1,
+         "created_at": 1, "tenant_id": 1}
+    ).sort("created_at", -1).limit(max_items)
+
+    intel_items = await cursor.to_list(length=max_items)
+    debug_info["items_searched"] = len(intel_items)
+
+    assert_tenant_match(intel_items, tenant_id, "intelligence_context")
+
+    if not intel_items:
+        debug_info["reason"] = "no_items"
+        return "", debug_info
+
+    context_parts = ["Recent Intelligence Reports:"]
+    total_chars = len(context_parts[0])
+    items_used = 0
+
+    for intel in intel_items:
+        summary = intel.get('summary', '')[:200]
+        line = f"- [{intel.get('type', 'news').upper()}] {intel['title']}: {summary}"
+
+        if total_chars + len(line) + 1 > max_chars:
+            break
+
+        context_parts.append(line)
+        total_chars += len(line) + 1
+        items_used += 1
+
+    debug_info["items_used"] = items_used
+    debug_info["context_chars"] = total_chars
+    debug_info["reason"] = "success"
+    if debug:
+        debug_info["intel_ids"] = [i["id"] for i in intel_items[:items_used]]
+
+    return "\n".join(context_parts), debug_info
+
+
 @router.post("/message")
 async def send_chat_message(
     message_data: dict = Body(...),
@@ -147,6 +299,7 @@ async def send_chat_message(
     Storage: ChatTurn (atomic single-document).
     
     Expects: {"conversation_id": str, "message": str, "agent_type": "opportunities" | "intelligence"}
+    Optional: {"tenant_id": str} - super_admin only, for preview mode
     Optional Header: X-Debug-Knowledge: true (super admin only) - returns knowledge debug info
     """
     db = get_db()
@@ -159,6 +312,16 @@ async def send_chat_message(
     user_message = message_data.get("message")
     agent_type = message_data.get("agent_type", "opportunities")
     
+    # Tenant ID: allow super_admin to specify for preview mode
+    requested_tenant_id = message_data.get("tenant_id")
+    logger.info(f"[chat.debug] role={current_user.role} user_tenant={current_user.tenant_id} requested_tenant={requested_tenant_id} payload_keys={list(message_data.keys())}")
+    if requested_tenant_id and current_user.role == "super_admin":
+        effective_tenant_id = requested_tenant_id
+        logger.info(f"[chat] super_admin using preview tenant: {effective_tenant_id}")
+    else:
+        effective_tenant_id = current_user.tenant_id
+    logger.info(f"[chat.debug] effective_tenant_id={effective_tenant_id}")
+    
     if not conversation_id or not user_message:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -166,7 +329,7 @@ async def send_chat_message(
         )
     
     # Get tenant configuration
-    tenant = await db.tenants.find_one({"id": current_user.tenant_id})
+    tenant = await db.tenants.find_one({"id": effective_tenant_id})
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -206,65 +369,82 @@ async def send_chat_message(
     # === QUOTA RESERVATION (before LLM call to avoid wasting tokens) ===
     monthly_limit = chat_policy.get("monthly_message_limit")
     quota_reserved = False
-    
+
     if monthly_limit is not None:
         month_key = datetime.now(timezone.utc).strftime("%Y-%m")
-        
-        # Atomic reservation: try to reset month OR increment within limit
-        # Strategy: Two-phase attempt for Mongo standalone (no transactions)
-        
-        # Phase 1: Try resetting if month changed (new month = fresh quota)
-        reset_result = await db.tenants.update_one(
+
+        # SINGLE ATOMIC OPERATION using aggregation pipeline update (MongoDB 4.2+)
+        # Handles both month reset AND quota check in one atomic find_one_and_update
+        # No race window between check and increment
+        from pymongo import ReturnDocument
+
+        result = await db.tenants.find_one_and_update(
             {
-                "id": current_user.tenant_id,
+                "id": effective_tenant_id,
                 "$or": [
+                    # Case 1: No usage record yet
                     {"chat_usage": None},
-                    {"chat_usage.month": {"$ne": month_key}}
+                    {"chat_usage": {"$exists": False}},
+                    # Case 2: Different month (new month = reset)
+                    {"chat_usage.month": {"$ne": month_key}},
+                    # Case 3: Same month but under limit
+                    {
+                        "chat_usage.month": month_key,
+                        "chat_usage.messages_used": {"$lt": monthly_limit}
+                    }
                 ]
             },
-            {
-                "$set": {
-                    "chat_usage": {"month": month_key, "messages_used": 1}
+            [
+                # Aggregation pipeline update - conditional logic in single atomic op
+                {
+                    "$set": {
+                        "chat_usage": {
+                            "$cond": {
+                                "if": {
+                                    "$or": [
+                                        {"$eq": [{"$type": "$chat_usage"}, "missing"]},
+                                        {"$eq": ["$chat_usage", None]},
+                                        {"$ne": ["$chat_usage.month", month_key]}
+                                    ]
+                                },
+                                # New month or first usage: reset to 1
+                                "then": {"month": month_key, "messages_used": 1},
+                                # Same month: increment
+                                "else": {
+                                    "month": "$chat_usage.month",
+                                    "messages_used": {"$add": ["$chat_usage.messages_used", 1]}
+                                }
+                            }
+                        }
+                    }
                 }
-            }
+            ],
+            return_document=ReturnDocument.AFTER
         )
-        
-        if reset_result.modified_count > 0:
+
+        if result:
             quota_reserved = True
-            logger.info(f"[quota] New month reservation for tenant {current_user.tenant_id}: month={month_key}")
+            new_usage = result.get("chat_usage", {}).get("messages_used", 0)
+            logger.info(f"[quota] Atomic reservation for tenant {effective_tenant_id}: month={month_key}, usage={new_usage}/{monthly_limit}")
         else:
-            # Phase 2: Same month - try incrementing if under limit
-            inc_result = await db.tenants.update_one(
-                {
-                    "id": current_user.tenant_id,
-                    "chat_usage.month": month_key,
-                    "chat_usage.messages_used": {"$lt": monthly_limit}
-                },
-                {
-                    "$inc": {"chat_usage.messages_used": 1}
-                }
+            # No document matched = quota exceeded
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Monthly chat limit exceeded"
             )
-            
-            if inc_result.modified_count > 0:
-                quota_reserved = True
-                logger.info(f"[quota] Incremented usage for tenant {current_user.tenant_id}")
-            else:
-                # Quota exceeded
-                raise HTTPException(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail="Monthly chat limit exceeded"
-                )
     
     # Get policy values for LLM call
     max_assistant_tokens = chat_policy.get("max_assistant_tokens", 1000)
     max_turns_history = chat_policy.get("max_turns_history", 10)
     
     agent_config = tenant.get("agent_config", {})
-    
-    # Determine base instructions based on agent type
+
+    # Determine agent ID and base instructions based on agent type
     if agent_type == "opportunities":
+        chat_agent_id = agent_config.get("opportunities_chat_agent_id")
         base_instructions = agent_config.get("opportunities_chat_instructions", "You are a helpful assistant.")
     else:
+        chat_agent_id = agent_config.get("intelligence_chat_agent_id")
         base_instructions = agent_config.get("intelligence_chat_instructions", "You are a business intelligence analyst.")
     
     # === MINI-RAG: Build and inject tenant knowledge ===
@@ -287,10 +467,10 @@ Rules:
         logger.debug("[knowledge] No knowledge context (disabled or empty)")
     
     # === REAL RAG: Embeddings-based retrieval ===
-    from routes.rag import retrieve_rag_context
+    from backend.routes.rag import retrieve_rag_context
     rag_policy = tenant.get("rag_policy") or {}
     rag_context, rag_debug_info = await retrieve_rag_context(
-        db, current_user.tenant_id, user_message, rag_policy, debug=debug_rag
+        db, effective_tenant_id, user_message, rag_policy, debug=debug_rag
     )
     
     if rag_context:
@@ -305,16 +485,45 @@ Use these snippets to answer the user's question accurately."""
     if rag_policy.get("enabled", False):
         logger.info(
             "[rag.audit] tenant_id=%s conv=%s reason=%s searched=%s used=%s chars=%s",
-            current_user.tenant_id, conversation_id,
+            effective_tenant_id, conversation_id,
             rag_debug_info.get("reason"),
             rag_debug_info.get("chunks_searched"),
             rag_debug_info.get("chunks_used"),
             rag_debug_info.get("context_chars"),
         )
-    
+
+    # === DOMAIN CONTEXT: Opportunities/Intelligence injection ===
+    domain_context = ""
+    domain_debug_info = {}
+
+    if agent_type == "opportunities":
+        domain_context, domain_debug_info = await _retrieve_opportunities_context(
+            db, effective_tenant_id, agent_config, debug=debug_rag
+        )
+    elif agent_type == "intelligence":
+        domain_context, domain_debug_info = await _retrieve_intelligence_context(
+            db, effective_tenant_id, agent_config, debug=debug_rag
+        )
+
+    if domain_context:
+        instructions = f"""{instructions}
+
+{domain_context}
+
+Use this data to answer questions accurately. Reference specific items when relevant."""
+
+    # Domain context audit log (always, following RAG pattern)
+    logger.info(
+        "[domain.audit] tenant_id=%s conv=%s agent_type=%s reason=%s items_used=%s chars=%s",
+        effective_tenant_id, conversation_id, agent_type,
+        domain_debug_info.get("reason"),
+        domain_debug_info.get("items_used"),
+        domain_debug_info.get("context_chars"),
+    )
+
     # Get conversation history from chat_turns collection (last N turns per policy)
     history_cursor = db.chat_turns.find(
-        {"tenant_id": current_user.tenant_id, "conversation_id": conversation_id},
+        {"tenant_id": effective_tenant_id, "conversation_id": conversation_id},
         {"_id": 0}
     ).sort("created_at", 1).limit(max_turns_history)
     history_turns = await history_cursor.to_list(length=max_turns_history)
@@ -338,11 +547,14 @@ Use these snippets to answer the user's question accurately."""
     async def release_quota():
         if quota_reserved and monthly_limit is not None:
             try:
-                await db.tenants.update_one(
-                    {"id": current_user.tenant_id, "chat_usage.messages_used": {"$gt": 0}},
+                result = await db.tenants.update_one(
+                    {"id": effective_tenant_id, "chat_usage.messages_used": {"$gt": 0}},
                     {"$inc": {"chat_usage.messages_used": -1}}
                 )
-                logger.info(f"[quota] Released reservation for tenant {current_user.tenant_id}")
+                if result.modified_count == 0:
+                    logger.warning(f"[quota] Release attempted but no update for tenant {effective_tenant_id}")
+                else:
+                    logger.info(f"[quota] Released reservation for tenant {effective_tenant_id}")
             except Exception as release_err:
                 logger.warning(f"[quota] Failed to release reservation: {release_err}")
     
@@ -356,17 +568,67 @@ Use these snippets to answer the user's question accurately."""
     
     try:
         client = Mistral(api_key=MISTRAL_API_KEY)
-        response = client.chat.complete(
-            model="mistral-small-latest",
-            messages=[
-                {"role": "system", "content": instructions}
-            ] + inputs,
-            temperature=0.7,
-            max_tokens=max_assistant_tokens
+        api_start = time.monotonic()
+
+        if chat_agent_id:
+            # Use Mistral Agents API for pre-created agents
+            logger.info(f"[chat] Using Mistral Agent: {chat_agent_id}")
+            # Agents need context injected into the user message since they have their own system prompt
+            context_prefix = ""
+            if instructions != base_instructions:
+                # We have knowledge/RAG context to inject
+                context_prefix = f"[Context for this conversation:\n{instructions}\n]\n\n"
+
+            agent_messages = []
+            for turn in history_turns:
+                agent_messages.append({"role": "user", "content": turn["user"]["content"]})
+                agent_messages.append({"role": "assistant", "content": turn["assistant"]["content"]})
+            agent_messages.append({"role": "user", "content": context_prefix + user_message})
+
+            response = client.agents.complete(
+                agent_id=chat_agent_id,
+                messages=agent_messages
+            )
+        else:
+            # Fallback to chat.complete with dynamic instructions
+            logger.info("[chat] Using dynamic instructions (no agent ID)")
+            response = client.chat.complete(
+                model="mistral-small-latest",
+                messages=[
+                    {"role": "system", "content": instructions}
+                ] + inputs,
+                temperature=0.7,
+                max_tokens=max_assistant_tokens
+            )
+
+        duration_ms = (time.monotonic() - api_start) * 1000
+        await record_external_usage(
+            db,
+            effective_tenant_id,
+            "mistral",
+            "agents_complete" if chat_agent_id else "chat_complete",
+            "success",
+            duration_ms=duration_ms,
+            metadata={
+                "agent_id": chat_agent_id,
+                "model": "mistral-small-latest",
+                "has_agent": bool(chat_agent_id)
+            }
         )
         assistant_content = response.choices[0].message.content
-        
+
     except Exception as e:
+        # Log error via usage tracking
+        duration_ms = (time.monotonic() - api_start) * 1000 if "api_start" in locals() else None
+        await record_external_usage(
+            db,
+            effective_tenant_id,
+            "mistral",
+            "agents_complete" if chat_agent_id else "chat_complete",
+            "error",
+            duration_ms=duration_ms,
+            metadata={"error": str(e), "agent_id": chat_agent_id}
+        )
         err_id = str(uuid.uuid4())
         logger.exception(f"[chat_llm_error:{err_id}] Mistral API error")
         await release_quota()
@@ -381,7 +643,7 @@ Use these snippets to answer the user's question accurately."""
     chat_turn_doc = {
         "id": str(uuid.uuid4()),
         "conversation_id": conversation_id,
-        "tenant_id": current_user.tenant_id,
+        "tenant_id": effective_tenant_id,
         "user_id": current_user.user_id,
         "user": {
             "content": user_message,
@@ -405,8 +667,10 @@ Use these snippets to answer the user's question accurately."""
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to save chat turn"
         )
-    
+
     # === ATOMIC SECTION END ===
+
+    logger.info(f"[audit.chat] tenant_id={effective_tenant_id} conv={conversation_id} turn_id={chat_turn_doc['id']} agent={agent_type} user_chars={len(user_message)} assistant_chars={len(assistant_content)}")
     
     # Build response
     response_data = {
