@@ -3,6 +3,7 @@ from typing import Optional, List, Tuple
 import re
 import secrets
 import hashlib
+import uuid
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
@@ -104,6 +105,7 @@ def create_refresh_token_jwt(data: dict) -> Tuple[str, datetime]:
     to_encode = {
         "sub": data.get("sub"),
         "type": "refresh",
+        "jti": str(uuid.uuid4()),  # Unique ID: prevents DuplicateKeyError on concurrent logins
     }
     expire = datetime.now(timezone.utc) + timedelta(days=JWT_REFRESH_EXPIRATION_DAYS)
     to_encode.update({"exp": expire})
