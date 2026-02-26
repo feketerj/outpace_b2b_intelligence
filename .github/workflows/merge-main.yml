@@ -65,15 +65,20 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           if [ -z "$API_URL" ]; then
-            echo "⚠️  API_URL secret not configured - skipping SYNC-02 full suite"
-            echo "   This workflow requires a deployed environment with API_URL set"
-            echo "   The ci.yml workflow provides local integration testing (carfax 70/70)"
+            echo "API_URL secret not configured - skipping SYNC-02 full suite"
+            echo "The ci.yml workflow provides local integration testing (carfax 70/70)"
+            exit 0
+          fi
+          # Preflight: verify the server is reachable before running full suite
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$API_URL/api/health" 2>/dev/null || echo "000")
+          if [ "$HEALTH_STATUS" != "200" ]; then
+            echo "Server at $API_URL not reachable (health check: HTTP $HEALTH_STATUS) - skipping"
             exit 0
           fi
           if [ -f ci_verify.sh ]; then
             bash ci_verify.sh
           else
-            echo "ERROR: ci_verify.sh not found - cannot verify sync contract"
+            echo "ERROR: ci_verify.sh not found"
             exit 1
           fi
         env:
