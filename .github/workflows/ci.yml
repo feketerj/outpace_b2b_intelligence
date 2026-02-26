@@ -67,6 +67,8 @@ jobs:
         DB_NAME: outpace_intelligence
         JWT_SECRET: test-secret-for-ci
         PYTHONPATH: .
+        RATE_LIMIT_DEFAULT: "1000/minute"
+        RATE_LIMIT_AUTH: "1000/minute"
       run: |
         uvicorn backend.server:app --host 0.0.0.0 --port 8000 &
         sleep 5
