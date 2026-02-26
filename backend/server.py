@@ -198,13 +198,36 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     Handle validation errors with trace_id.
 
     Returns detailed validation errors with trace_id for debugging.
+    Pydantic v2 field_validator errors include non-JSON-serializable Exception objects
+    in the 'ctx' dict - we must sanitize them before passing to JSONResponse.
     """
     trace_id = get_trace_id()
+
+    def _safe_errors(errors: list) -> list:
+        """Sanitize Pydantic v2 errors for JSON serialization.
+        The 'ctx' field may contain Exception objects which JSONResponse cannot serialize."""
+        result = []
+        for err in errors:
+            safe_err = {}
+            for k, v in err.items():
+                if k == "ctx" and isinstance(v, dict):
+                    safe_ctx = {}
+                    for ck, cv in v.items():
+                        safe_ctx[ck] = str(cv) if isinstance(cv, Exception) else cv
+                    safe_err[k] = safe_ctx
+                elif k == "url":
+                    pass  # omit pydantic docs URL to reduce noise
+                else:
+                    safe_err[k] = v
+            result.append(safe_err)
+        return result
+
+    safe_errs = _safe_errors(exc.errors())
 
     logger.warning(
         "validation_error",
         extra={
-            "errors": exc.errors(),
+            "errors": str(safe_errs),
             "path": str(request.url.path),
             "method": request.method
         }
@@ -213,7 +236,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=422,
         content={
-            "detail": exc.errors(),
+            "detail": safe_errs,
             "trace_id": trace_id,
         },
         headers={"X-Trace-ID": trace_id}
