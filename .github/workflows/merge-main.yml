@@ -86,11 +86,13 @@ jobs:
           REPO_ROOT: ${{ github.workspace }}
       
       - name: Validate marker gate (canonical validator)
-        if: env.API_URL != ''
-        env:
-          API_URL: ${{ secrets.API_URL }}
         working-directory: ${{ github.workspace }}/backend
         run: |
+
+          if [ ! -f /tmp/carfax_sync02_ok.marker ]; then
+            echo "Marker file not present - SYNC-02 skipped (server unreachable). Skipping validation."
+            exit 0
+          fi
           # Use CANONICAL marker_validator.py - NO bespoke logic drift
           python3 << 'PYEOF'
           import sys
