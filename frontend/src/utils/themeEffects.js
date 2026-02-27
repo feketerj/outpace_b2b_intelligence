@@ -153,9 +153,11 @@ export const applyThemeEffects = (theme, brandingConfig) => {
     }`;
   }
   
-  if (brandingConfig.background_image_base64) {
+  // Background image: supports both base64 upload and URL
+  const bgImage = brandingConfig.background_image_base64 || brandingConfig.background_image_url;
+  if (bgImage) {
     css += `body {
-      background-image: url('${brandingConfig.background_image_base64}');
+      background-image: url('${bgImage}');
       background-size: cover;
       background-attachment: fixed;
       background-position: center;
@@ -165,8 +167,12 @@ export const applyThemeEffects = (theme, brandingConfig) => {
       content: '';
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: -1;
+      background-image: url('${bgImage}');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
     }`;
   }
   
