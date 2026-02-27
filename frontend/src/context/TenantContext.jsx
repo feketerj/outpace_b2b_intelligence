@@ -1,88 +1,99 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import apiClient from '@/lib/api';
+import { injectThemeStyles } from '@/utils/themeEffects';
 import { useAuth } from './AuthContext';
-import { injectThemeStyles } from '../utils/themeEffects';
 
 const TenantContext = createContext(null);
 
-export const TenantProvider = ({ children }) => {
-  const { user } = useAuth();
+export function TenantProvider({ children }) {
+  const { user, isAuthenticated } = useAuth();
   const [currentTenant, setCurrentTenant] = useState(null);
-  const [brandingStyles, setBrandingStyles] = useState(null);
+  const [brandingStyles, setBrandingStyles] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (user?.tenant_id) {
-      fetchTenantBranding(user.tenant_id);
-    }
-  }, [user]);
+  const applyBranding = useCallback((branding) => {
+    if (!branding) return;
 
-  const fetchTenantBranding = async (tenantId) => {
-    try {
-      const API_URL = process.env.REACT_APP_BACKEND_URL;
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/tenants/${tenantId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch tenant: ${response.status}`);
-      }
-      
-      const tenant = await response.json();
-      
-      setCurrentTenant(tenant);
-      applyBranding(tenant.branding, tenant.master_branding);
-    } catch (error) {
-      console.error('Failed to fetch tenant branding:', error);
-    }
-  };
+    const styles = {
+      '--tenant-primary': branding.primary_color || '',
+      '--tenant-secondary': branding.secondary_color || '',
+      '--tenant-accent': branding.accent_color || '',
+    };
 
-  const applyBranding = (branding, masterBranding) => {
-    if (!branding && !masterBranding) return;
-    
-    // Use master branding if available (for sub-clients)
-    const effectiveBranding = masterBranding || branding;
+    setBrandingStyles(styles);
 
-    // Apply dynamic CSS variables
+    // Inject CSS custom properties into document root
     const root = document.documentElement;
-    
-    if (effectiveBranding.primary_color) {
-      root.style.setProperty('--tenant-primary', effectiveBranding.primary_color.replace('hsl(', '').replace(')', ''));
-    }
-    
-    if (effectiveBranding.secondary_color) {
-      root.style.setProperty('--tenant-secondary', effectiveBranding.secondary_color.replace('hsl(', '').replace(')', ''));
-    }
-    
-    if (effectiveBranding.accent_color) {
-      root.style.setProperty('--tenant-accent', effectiveBranding.accent_color.replace('hsl(', '').replace(')', ''));
-    }
-    
-    // Apply visual theme effects
-    if (effectiveBranding.visual_theme) {
-      injectThemeStyles(effectiveBranding.visual_theme, effectiveBranding);
-    }
+    Object.entries(styles).forEach(([property, value]) => {
+      if (value) {
+        root.style.setProperty(property, value);
+      }
+    });
 
-    setBrandingStyles(effectiveBranding);
+    // Call utility to inject any additional theme effects (fonts, shadows, etc.)
+    injectThemeStyles(branding);
+  }, []);
+
+  const fetchTenant = useCallback(async (tenantId) => {
+    if (!tenantId) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // FIX: Use apiClient (with token refresh interceptor) instead of raw fetch()
+      const response = await apiClient.get(`/api/tenants/${tenantId}`);
+      const tenant = response.data;
+
+      setCurrentTenant(tenant);
+
+      // Sub-clients inherit parent (master) branding if present
+      // master_branding overrides branding
+      const effectiveBranding = tenant.master_branding || tenant.branding;
+      if (effectiveBranding) {
+        applyBranding(effectiveBranding);
+      }
+    } catch (err) {
+      console.error('Failed to fetch tenant:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [applyBranding]);
+
+  // Fetch tenant whenever a user logs in and has a tenant_id
+  useEffect(() => {
+    if (isAuthenticated && user?.tenant_id) {
+      fetchTenant(user.tenant_id);
+    } else if (!isAuthenticated) {
+      // Clear tenant state on logout
+      setCurrentTenant(null);
+      setBrandingStyles({});
+    }
+  }, [isAuthenticated, user?.tenant_id, fetchTenant]);
+
+  const value = {
+    currentTenant,
+    brandingStyles,
+    loading,
+    error,
+    refetchTenant: () => user?.tenant_id ? fetchTenant(user.tenant_id) : null,
   };
 
   return (
-    <TenantContext.Provider value={{
-      currentTenant,
-      brandingStyles,
-      setCurrentTenant,
-      applyBranding
-    }}>
+    <TenantContext.Provider value={value}>
       {children}
     </TenantContext.Provider>
   );
-};
+}
 
-export const useTenant = () => {
+export function useTenant() {
   const context = useContext(TenantContext);
   if (!context) {
-    throw new Error('useTenant must be used within TenantProvider');
+    throw new Error('useTenant must be used within a TenantProvider');
   }
   return context;
-};
+}
+
+export default TenantContext;

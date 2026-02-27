@@ -1,173 +1,259 @@
-import React, { useEffect, useState } from 'react';
-import { SuperAdminLayout } from '../components/layout/SuperAdminLayout';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { apiClient } from '../lib/api';
-import { Building2, Users, FileText, TrendingUp, Plus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import apiClient from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+
+// Health indicator dot colors
+const STATUS_COLORS = {
+  healthy: 'text-green-500',
+  running: 'text-green-500',
+  active: 'text-green-500',
+  degraded: 'text-yellow-500',
+  unknown: 'text-yellow-500',
+  down: 'text-red-500',
+  error: 'text-red-500',
+};
+
+function StatusDot({ status }) {
+  const colorClass = STATUS_COLORS[status?.toLowerCase()] ?? STATUS_COLORS.unknown;
+  return (
+    <span className={`inline-block mr-2 ${colorClass}`} aria-hidden="true">
+      ●
+    </span>
+  );
+}
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    fetchDashboardStats();
-  }, []);
+  // Dashboard stats
+  const [stats, setStats] = useState({
+    totalTenants: null,
+    totalUsers: null,
+    opportunities: null,
+    intelligenceReports: null,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
-  const fetchDashboardStats = async () => {
+  // FIX: Real system health state (previously hardcoded)
+  const [health, setHealth] = useState({
+    database: null,
+    api: null,
+    scheduler: null,
+  });
+  const [healthLoading, setHealthLoading] = useState(true);
+  const [healthError, setHealthError] = useState(false);
+
+  // Fetch dashboard stats
+  const fetchStats = useCallback(async () => {
+    setStatsLoading(true);
     try {
       const response = await apiClient.get('/api/admin/dashboard');
-      setStats(response.data);
-    } catch (error) {
-      console.error('Failed to fetch dashboard stats:', error);
+      const data = response.data;
+      setStats({
+        totalTenants: data.total_tenants ?? data.tenants ?? 0,
+        totalUsers: data.total_users ?? data.users ?? 0,
+        opportunities: data.opportunities ?? 0,
+        intelligenceReports: data.intelligence_reports ?? 0,
+      });
+    } catch (err) {
+      console.error('Failed to fetch dashboard stats:', err);
     } finally {
-      setLoading(false);
+      setStatsLoading(false);
     }
-  };
+  }, []);
 
-  if (loading) {
-    return (
-      <SuperAdminLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-[hsl(var(--foreground-secondary))]">Loading dashboard...</div>
-        </div>
-      </SuperAdminLayout>
-    );
-  }
+  // FIX: Fetch real system health from GET /api/health
+  const fetchHealth = useCallback(async () => {
+    setHealthLoading(true);
+    setHealthError(false);
+    try {
+      const response = await apiClient.get('/api/health');
+      const data = response.data;
+
+      // Normalize: backend may return { status, database, scheduler } or nested { services: { ... } }
+      const services = data.services ?? data;
+      setHealth({
+        database: services.database?.status ?? services.database ?? data.database ?? 'unknown',
+        api: services.api?.status ?? services.api ?? data.api ?? data.status ?? 'unknown',
+        scheduler: services.scheduler?.status ?? services.scheduler ?? data.scheduler ?? 'unknown',
+      });
+    } catch (err) {
+      console.error('Failed to fetch health status:', err);
+      setHealthError(true);
+      setHealth({ database: 'unknown', api: 'unknown', scheduler: 'unknown' });
+    } finally {
+      setHealthLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+    fetchHealth();
+  }, [fetchStats, fetchHealth]);
+
+  const statCards = [
+    { label: 'Total Tenants', value: stats.totalTenants, testId: 'tenants-stat-card' },
+    { label: 'Total Users', value: stats.totalUsers, testId: 'users-stat-card' },
+    { label: 'Opportunities', value: stats.opportunities, testId: 'opportunities-stat-card' },
+    { label: 'Intelligence Reports', value: stats.intelligenceReports, testId: 'intelligence-stat-card' },
+  ];
 
   return (
-    <SuperAdminLayout>
-      <div className="p-6 md:p-8 max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-heading font-bold text-[hsl(var(--foreground))]">
-            Dashboard
-          </h1>
-          <p className="text-[hsl(var(--foreground-secondary))] mt-1">
-            System overview and quick actions
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]" data-testid="tenants-stat-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-[hsl(var(--foreground-secondary))]">
-                Total Tenants
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold font-mono text-[hsl(var(--foreground))]">
-                  {stats?.summary?.total_tenants || 0}
-                </div>
-                <Building2 className="h-8 w-8 text-[hsl(var(--primary))]" />
-              </div>
-              <p className="text-xs text-[hsl(var(--foreground-muted))] mt-2">
-                {stats?.summary?.active_tenants || 0} active
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-[hsl(var(--foreground-secondary))]">
-                Total Users
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold font-mono text-[hsl(var(--foreground))]">
-                  {stats?.summary?.total_users || 0}
-                </div>
-                <Users className="h-8 w-8 text-[hsl(var(--secondary))]" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-[hsl(var(--foreground-secondary))]">
-                Opportunities
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold font-mono text-[hsl(var(--foreground))]">
-                  {stats?.summary?.total_opportunities || 0}
-                </div>
-                <FileText className="h-8 w-8 text-[hsl(var(--accent-success))]" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-[hsl(var(--foreground-secondary))]">
-                Intelligence Reports
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold font-mono text-[hsl(var(--foreground))]">
-                  {stats?.summary?.total_intelligence || 0}
-                </div>
-                <TrendingUp className="h-8 w-8 text-[hsl(var(--accent-info))]" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
-            <CardHeader>
-              <CardTitle className="text-[hsl(var(--foreground))]">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                className="w-full justify-start bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90"
-                onClick={() => navigate('/admin/tenants')}
-                data-testid="manage-tenants-button"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Tenant
-              </Button>
-              <Button 
-                className="w-full justify-start bg-[hsl(var(--background-tertiary))] border border-[hsl(var(--border))] hover:bg-[hsl(var(--background-elevated))] text-[hsl(var(--foreground))]"
-                onClick={() => navigate('/admin/users')}
-                variant="outline"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Manage Users
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
-            <CardHeader>
-              <CardTitle className="text-[hsl(var(--foreground))]">System Health</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[hsl(var(--foreground-secondary))]">Database</span>
-                  <span className="text-sm font-medium text-[hsl(var(--accent-success))]">● Healthy</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[hsl(var(--foreground-secondary))]">API</span>
-                  <span className="text-sm font-medium text-[hsl(var(--accent-success))]">● Running</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[hsl(var(--foreground-secondary))]">Scheduler</span>
-                  <span className="text-sm font-medium text-[hsl(var(--accent-success))]">● Active</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+    <div className="p-6 space-y-8">
+      <div>
+        <h1
+          className="text-3xl font-bold"
+          style={{ color: 'hsl(var(--foreground))' }}
+        >
+          Super Admin Dashboard
+        </h1>
+        <p style={{ color: 'hsl(var(--muted-foreground))' }}>
+          Welcome, {user?.name ?? user?.email}
+        </p>
       </div>
-    </SuperAdminLayout>
+
+      {/* Stats Cards */}
+      <section>
+        <h2
+          className="text-xl font-semibold mb-4"
+          style={{ color: 'hsl(var(--foreground))' }}
+        >
+          Overview
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {statCards.map(({ label, value, testId }) => (
+            <Card key={testId} data-testid={testId}>
+              <CardHeader className="pb-2">
+                <CardTitle
+                  className="text-sm font-medium"
+                  style={{ color: 'hsl(var(--muted-foreground))' }}
+                >
+                  {label}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p
+                  className="text-3xl font-bold"
+                  style={{ color: 'hsl(var(--foreground))' }}
+                >
+                  {statsLoading ? (
+                    <span className="animate-pulse">—</span>
+                  ) : (
+                    value?.toLocaleString() ?? '—'
+                  )}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Quick Actions */}
+      <section>
+        <h2
+          className="text-xl font-semibold mb-4"
+          style={{ color: 'hsl(var(--foreground))' }}
+        >
+          Quick Actions
+        </h2>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            data-testid="manage-tenants-button"
+            onClick={() => navigate('/admin/tenants')}
+          >
+            Create Tenant
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/admin/users')}
+          >
+            Manage Users
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/admin/database')}
+          >
+            Database Manager
+          </Button>
+        </div>
+      </section>
+
+      {/* System Health — FIX: real data from /api/health */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2
+            className="text-xl font-semibold"
+            style={{ color: 'hsl(var(--foreground))' }}
+          >
+            System Health
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchHealth}
+            disabled={healthLoading}
+          >
+            {healthLoading ? 'Refreshing…' : 'Refresh'}
+          </Button>
+        </div>
+
+        <Card>
+          <CardContent className="pt-6">
+            {healthLoading ? (
+              <div className="space-y-3">
+                {['Database', 'API', 'Scheduler'].map((label) => (
+                  <div key={label} className="flex items-center justify-between">
+                    <span style={{ color: 'hsl(var(--foreground))' }}>{label}</span>
+                    <span
+                      className="animate-pulse text-sm"
+                      style={{ color: 'hsl(var(--muted-foreground))' }}
+                    >
+                      Loading…
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {healthError && (
+                  <p
+                    className="text-sm mb-3"
+                    style={{ color: 'hsl(var(--destructive))' }}
+                  >
+                    Could not reach health endpoint. Showing last known status.
+                  </p>
+                )}
+
+                {[
+                  { label: 'Database', status: health.database },
+                  { label: 'API', status: health.api },
+                  { label: 'Scheduler', status: health.scheduler },
+                ].map(({ label, status }) => {
+                  const displayStatus = status
+                    ? status.charAt(0).toUpperCase() + status.slice(1)
+                    : 'Unknown';
+                  return (
+                    <div key={label} className="flex items-center justify-between">
+                      <span style={{ color: 'hsl(var(--foreground))' }}>{label}</span>
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: 'hsl(var(--foreground))' }}
+                      >
+                        <StatusDot status={status ?? 'unknown'} />
+                        {displayStatus}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+    </div>
   );
 }
