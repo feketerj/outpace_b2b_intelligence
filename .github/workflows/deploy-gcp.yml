@@ -1,0 +1,76 @@
+name: Deploy to GCP Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      region:
+        description: 'GCP region to deploy to'
+        required: false
+        default: 'us-central1'
+
+# Prevent concurrent deployments to the same environment
+concurrency:
+  group: deploy-gcp-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write   # Required for Workload Identity Federation
+
+jobs:
+  deploy:
+    name: Cloud Build & Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Determine deploy region
+        id: region
+        run: |
+          REGION="${{ github.event.inputs.region || 'us-central1' }}"
+          echo "region=$REGION" >> "$GITHUB_OUTPUT"
+
+      - name: Submit Cloud Build
+        run: |
+          gcloud builds submit . \
+            --config=gcp/cloudbuild.yaml \
+            --substitutions=_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},_REGION=${{ steps.region.outputs.region }},SHORT_SHA=${{ github.sha }} \
+            --async=false
+
+      - name: Print deployed service URLs
+        if: success()
+        run: |
+          REGION="${{ steps.region.outputs.region }}"
+          PROJECT="${{ secrets.GCP_PROJECT_ID }}"
+
+          echo "### Deployment URLs" >> "$GITHUB_STEP_SUMMARY"
+
+          API_URL=$(gcloud run services describe outpace-api \
+            --region="$REGION" --format="value(status.url)" 2>/dev/null || echo "N/A")
+          WEB_URL=$(gcloud run services describe outpace-web \
+            --region="$REGION" --format="value(status.url)" 2>/dev/null || echo "N/A")
+
+          echo "| Service | URL |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| outpace-api | $API_URL |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| outpace-web | $WEB_URL |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
