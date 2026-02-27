@@ -259,3 +259,158 @@ async def upload_tenant_logo(
     if resize_failed:
         response["warning"] = "Image resize failed - original size used"
     return response
+
+
+@router.post("/background-image/{tenant_id}")
+@limiter.limit(UPLOAD_RATE_LIMIT)
+async def upload_tenant_background_image(
+    request: Request,
+    tenant_id: str,
+    file: UploadFile = File(None),
+    current_user: TokenData = Depends(get_current_tenant_admin)
+):
+    """
+    Upload tenant card background image.
+    Accepts: PNG, JPG, JPEG, WEBP, GIF, SVG — any size (max 20 MB).
+    No destructive resize — stored as-is for full-bleed background use.
+    """
+    db = get_db()
+
+    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+
+    if not file or not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No file provided"
+        )
+
+    allowed_types = [
+        'image/png', 'image/jpeg', 'image/jpg',
+        'image/webp', 'image/gif', 'image/svg+xml'
+    ]
+    if file.content_type and file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported file type: {file.content_type}. Allowed: PNG, JPG, JPEG, WEBP, GIF, SVG"
+        )
+
+    MAX_SIZE = 20 * 1024 * 1024  # 20 MB
+    contents = await file.read()
+    if len(contents) > MAX_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File too large: {len(contents) / (1024*1024):.1f} MB. Maximum is 20 MB."
+        )
+
+    # Determine MIME type — trust content sniff over content_type header for safety
+    mime_type = file.content_type or 'image/png'
+    encoded = base64.b64encode(contents).decode('utf-8')
+    data_uri = f"data:{mime_type};base64,{encoded}"
+
+    tenant = await db.tenants.find_one({"id": tenant_id})
+    if not tenant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+
+    await db.tenants.update_one(
+        {"id": tenant_id},
+        {"$set": {
+            "branding.background_image_base64": data_uri,
+            "branding.background_image_url": ""
+        }}
+    )
+
+    logger.info(f"[upload.background] Tenant {tenant_id} background image updated — {len(contents)/1024:.1f} KB, type={mime_type}")
+    return {
+        "status": "success",
+        "background_image_data_uri": data_uri,
+        "size_kb": len(contents) / 1024
+    }
+
+
+@router.post("/background-image-url/{tenant_id}")
+@limiter.limit(UPLOAD_RATE_LIMIT)
+async def set_tenant_background_image_url(
+    request: Request,
+    tenant_id: str,
+    current_user: TokenData = Depends(get_current_tenant_admin)
+):
+    """
+    Set tenant card background image from a URL.
+    The URL is stored directly — no download or proxy.
+    """
+    db = get_db()
+
+    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+
+    body = await request.json()
+    url = (body.get("url") or "").strip()
+    if not url:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="url field is required"
+        )
+
+    # Basic URL safety check — must be http/https
+    if not (url.startswith("http://") or url.startswith("https://")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="URL must start with http:// or https://"
+        )
+
+    tenant = await db.tenants.find_one({"id": tenant_id})
+    if not tenant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+
+    await db.tenants.update_one(
+        {"id": tenant_id},
+        {"$set": {
+            "branding.background_image_url": url,
+            "branding.background_image_base64": ""
+        }}
+    )
+
+    logger.info(f"[upload.background-url] Tenant {tenant_id} background URL set: {url[:80]}")
+    return {
+        "status": "success",
+        "background_image_url": url
+    }
+
+
+@router.delete("/background-image/{tenant_id}")
+@limiter.limit(UPLOAD_RATE_LIMIT)
+async def delete_tenant_background_image(
+    request: Request,
+    tenant_id: str,
+    current_user: TokenData = Depends(get_current_tenant_admin)
+):
+    """Clear the tenant card background image (file or URL)."""
+    db = get_db()
+
+    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+
+    tenant = await db.tenants.find_one({"id": tenant_id})
+    if not tenant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+
+    await db.tenants.update_one(
+        {"id": tenant_id},
+        {"$set": {
+            "branding.background_image_base64": "",
+            "branding.background_image_url": ""
+        }}
+    )
+
+    logger.info(f"[upload.background] Tenant {tenant_id} background image cleared")
+    return {"status": "success"}
