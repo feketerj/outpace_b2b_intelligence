@@ -277,7 +277,16 @@ export default function TenantsPage() {
             {tenants.map((tenant) => (
               <Card 
                 key={tenant.id} 
-                className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))] hover:border-[hsl(var(--border-light))] transition-colors duration-150"
+                className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))] hover:border-[hsl(var(--border-light))] transition-colors duration-150 overflow-hidden"
+                style={(() => {
+                  const bg = tenant.branding?.background_image_base64 || tenant.branding?.background_image_url;
+                  return bg ? {
+                    backgroundImage: `url('${bg}')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                  } : {};
+                })()}
                 data-testid={`tenant-card-${tenant.slug}`}
               >
                 <CardContent className="p-6">
@@ -317,13 +326,13 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-xs text-[hsl(var(--foreground-muted))] mb-1">Intelligence</p>
                       <p className="text-base font-semibold text-[hsl(var(--foreground))]">
-                        {tenant.intelligence_config?.enabled ? '✓' : '✗'}
+                        {tenant.intelligence_config?.enabled ? 'â' : 'â'}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-[hsl(var(--foreground-muted))] mb-1">Auto-Update</p>
                       <p className="text-base font-semibold text-[hsl(var(--foreground))]">
-                        {tenant.search_profile?.auto_update_enabled !== false ? '✓' : '✗'}
+                        {tenant.search_profile?.auto_update_enabled !== false ? 'â' : 'â'}
                       </p>
                     </div>
                   </div>
@@ -473,7 +482,7 @@ export default function TenantsPage() {
                       className={`bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] ${editingTenant ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
                     {editingTenant ? (
-                      <p className="text-xs text-[hsl(var(--accent-warning))]">⚠️ Slug cannot be changed after creation (would break existing URLs/links)</p>
+                      <p className="text-xs text-[hsl(var(--accent-warning))]">â ï¸ Slug cannot be changed after creation (would break existing URLs/links)</p>
                     ) : (
                       <p className="text-xs text-[hsl(var(--foreground-muted))]">Lowercase letters, numbers, hyphens only. Cannot be changed later.</p>
                     )}
@@ -518,7 +527,7 @@ export default function TenantsPage() {
                   {formData.is_master_client ? (
                     <>
                       <div className="bg-[hsl(var(--accent-warning))]/10 p-4 rounded border border-[hsl(var(--accent-warning))]/30 mb-4">
-                        <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-1">⚠️ Master White-Label Configuration</p>
+                        <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-1">â ï¸ Master White-Label Configuration</p>
                         <p className="text-xs text-[hsl(var(--foreground-secondary))]">
                           <strong>This branding is for YOUR CLIENTS (sub-clients), NOT for you.</strong>
                           <br />
@@ -694,7 +703,7 @@ export default function TenantsPage() {
                   </div>
                   
                   <div className="border-t border-[hsl(var(--border))] pt-4 mt-4">
-                    <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">🎨 Visual Effects & Theme</h4>
+                    <h4 className="font-medium text-[hsl(var(--foreground))] mb-3">ð¨ Visual Effects & Theme</h4>
                     
                     <div className="space-y-3 mb-4">
                       <Label className="text-[hsl(var(--foreground))]">Theme Preset (Military/Gov/Executive)</Label>
@@ -707,12 +716,12 @@ export default function TenantsPage() {
                         </SelectTrigger>
                         <SelectContent className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]">
                           <SelectItem value="default">Default - Clean Professional</SelectItem>
-                          <SelectItem value="brushed_metal">🔧 Brushed Metal - Industrial texture</SelectItem>
-                          <SelectItem value="nvg_green">🌃 NVG Green - Night vision tactical</SelectItem>
-                          <SelectItem value="executive_gloss">✨ Executive Gloss - Polished shine</SelectItem>
-                          <SelectItem value="tactical_dark">🎖️ Tactical Dark - Military ops</SelectItem>
-                          <SelectItem value="govt_blue">🇺🇸 Government Blue - Federal official</SelectItem>
-                          <SelectItem value="high_tech_sheen">💎 High-Tech Sheen - Futuristic glow</SelectItem>
+                          <SelectItem value="brushed_metal">ð§ Brushed Metal - Industrial texture</SelectItem>
+                          <SelectItem value="nvg_green">ð NVG Green - Night vision tactical</SelectItem>
+                          <SelectItem value="executive_gloss">â¨ Executive Gloss - Polished shine</SelectItem>
+                          <SelectItem value="tactical_dark">ðï¸ Tactical Dark - Military ops</SelectItem>
+                          <SelectItem value="govt_blue">ðºð¸ Government Blue - Federal official</SelectItem>
+                          <SelectItem value="high_tech_sheen">ð High-Tech Sheen - Futuristic glow</SelectItem>
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-[hsl(var(--foreground-muted))]">Applies visual effects, overlays, and textures</p>
@@ -742,31 +751,95 @@ export default function TenantsPage() {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--foreground))]">Background Image Upload (Optional)</Label>
+                      <Label className="text-[hsl(var(--foreground))]">Background Image (Optional)</Label>
+                      <p className="text-xs text-[hsl(var(--foreground-muted))]">
+                        Upload a file (PNG, JPG, WEBP, GIF, SVG — up to 20 MB) or paste an image URL.
+                        This image fills the client card exactly as the client sees it.
+                      </p>
+
+                      {/* File upload */}
                       <Input
                         type="file"
-                        accept="image/png,image/jpeg,image/jpg"
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/svg+xml"
+                        className="text-[hsl(var(--foreground))] cursor-pointer"
                         onChange={async (e) => {
                           const file = e.target.files[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setFormData({...formData, branding: {...formData.branding, background_image_base64: reader.result}});
-                              toast.success('Background image loaded!');
-                            };
-                            reader.readAsDataURL(file);
+                            const formDataBg = new FormData();
+                            formDataBg.append('file', file);
+                            try {
+                              const response = await apiClient.post(
+                                `/api/upload/background-image/${editingTenant.id}`,
+                                formDataBg
+                              );
+                              setFormData({...formData, branding: {...formData.branding,
+                                background_image_base64: response.data.background_image_data_uri,
+                                background_image_url: ''
+                              }});
+                              toast.success('Background image uploaded!');
+                            } catch (error) {
+                              showApiError(error, 'Background image upload failed');
+                            }
                           }
                         }}
-                        className="bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))]"
                       />
-                      <p className="text-xs text-[hsl(var(--foreground-muted))]">Subtle background pattern (low opacity recommended)</p>
-                      {formData.branding.background_image_base64 && (
-                        <div className="mt-2">
-                          <img 
-                            src={formData.branding.background_image_base64}
-                            alt="Background preview"
-                            className="h-20 w-full object-cover rounded border border-[hsl(var(--border))] opacity-30"
+
+                      {/* URL input */}
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          type="url"
+                          placeholder="...or paste an image URL (https://...)"
+                          className="text-[hsl(var(--foreground))] flex-1"
+                          onBlur={async (e) => {
+                            const url = e.target.value.trim();
+                            if (!url) return;
+                            try {
+                              await apiClient.post(
+                                `/api/upload/background-image-url/${editingTenant.id}`,
+                                { url }
+                              );
+                              setFormData({...formData, branding: {...formData.branding,
+                                background_image_url: url,
+                                background_image_base64: ''
+                              }});
+                              toast.success('Background image URL saved!');
+                            } catch (error) {
+                              showApiError(error, 'Failed to save background URL');
+                            }
+                          }}
+                        />
+                      </div>
+
+                      {/* Preview & clear */}
+                      {(formData.branding.background_image_base64 || formData.branding.background_image_url) && (
+                        <div className="mt-2 space-y-1">
+                          <div
+                            className="h-24 w-full rounded border border-[hsl(var(--border))] bg-cover bg-center"
+                            style={{
+                              backgroundImage: `url('${formData.branding.background_image_base64 || formData.branding.background_image_url}')`
+                            }}
+                            title="Card background preview"
                           />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs text-[hsl(var(--foreground-muted))] hover:text-[hsl(var(--destructive))]"
+                            onClick={async () => {
+                              try {
+                                await apiClient.delete(`/api/upload/background-image/${editingTenant.id}`);
+                                setFormData({...formData, branding: {...formData.branding,
+                                  background_image_base64: '',
+                                  background_image_url: ''
+                                }});
+                                toast.success('Background image removed');
+                              } catch (error) {
+                                showApiError(error, 'Failed to remove background image');
+                              }
+                            }}
+                          >
+                            Remove background image
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -977,7 +1050,7 @@ export default function TenantsPage() {
                 {/* Intelligence Config Tab (Perplexity) */}
                 <TabsContent value="intelligence" className="space-y-4 mt-4">
                   <div className="bg-[hsl(var(--accent-success))]/10 p-4 rounded border border-[hsl(var(--accent-success))]/30 mb-4">
-                    <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-1">✓ Automated Intelligence Reports</p>
+                    <p className="text-sm text-[hsl(var(--foreground))] font-medium mb-1">â Automated Intelligence Reports</p>
                     <p className="text-xs text-[hsl(var(--foreground-secondary))]">
                       Configure when Perplexity generates intelligence reports automatically for this client. 
                       Reports run on schedule without manual intervention.
@@ -1029,7 +1102,7 @@ export default function TenantsPage() {
                         />
                         <p className="text-xs text-[hsl(var(--foreground-muted))]">
                           <a href="https://crontab.guru" target="_blank" rel="noopener noreferrer" className="text-[hsl(var(--primary))] hover:underline">
-                            Cron helper →
+                            Cron helper â
                           </a>
                         </p>
                       </div>
@@ -1380,10 +1453,10 @@ export default function TenantsPage() {
                   <div className="bg-[hsl(var(--background-tertiary))] p-4 rounded border border-[hsl(var(--border))] mt-4">
                     <p className="text-xs text-[hsl(var(--foreground-secondary))]"><strong>How It Works:</strong></p>
                     <ul className="text-xs text-[hsl(var(--foreground-muted))] mt-2 space-y-1">
-                      <li>• <strong>With Agent ID:</strong> Uses your pre-configured agent from Mistral platform</li>
-                      <li>• <strong>With Instructions:</strong> Creates agent on-the-fly with custom system prompt</li>
-                      <li>• Agent ID takes priority if both are set</li>
-                      <li>• Each client can have unique agents with their own prompts</li>
+                      <li>â¢ <strong>With Agent ID:</strong> Uses your pre-configured agent from Mistral platform</li>
+                      <li>â¢ <strong>With Instructions:</strong> Creates agent on-the-fly with custom system prompt</li>
+                      <li>â¢ Agent ID takes priority if both are set</li>
+                      <li>â¢ Each client can have unique agents with their own prompts</li>
                     </ul>
                   </div>
                 </TabsContent>
