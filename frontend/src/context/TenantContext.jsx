@@ -1,99 +1,85 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import apiClient from '@/lib/api';
-import { injectThemeStyles } from '@/utils/themeEffects';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { injectThemeStyles } from '../utils/themeEffects';
+import { apiClient } from '../lib/api';
 
 const TenantContext = createContext(null);
 
-export function TenantProvider({ children }) {
-  const { user, isAuthenticated } = useAuth();
-  const [currentTenant, setCurrentTenant] = useState(null);
-  const [brandingStyles, setBrandingStyles] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+export const TenantProvider = ({ children }) => {
+    const { user } = useAuth();
+    const [currentTenant, setCurrentTenant] = useState(null);
+    const [brandingStyles, setBrandingStyles] = useState(null);
 
-  const applyBranding = useCallback((branding) => {
-    if (!branding) return;
+    useEffect(() => {
+          if (user?.tenant_id) {
+                  fetchTenantBranding(user.tenant_id);
+          }
+    }, [user]);
 
-    const styles = {
-      '--tenant-primary': branding.primary_color || '',
-      '--tenant-secondary': branding.secondary_color || '',
-      '--tenant-accent': branding.accent_color || '',
+    // FIX: Use apiClient (with token refresh interceptor) instead of raw fetch()
+    // which silently failed on expired tokens.
+    const fetchTenantBranding = async (tenantId) => {
+          try {
+                  const response = await apiClient.get(`/api/tenants/${tenantId}`);
+                  const tenant = response.data;
+                  setCurrentTenant(tenant);
+                  applyBranding(tenant.branding, tenant.master_branding);
+          } catch (error) {
+                  console.error('Failed to fetch tenant branding:', error);
+          }
     };
 
-    setBrandingStyles(styles);
+    const applyBranding = (branding, masterBranding) => {
+          if (!branding && !masterBranding) return;
 
-    // Inject CSS custom properties into document root
-    const root = document.documentElement;
-    Object.entries(styles).forEach(([property, value]) => {
-      if (value) {
-        root.style.setProperty(property, value);
-      }
-    });
+          // Use master branding if available (for sub-clients)
+          const effectiveBranding = masterBranding || branding;
 
-    // Call utility to inject any additional theme effects (fonts, shadows, etc.)
-    injectThemeStyles(branding);
-  }, []);
+          // Apply dynamic CSS variables — strip hsl() wrapper so consumers can use hsl(var(--tenant-primary))
+          const root = document.documentElement;
+          if (effectiveBranding.primary_color) {
+                  root.style.setProperty(
+                            '--tenant-primary',
+                            effectiveBranding.primary_color.replace('hsl(', '').replace(')', '')
+                          );
+          }
+          if (effectiveBranding.secondary_color) {
+                  root.style.setProperty(
+                            '--tenant-secondary',
+                            effectiveBranding.secondary_color.replace('hsl(', '').replace(')', '')
+                          );
+          }
+          if (effectiveBranding.accent_color) {
+                  root.style.setProperty(
+                            '--tenant-accent',
+                            effectiveBranding.accent_color.replace('hsl(', '').replace(')', '')
+                          );
+          }
 
-  const fetchTenant = useCallback(async (tenantId) => {
-    if (!tenantId) return;
+          // Apply visual theme effects — injectThemeStyles takes (themeString, brandingConfig)
+          if (effectiveBranding.visual_theme) {
+                  injectThemeStyles(effectiveBranding.visual_theme, effectiveBranding);
+          }
 
-    setLoading(true);
-    setError(null);
+          // brandingStyles holds the raw branding object so consumers can read
+          // effectiveBranding.primary_color, .logo_base64, etc. directly
+          setBrandingStyles(effectiveBranding);
+                    };
 
-    try {
-      // FIX: Use apiClient (with token refresh interceptor) instead of raw fetch()
-      const response = await apiClient.get(`/api/tenants/${tenantId}`);
-      const tenant = response.data;
+    return (
+          <TenantContext.Provider
+                  value={{ currentTenant, brandingStyles, setCurrentTenant, applyBranding }}
+                >
+            {children}
+          </TenantContext.Provider>TenantContext.Provider>
+        );
+};
 
-      setCurrentTenant(tenant);
-
-      // Sub-clients inherit parent (master) branding if present
-      // master_branding overrides branding
-      const effectiveBranding = tenant.master_branding || tenant.branding;
-      if (effectiveBranding) {
-        applyBranding(effectiveBranding);
-      }
-    } catch (err) {
-      console.error('Failed to fetch tenant:', err);
-      setError(err);
-    } finally {
-      setLoading(false);
+export const useTenant = () => {
+    const context = useContext(TenantContext);
+    if (!context) {
+          throw new Error('useTenant must be used within TenantProvider');
     }
-  }, [applyBranding]);
-
-  // Fetch tenant whenever a user logs in and has a tenant_id
-  useEffect(() => {
-    if (isAuthenticated && user?.tenant_id) {
-      fetchTenant(user.tenant_id);
-    } else if (!isAuthenticated) {
-      // Clear tenant state on logout
-      setCurrentTenant(null);
-      setBrandingStyles({});
-    }
-  }, [isAuthenticated, user?.tenant_id, fetchTenant]);
-
-  const value = {
-    currentTenant,
-    brandingStyles,
-    loading,
-    error,
-    refetchTenant: () => user?.tenant_id ? fetchTenant(user.tenant_id) : null,
-  };
-
-  return (
-    <TenantContext.Provider value={value}>
-      {children}
-    </TenantContext.Provider>
-  );
-}
-
-export function useTenant() {
-  const context = useContext(TenantContext);
-  if (!context) {
-    throw new Error('useTenant must be used within a TenantProvider');
-  }
-  return context;
-}
-
-export default TenantContext;
+    return context;
+};
+</TenantContext.Provider>
