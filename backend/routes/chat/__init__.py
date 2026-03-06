@@ -261,6 +261,14 @@ async def get_chat_turns(conversation_id: str, current_user: TokenData = Depends
     return await load_chat_turns(get_db(), current_user.tenant_id, conversation_id)
 
 
+@router.get("/conversations")
+async def list_conversations(current_user: TokenData = Depends(get_current_user)):
+    """Return distinct conversation IDs for the current tenant."""
+    from .history import list_conversations as _list_conversations
+    conversation_ids = await _list_conversations(get_db(), current_user.tenant_id)
+    return {"data": conversation_ids}
+
+
 # Backward-compatible aliases for existing test imports
 from .rag_injection import tokenize as _tokenize
 _retrieve_opportunities_context = retrieve_opportunities_context
