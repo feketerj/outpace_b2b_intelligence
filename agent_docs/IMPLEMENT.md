@@ -109,8 +109,8 @@ Update this section after completing each milestone.
 
 | Milestone | Status | Started | Completed | Notes |
 |-----------|--------|---------|-----------|-------|
-| M0: Recon | ⬜ Not Started | — | — | |
-| M1: Repo Cleanup | ⬜ Not Started | — | — | |
+| M0: Recon | ✅ Completed | 2026-03-06 | 2026-03-06 | Baseline captured; tests failing in environment due dependency/config issues. |
+| M1: Repo Cleanup | ✅ Completed | 2026-03-06 | 2026-03-06 | Temp/dead files removed; .gitignore updated. |
 | M2: Credential Purge | ⬜ Not Started | — | — | |
 | M3: chat.py Decomposition | ⬜ Not Started | — | — | |
 | M4: TenantsPage Decomposition | ⬜ Not Started | — | — | |
