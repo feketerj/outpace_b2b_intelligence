@@ -109,9 +109,9 @@ Update this section after completing each milestone.
 
 | Milestone | Status | Started | Completed | Notes |
 |-----------|--------|---------|-----------|-------|
-| M0: Recon | ⬜ Not Started | — | — | |
-| M1: Repo Cleanup | ⬜ Not Started | — | — | |
-| M2: Credential Purge | ⬜ Not Started | — | — | |
+| M0: Recon | ✅ Completed | 2026-03-06 | 2026-03-06 | Baseline captured; pytest collection/import issues in environment. |
+| M1: Repo Cleanup | ✅ Completed | 2026-03-06 | 2026-03-06 | Temp/dead files removed; .gitignore updated. |
+| M2: Credential Purge | 🟨 In Progress | 2026-03-06 | — | Core scripts/e2e/CI migrated to env vars; additional credential strings remain in non-scope files. |
 | M3: chat.py Decomposition | ⬜ Not Started | — | — | |
 | M4: TenantsPage Decomposition | ⬜ Not Started | — | — | |
 | M5: Frontend Fixes | ⬜ Not Started | — | — | |

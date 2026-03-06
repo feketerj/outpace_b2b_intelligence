@@ -56,18 +56,18 @@ REPORT_FILE="$REPORT_DIR/carfax_$TIMESTAMP.json"
 LOG_FILE="/var/log/supervisor/backend.err.log"
 
 # Fixtures from docs/testing/TEST_PLAN.json
-ADMIN_EMAIL="admin@outpace.ai"
-ADMIN_PASSWORD="Admin123!"
+ADMIN_EMAIL="${CARFAX_ADMIN_EMAIL:?CARFAX_ADMIN_EMAIL not set}"
+ADMIN_PASSWORD="${CARFAX_ADMIN_PASSWORD:?CARFAX_ADMIN_PASSWORD not set}"
 # Updated fixtures - 2025-12-18
-TENANT_A_EMAIL="tenant-b-test@test.com"
-TENANT_A_PASSWORD="Test123!"
-TENANT_B_EMAIL="enchandia-test@test.com"
-TENANT_B_PASSWORD="Test123!"
+TENANT_A_EMAIL="${CARFAX_TENANT_A_EMAIL:?CARFAX_TENANT_A_EMAIL not set}"
+TENANT_A_PASSWORD="${CARFAX_TENANT_A_PASSWORD:?CARFAX_TENANT_A_PASSWORD not set}"
+TENANT_B_EMAIL="${CARFAX_TENANT_B_EMAIL:?CARFAX_TENANT_B_EMAIL not set}"
+TENANT_B_PASSWORD="${CARFAX_TENANT_B_PASSWORD:?CARFAX_TENANT_B_PASSWORD not set}"
 TENANT_A_ID="8aa521eb-56ad-4727-8f09-c01fc7921c21"
 TENANT_B_ID="e4e0b3b4-90ec-4c32-88d8-534aa563ed5d"
 # Tenant admin credentials (from seed_carfax_tenants.py)
-TENANT_A_ADMIN_EMAIL="admin@tenant-a.test"
-TENANT_A_ADMIN_PASSWORD="Test123!"
+TENANT_A_ADMIN_EMAIL="${CARFAX_TENANT_A_ADMIN_EMAIL:-admin@tenant-a.test}"
+TENANT_A_ADMIN_PASSWORD="${CARFAX_TENANT_A_ADMIN_PASSWORD:-$TENANT_A_PASSWORD}"
 
 # Counters
 PASSED=0
@@ -258,7 +258,7 @@ test_S0_auth_happy_expansion() {
     # Note: Seed data uses .test TLD which API rejects - register valid admin first
     echo -e "\n${BOLD}AUTH-H-002: tenant_admin_login_valid${NC}"
     local admin_email="carfax-admin-$(date +%s)@tenant-a-test.com"
-    local admin_password="Test123!"
+    local admin_password="$TENANT_A_PASSWORD"
 
     # Register a tenant_admin with valid email domain
     local reg_resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/register" \
@@ -357,7 +357,7 @@ test_S0_auth_invalid_expansion() {
     echo -e "\n${BOLD}AUTH-I-002: unknown_email_rejected${NC}"
     resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/login" \
         -H "Content-Type: application/json" \
-        -d '{"email":"nonexistent-user-12345@example.com","password":"Test123!"}')
+        -d '{"email":"nonexistent-user-12345@example.com","password":"$TENANT_A_PASSWORD"}')
     status=$(echo "$resp" | tail -n1)
     evidence "unknown email -> HTTP $status"
     if [ "$status" = "401" ]; then
@@ -370,7 +370,7 @@ test_S0_auth_invalid_expansion() {
     echo -e "\n${BOLD}AUTH-I-003: malformed_email_rejected${NC}"
     resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/login" \
         -H "Content-Type: application/json" \
-        -d '{"email":"not-an-email","password":"Test123!"}')
+        -d '{"email":"not-an-email","password":"$TENANT_A_PASSWORD"}')
     status=$(echo "$resp" | tail -n1)
     evidence "malformed email 'not-an-email' -> HTTP $status"
     if [[ "$status" =~ ^(400|422)$ ]]; then
@@ -469,7 +469,7 @@ test_S0_auth_boundary_expansion() {
     # AUTH-B-002: Password at minimum length (8 chars)
     echo -e "\n${BOLD}AUTH-B-002: password_min_length_accepted${NC}"
     local min_pass_email="carfax-minpass-$(date +%s)@test.com"
-    local min_password="Test123!" # Exactly 8 characters
+    local min_password="$TENANT_A_PASSWORD" # Minimum length credential from env
     resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/register" \
         -H "Content-Type: application/json" \
         -d "{\"email\":\"$min_pass_email\",\"password\":\"$min_password\",\"full_name\":\"Min Pass User\",\"role\":\"tenant_user\",\"tenant_id\":\"$TENANT_A_ID\"}")
@@ -590,7 +590,7 @@ test_S0_auth_empty_expansion() {
     echo -e "\n${BOLD}AUTH-E-001: login_no_email_rejected${NC}"
     local status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL/api/auth/login" \
         -H "Content-Type: application/json" \
-        -d '{"password":"Test123!"}')
+        -d '{"password":"$TENANT_A_PASSWORD"}')
     evidence "login without email -> HTTP $status"
     if [ "$status" = "422" ]; then
         pass "AUTH-E-001: login_no_email_rejected"

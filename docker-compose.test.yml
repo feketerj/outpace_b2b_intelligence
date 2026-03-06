@@ -39,6 +39,13 @@ services:
       - MONGO_URL=mongodb://mongodb:27017
       - DB_NAME=outpace_intelligence
       - JWT_SECRET=test-secret-key
+      - CARFAX_ADMIN_EMAIL=${CARFAX_ADMIN_EMAIL}
+      - CARFAX_ADMIN_PASSWORD=${CARFAX_ADMIN_PASSWORD}
+      - CARFAX_TENANT_A_EMAIL=${CARFAX_TENANT_A_EMAIL}
+      - CARFAX_TENANT_A_PASSWORD=${CARFAX_TENANT_A_PASSWORD}
+      - CARFAX_TENANT_B_EMAIL=${CARFAX_TENANT_B_EMAIL}
+      - CARFAX_TENANT_B_PASSWORD=${CARFAX_TENANT_B_PASSWORD}
+      - E2E_ADMIN_PASSWORD=${E2E_ADMIN_PASSWORD}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -57,6 +64,13 @@ services:
       dockerfile: Dockerfile.test
     environment:
       - API_URL=http://api:8000
+      - CARFAX_ADMIN_EMAIL=${CARFAX_ADMIN_EMAIL}
+      - CARFAX_ADMIN_PASSWORD=${CARFAX_ADMIN_PASSWORD}
+      - CARFAX_TENANT_A_EMAIL=${CARFAX_TENANT_A_EMAIL}
+      - CARFAX_TENANT_A_PASSWORD=${CARFAX_TENANT_A_PASSWORD}
+      - CARFAX_TENANT_B_EMAIL=${CARFAX_TENANT_B_EMAIL}
+      - CARFAX_TENANT_B_PASSWORD=${CARFAX_TENANT_B_PASSWORD}
+      - E2E_ADMIN_PASSWORD=${E2E_ADMIN_PASSWORD}
     depends_on:
       api:
         condition: service_healthy
