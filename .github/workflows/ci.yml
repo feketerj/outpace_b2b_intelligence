@@ -54,6 +54,7 @@ jobs:
         run: |
           pytest backend/tests/ -v \
             --cov=backend \
+            --cov-config=.coveragerc \
             --cov-report=xml \
             --cov-report=term-missing \
             --cov-fail-under=70
@@ -94,9 +95,13 @@ jobs:
         if: always()
         run: |
           echo "=== ARTIFACT VERIFICATION ==="
-          for f in carfax_reports/*.json; do
-            sha256sum "$f"
-          done
+          if ls carfax_reports/*.json 1>/dev/null 2>&1; then
+            for f in carfax_reports/*.json; do
+              sha256sum "$f"
+            done
+          else
+            echo "No carfax reports found — skipping hash computation"
+          fi
 
       - name: Upload test reports
         uses: actions/upload-artifact@v4
