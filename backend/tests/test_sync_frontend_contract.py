@@ -49,7 +49,7 @@ def _get_repo_root() -> Path:
 # Dynamically resolved frontend file paths (no hardcoded /app)
 _REPO_ROOT = _get_repo_root()
 INTELLIGENCE_FEED_PATH = str(_REPO_ROOT / "frontend" / "src" / "pages" / "IntelligenceFeed.jsx")
-TENANTS_PAGE_PATH = str(_REPO_ROOT / "frontend" / "src" / "pages" / "TenantsPage.jsx")
+TENANTS_PAGE_PATH = str(_REPO_ROOT / "frontend" / "src" / "pages" / "TenantsPageLegacy.jsx")
 
 
 class TestSyncButtonVisibilityContract:

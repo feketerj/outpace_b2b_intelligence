@@ -307,16 +307,20 @@ class TestConcurrentAccessPatterns:
 
     def test_quota_atomicity_pattern_exists(self):
         """Verify quota updates use atomic operations."""
-        # The chat.py uses a two-phase atomic pattern
-        # This test verifies the pattern is documented/present
+        # After the chat.py decomposition, quota logic lives in
+        # backend.routes.chat.quota.increment_quota.
         import inspect
-        from backend.routes import chat
+        from backend.routes.chat import quota as chat_quota
 
-        source = inspect.getsource(chat)
+        source = inspect.getsource(chat_quota.increment_quota)
 
-        # Check for atomic update patterns
-        assert "$inc" in source or "update_one" in source, \
-            "Chat should use atomic MongoDB updates for quota"
+        # Accept both $inc (original) and $add (aggregation-pipeline equivalent)
+        assert (
+            "$inc" in source
+            or "$add" in source
+            or "update_one" in source
+            or "find_one_and_update" in source
+        ), "increment_quota should use atomic MongoDB updates for quota"
 
     def test_optimistic_locking_pattern(self):
         """If using optimistic locking, verify pattern."""
