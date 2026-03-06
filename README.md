@@ -27,13 +27,22 @@ A B2B intelligence platform for tracking government contracting opportunities, g
 cd backend
 pip install -r requirements.txt
 
-# Set environment variables
+# Required environment variables
 export MONGO_URL=mongodb://localhost:27017
 export DB_NAME=outpace_intelligence
 export JWT_SECRET=your-secret-key
 
+# Optional: CORS (defaults to localhost origins if unset)
+export CORS_ALLOWED_ORIGINS="https://your-domain.com,https://app.your-domain.com"
+
+# Optional: GCP Secret Manager (omit or leave unset to read secrets from env vars only)
+# export GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
+
+# Optional: MongoDB write concern (defaults to "majority")
+export WRITE_CONCERN="majority"
+
 # Run the server
-uvicorn main:app --reload --port 8000
+uvicorn server:app --reload --port 8000
 ```
 
 ### Frontend Setup
@@ -43,6 +52,34 @@ cd frontend
 npm install
 npm run dev
 ```
+
+### Test Credentials (Integration Tests)
+
+The integration test harness (`carfax.sh`) reads credentials from environment variables. Set these before running tests:
+
+```bash
+# Admin credentials for test harness
+export CARFAX_ADMIN_EMAIL="admin@outpace.ai"
+export CARFAX_ADMIN_PASSWORD="<your-admin-password>"
+
+# Tenant test accounts (optional — used by tenant-isolation tests)
+export CARFAX_TENANT_A_EMAIL="tenant-a@example.com"
+export CARFAX_TENANT_A_PASSWORD="<tenant-a-password>"
+export CARFAX_TENANT_B_EMAIL="tenant-b@example.com"
+export CARFAX_TENANT_B_PASSWORD="<tenant-b-password>"
+
+# E2E browser tests (Playwright)
+export E2E_ADMIN_PASSWORD="<your-admin-password>"
+```
+
+Copy `.env.example` to `.env` and fill in the values:
+
+```bash
+cp .env.example .env
+# Edit .env with your values
+```
+
+> **Note**: Never commit `.env` to source control. `.gitignore` excludes it by default.
 
 ## Testing
 
