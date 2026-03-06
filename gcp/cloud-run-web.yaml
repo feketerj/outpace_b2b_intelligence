@@ -1,0 +1,45 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: outpace-web
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        # Scaling
+        autoscaling.knative.dev/minScale: '1'
+        autoscaling.knative.dev/maxScale: '5'
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 60
+      serviceAccountName: outpace-web-sa@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+        - image: REGION-docker.pkg.dev/PROJECT_ID/outpace/frontend:latest
+          ports:
+            - name: http1
+              containerPort: 80
+          resources:
+            limits:
+              memory: 256Mi
+              cpu: '1'
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 6    # 30s window for startup
+  traffic:
+    - percent: 100
+      latestRevision: true

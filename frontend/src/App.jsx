@@ -19,148 +19,86 @@ import TenantsPage from './pages/tenants';
 import DatabaseManager from './pages/DatabaseManager';
 import TenantPreview from './pages/TenantPreview';
 import UserProfilePage from './pages/UserProfilePage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requireSuperAdmin = false }) => {
-  const { isAuthenticated, loading, user } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[hsl(var(--background))] flex items-center justify-center">
-        <div className="text-[hsl(var(--foreground-secondary))]">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (requireSuperAdmin && user?.role !== 'super_admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return children;
+    const { isAuthenticated, loading, user } = useAuth();
+    if (loading) {
+          return (
+                  <div className="min-h-screen bg-[hsl(var(--background))] flex items-center justify-center">
+                          <div className="text-[hsl(var(--foreground-secondary))]">Loading...</div>div>
+                  </div>div>
+                );
+    }
+    if (!isAuthenticated) {
+          return <Navigate to="/login" replace />;
+    }
+    if (requireSuperAdmin && user?.role !== 'super_admin') {
+          return <Navigate to="/dashboard" replace />;
+    }
+    return children;
 };
 
 ProtectedRoute.propTypes = {
-  children: PropTypes.node.isRequired,
-  requireSuperAdmin: PropTypes.bool
+    children: PropTypes.node.isRequired,
+    requireSuperAdmin: PropTypes.bool,
 };
 
 function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-      {/* Super Admin Routes */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requireSuperAdmin>
-            <SuperAdminDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/tenants"
-        element={
-          <ProtectedRoute requireSuperAdmin>
-            <TenantsPage />
-          </ProtectedRoute>
-        }
-      />
-      
-      {/* Tenant User Routes */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <TenantDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/opportunities/:id"
-        element={
-          <ProtectedRoute>
-            <OpportunityDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/intelligence"
-        element={
-          <ProtectedRoute>
-            <IntelligenceFeed />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <ProtectedRoute requireSuperAdmin>
-            <UsersPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/database"
-        element={
-          <ProtectedRoute requireSuperAdmin>
-            <DatabaseManager />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/preview"
-        element={
-          <ProtectedRoute requireSuperAdmin>
-            <TenantPreview />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <UserProfilePage />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Default Route */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-    </Routes>
-  );
-}
-
-function App() {
-  return (
-    <ErrorBoundary>
-      <BrowserRouter>
-        <AuthProvider>
-          <TenantProvider>
-            <ErrorBoundary>
-              <AppRoutes />
-            </ErrorBoundary>
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                style: {
-                  background: 'hsl(var(--background-elevated))',
-                  color: 'hsl(var(--foreground))',
-                  border: '1px solid hsl(var(--border))'
-                }
-              }}
-            />
-          </TenantProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </ErrorBoundary>
-  );
-}
-
-export default App;
+    return (
+          <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+          
+            {/* Super Admin Routes */}
+                <Route path="/admin" element={<ProtectedRoute requireSuperAdmin><SuperAdminDashboard /></ProtectedRoute>ProtectedRoute>} />
+                      <Route path="/admin/tenants" element={<ProtectedRoute requireSuperAdmin><TenantsPage /></ProtectedRoute>ProtectedRoute>} />
+                            <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><UsersPage /></ProtectedRoute>ProtectedRoute>} />
+                                  <Route path="/admin/database" element={<ProtectedRoute requireSuperAdmin><DatabaseManager /></ProtectedRoute>ProtectedRoute>} />
+                                        <Route path="/preview" element={<ProtectedRoute requireSuperAdmin><TenantPreview /></ProtectedRoute>ProtectedRoute>} />
+                                        
+                                          {/* Tenant User Routes */}
+                                              <Route path="/dashboard" element={<ProtectedRoute><TenantDashboard /></ProtectedRoute>ProtectedRoute>} />
+                                                    <Route path="/opportunities/:id" element={<ProtectedRoute><OpportunityDetail /></ProtectedRoute>ProtectedRoute>} />
+                                                          <Route path="/intelligence" element={<ProtectedRoute><IntelligenceFeed /></ProtectedRoute>ProtectedRoute>} />
+                                                                <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>ProtectedRoute>} />
+                                                                
+                                                                  {/* Default Route */}
+                                                                      <Route path="/" element={<Navigate to="/login" replace />} />
+                                                                
+                                                                  {/* FIX: 404 catch-all route — must be last */}
+                                                                      <Route path="*" element={<NotFoundPage />} />
+                                                                </Route>Routes>
+                                                            );
+                                                            }
+                                                          
+                                                          function App() {
+                                                              return (
+                                                              <ErrorBoundary>
+                                                                    <BrowserRouter>
+                                                                            <AuthProvider>
+                                                                                      <TenantProvider>
+                                                                                                  <ErrorBoundary>
+                                                                                                                <AppRoutes />
+                                                                                                    </ErrorBoundary>ErrorBoundary>
+                                                                                                  <Toaster
+                                                                                                                  position="bottom-right"
+                                                                                                                  toastOptions={{
+                                                                                                                                    style: {
+                                                                                                                                                        background: 'hsl(var(--background-elevated))',
+                                                                                                                                                        color: 'hsl(var(--foreground))',
+                                                                                                                                                        border: '1px solid hsl(var(--border))',
+                                                                                                                                      },
+                                                                                                                    }}
+                                                                                                                />
+                                                                                      </TenantProvider>TenantProvider>
+                                                                            </AuthProvider>AuthProvider>
+                                                                    </BrowserRouter>BrowserRouter>
+                                                              </ErrorBoundary>ErrorBoundary>
+                                                            );
+                                                            }
+                                                          
+                                                          export default App;
+                                                          </div>

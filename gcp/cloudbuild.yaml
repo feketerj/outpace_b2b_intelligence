@@ -1,0 +1,120 @@
+steps:
+  # ── Build backend image ────────────────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/backend:latest'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/backend:$SHORT_SHA'
+      - '-f'
+      - 'backend/Dockerfile'
+      - '.'
+
+  # ── Build frontend image ───────────────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/frontend:latest'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/frontend:$SHORT_SHA'
+      - '-f'
+      - 'frontend/Dockerfile'
+      - '.'
+
+  # ── Push backend images ────────────────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend-latest'
+    waitFor: ['build-backend']
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/backend:latest'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend-sha'
+    waitFor: ['build-backend']
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/backend:$SHORT_SHA'
+
+  # ── Push frontend images ───────────────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-frontend-latest'
+    waitFor: ['build-frontend']
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/frontend:latest'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-frontend-sha'
+    waitFor: ['build-frontend']
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/frontend:$SHORT_SHA'
+
+  # ── Deploy backend to Cloud Run ───────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-backend'
+    waitFor: ['push-backend-latest', 'push-backend-sha']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'services'
+      - 'replace'
+      - 'gcp/cloud-run-api.yaml'
+      - '--region=${_REGION}'
+
+  # ── Deploy frontend to Cloud Run ───────────────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-frontend'
+    waitFor: ['push-frontend-latest', 'push-frontend-sha']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'services'
+      - 'replace'
+      - 'gcp/cloud-run-web.yaml'
+      - '--region=${_REGION}'
+
+  # ── Route 100% traffic to new revision (backend) ───────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'traffic-backend'
+    waitFor: ['deploy-backend']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'services'
+      - 'update-traffic'
+      - 'outpace-api'
+      - '--to-latest'
+      - '--region=${_REGION}'
+
+  # ── Route 100% traffic to new revision (frontend) ───────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'traffic-frontend'
+    waitFor: ['deploy-frontend']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'services'
+      - 'update-traffic'
+      - 'outpace-web'
+      - '--to-latest'
+      - '--region=${_REGION}'
+
+images:
+  - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/backend:latest'
+  - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/backend:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/frontend:latest'
+  - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/frontend:$SHORT_SHA'
+
+substitutions:
+  _REGION: us-central1
+  _PROJECT_ID: ''   # Required — set via trigger or --substitutions flag
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
