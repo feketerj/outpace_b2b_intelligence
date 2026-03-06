@@ -261,4 +261,10 @@ async def get_chat_turns(conversation_id: str, current_user: TokenData = Depends
     return await load_chat_turns(get_db(), current_user.tenant_id, conversation_id)
 
 
+# Backward-compatible aliases for existing test imports
+from .rag_injection import tokenize as _tokenize
+_retrieve_opportunities_context = retrieve_opportunities_context
+_retrieve_intelligence_context = retrieve_intelligence_context
+_build_knowledge_context = build_knowledge_context
+
 __all__ = ["router", "send_chat_message", "get_chat_history", "get_chat_turns"]
