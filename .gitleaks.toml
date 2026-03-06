@@ -1,0 +1,10 @@
+title = "OutPace B2B Intelligence Gitleaks Config"
+
+[allowlist]
+description = "Allowlisted patterns"
+paths = [
+  '''\.env\.example''',
+  '''docs/.*\.md''',
+  '''agent_docs/.*\.md''',
+  '''mocks/.*'''
+]

@@ -150,10 +150,21 @@ app.include_router(api_router)
 # TracingMiddleware FIRST (outermost layer) - adds trace_id to all requests
 app.add_middleware(TracingMiddleware)
 
+cors_origins_raw = os.environ.get(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:3000,http://localhost:3333,http://host.docker.internal:3000',
+)
+_cors_allowed_origins = [o.strip() for o in cors_origins_raw.split(',') if o.strip()]
+# Wildcard origins are never permitted — enforce at startup
+if '*' in _cors_allowed_origins:
+    raise RuntimeError(
+        "CORS_ALLOWED_ORIGINS must not contain '*'. "
+        "Set explicit origin(s) in the CORS_ALLOWED_ORIGINS environment variable."
+    )
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', 'http://localhost:3000,http://localhost:3333,http://host.docker.internal:3000').split(','),
+    allow_origins=_cors_allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
