@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """
 E2E Smoke Test - Verify frontend and backend work together.
 
@@ -28,8 +29,8 @@ from typing import Tuple, List
 
 BACKEND_URL = "http://localhost:8000"
 FRONTEND_URL = "http://localhost:3000"
-TEST_EMAIL = "admin@outpace.ai"
-TEST_PASSWORD = "Admin123!"
+TEST_EMAIL = os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com")
+TEST_PASSWORD = os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")
 
 
 def make_request(url: str, method: str = "GET", data: dict = None, headers: dict = None) -> Tuple[int, str, dict]:
