@@ -189,6 +189,8 @@ async def send_chat_message(
         assistant_content = response.choices[0].message.content
 
     except Exception as e:
+        err_id = str(uuid.uuid4())
+        logger.exception("[chat_llm_error:%s] Mistral API error", err_id)
         duration_ms = (time.monotonic() - api_start) * 1000 if "api_start" in locals() else None
         await record_external_usage(
             db,
@@ -199,8 +201,6 @@ async def send_chat_message(
             duration_ms=duration_ms,
             metadata={"error": str(e), "agent_id": chat_agent_id},
         )
-        err_id = str(uuid.uuid4())
-        logger.exception("[chat_llm_error:%s] Mistral API error", err_id)
         await release_quota(db, effective_tenant_id, quota_reserved, monthly_limit)
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"LLM service unavailable (error_id={err_id})")
 
