@@ -114,7 +114,7 @@ Update this section after completing each milestone.
 | M2: Credential Purge | 🟨 In Progress | 2026-03-06 | — | Replaced hardcoded credentials across shell/python/e2e files and .env.example; broader test suite still failing for unrelated baseline reasons. |
 | M3: chat.py Decomposition | ✅ Completed | 2026-03-06 | 2026-03-06 | Split monolith into `backend/routes/chat/` package and removed legacy file. |
 | M4: TenantsPage Decomposition | ✅ Completed | 2026-03-06 | 2026-03-06 | Moved page entrypoint to `frontend/src/pages/tenants/index.jsx` and removed legacy route file path. |
-| M5: Frontend Fixes | ⬜ Not Started | — | — | |
+| M5: Frontend Fixes | ✅ Completed | 2026-03-06 | 2026-03-06 | TenantContext/App.jsx/SuperAdminDashboard already done; added /api/chat/conversations backend endpoint, updated DatabaseManager, removed unused zustand/recharts, moved export-download spec to e2e/.spec.ts. |
 | M6: Security Hardening | ⬜ Not Started | — | — | |
 | M7: DB & Backend Hardening | ⬜ Not Started | — | — | |
 | M8: Branch Cleanup & PR #23 | ⬜ Not Started | — | — | |

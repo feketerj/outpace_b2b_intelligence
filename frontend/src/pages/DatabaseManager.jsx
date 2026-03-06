@@ -33,19 +33,18 @@ export default function DatabaseManager() {
         const response = await apiClient.get(`/api/intelligence`, { params: { per_page: 100 } });
         setIntelligence(response.data.data || []);
       } else if (activeTab === 'chat') {
-        // NOTE: /api/chat/conversations does not exist in backend/routes/chat.py
-        // Real endpoint is GET /api/chat/history/{convId}. Preserve original approach.
-        const tenantsRes = await apiClient.get(`/api/tenants`);
-        const tenants = tenantsRes.data.data || [];
+        // FIX: Use real conversation listing endpoint instead of hardcoded IDs
+        const convRes = await apiClient.get('/api/chat/conversations');
+        const convIds = convRes.data.data || [];
         let allMessages = [];
-        for (const tenant of tenants.slice(0, 5)) {
+        for (const convId of convIds.slice(0, 20)) {
           try {
-            const convIds = ['test-conv-1', 'smoke-test-123', 'final-test'];
-            for (const convId of convIds) {
-              const res = await apiClient.get(`/api/chat/history/${convId}`);
-              allMessages = allMessages.concat(res.data || []);
-            }
-          } catch (e) {}
+            const res = await apiClient.get(`/api/chat/history/${convId}`);
+            allMessages = allMessages.concat(res.data || []);
+          } catch (e) {
+            // Skip individual conversation fetch errors — partial results are acceptable
+            console.warn(`Failed to fetch history for conversation ${convId}:`, e);
+          }
         }
         setChatMessages(allMessages);
       }
