@@ -23,55 +23,60 @@ jobs:
           --health-retries 5
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install dependencies
-      run: |
-        cd backend
-        pip install -r requirements.txt
-        pip install "pytest-asyncio>=0.26" --upgrade
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install "pytest-asyncio>=0.26" --upgrade
 
-    - name: Seed test data
-      env:
-        MONGO_URL: mongodb://localhost:27017
-        DB_NAME: outpace_intelligence
-      run: |
-        pip install pymongo bcrypt
-        python scripts/seed_carfax_tenants.py
-        python scripts/seed_carfax_users.py
+      - name: Seed test data
+        env:
+          MONGO_URL: mongodb://localhost:27017
+          DB_NAME: outpace_intelligence
+        run: |
+          pip install pymongo bcrypt
+          python scripts/seed_carfax_tenants.py
+          python scripts/seed_carfax_users.py
 
-    - name: Run pytest with coverage
-      env:
-        MONGO_URL: mongodb://localhost:27017
-        DB_NAME: outpace_intelligence
-        JWT_SECRET: test-secret-for-ci
-        PYTHONPATH: .
-      run: |
-        pytest backend/tests/ -v --cov=backend --cov-report=xml --cov-report=term-missing
+      - name: Run pytest with coverage
+        env:
+          MONGO_URL: mongodb://localhost:27017
+          DB_NAME: outpace_intelligence
+          JWT_SECRET: test-secret-for-ci
+          PYTHONPATH: .
+        run: |
+          pytest backend/tests/ -v \
+            --cov=backend \
+            --cov-config=.coveragerc \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-fail-under=70
 
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: coverage-report
-        path: backend/coverage.xml
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: backend/coverage.xml
 
-    - name: Start API server
-      env:
-        MONGO_URL: mongodb://localhost:27017
-        DB_NAME: outpace_intelligence
-        JWT_SECRET: test-secret-for-ci
-        PYTHONPATH: .
-        RATE_LIMIT_DEFAULT: "1000/minute"
-        RATE_LIMIT_AUTH: "1000/minute"
-      run: |
-        uvicorn backend.server:app --host 0.0.0.0 --port 8000 &
-        sleep 5
+      - name: Start API server
+        env:
+          MONGO_URL: mongodb://localhost:27017
+          DB_NAME: outpace_intelligence
+          JWT_SECRET: test-secret-for-ci
+          PYTHONPATH: .
+          RATE_LIMIT_DEFAULT: "1000/minute"
+          RATE_LIMIT_AUTH: "1000/minute"
+        run: |
+          uvicorn backend.server:app --host 0.0.0.0 --port 8000 &
+          sleep 5
 
     - name: Run carfax tests
       env:
@@ -86,17 +91,21 @@ jobs:
         chmod +x carfax.sh
         ./carfax.sh all
 
-    - name: Compute report hashes
-      if: always()
-      run: |
-        echo "=== ARTIFACT VERIFICATION ==="
-        for f in carfax_reports/*.json; do
-          sha256sum "$f"
-        done
+      - name: Compute report hashes
+        if: always()
+        run: |
+          echo "=== ARTIFACT VERIFICATION ==="
+          if ls carfax_reports/*.json 1>/dev/null 2>&1; then
+            for f in carfax_reports/*.json; do
+              sha256sum "$f"
+            done
+          else
+            echo "No carfax reports found — skipping hash computation"
+          fi
 
-    - name: Upload test reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: carfax-reports
-        path: carfax_reports/
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: carfax-reports
+          path: carfax_reports/

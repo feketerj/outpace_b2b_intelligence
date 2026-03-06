@@ -1,0 +1,90 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: outpace-api
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        # Scaling
+        autoscaling.knative.dev/minScale: '1'
+        autoscaling.knative.dev/maxScale: '10'
+        # Use second-generation execution environment for better performance
+        run.googleapis.com/execution-environment: gen2
+        # CPU is always allocated (avoids cold-start latency on kept-warm instances)
+        run.googleapis.com/cpu-throttling: 'false'
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: outpace-api-sa@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+        - image: REGION-docker.pkg.dev/PROJECT_ID/outpace/backend:latest
+          ports:
+            - name: http1
+              containerPort: 8000
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: '1'
+          env:
+            # Non-secret config
+            - name: DB_NAME
+              value: outpace_intelligence
+            - name: PORT
+              value: '8000'
+            # Secrets from Secret Manager
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: outpace-mongo-url
+                  key: latest
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: outpace-jwt-secret
+                  key: latest
+            - name: MISTRAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: outpace-mistral-api-key
+                  key: latest
+            - name: PERPLEXITY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: outpace-perplexity-api-key
+                  key: latest
+            - name: HIGHERGOV_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: outpace-highergov-api-key
+                  key: latest
+            - name: RATE_LIMIT_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: outpace-rate-limit-auth
+                  key: latest
+            - name: RATE_LIMIT_DEFAULT
+              valueFrom:
+                secretKeyRef:
+                  name: outpace-rate-limit-default
+                  key: latest
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12   # 60s window for startup
+  traffic:
+    - percent: 100
+      latestRevision: true

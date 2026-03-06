@@ -20,8 +20,11 @@ node_modules/
 # === Python ===
 __pycache__/
 *.pyc
+*.py[cod]
+*.pyo
 venv/
 .venv/
+env/
 
 # === Test artifacts ===
 carfax_reports/*.json
@@ -30,6 +33,8 @@ carfax_*.log
 test_reports/
 evidence/
 mc_reports/
+test_export.pdf
+test_export.xlsx
 
 # === Build outputs ===
 /coverage
@@ -40,10 +45,17 @@ next-env.d.ts
 /build
 dist/
 
+# === Coverage ===
+coverage.xml
+htmlcov/
+.coverage
+
 # === Environment ===
 .env
 .env.local
 .env.*.local
+.env.production
+
 # Keep .env.example for documentation
 !.env.example
 
@@ -54,6 +66,7 @@ login.json
 
 # === System files ===
 .DS_Store
+Thumbs.db
 *.pem
 nul
 
@@ -88,6 +101,9 @@ artifacts/SOURCE_MAP.txt
 
 # === Build caches ===
 .cache/
+
+# === Claude temp files ===
+tmpclaude-*
 
 # === Mobile development ===
 android-sdk/

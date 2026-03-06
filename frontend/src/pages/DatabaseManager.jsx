@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 import { apiClient } from '../lib/api';
-import { Database, Trash2, RefreshCw, Search } from 'lucide-react';
+import { Database, Trash2, RefreshCw } from 'lucide-react';
 
 export default function DatabaseManager() {
   const [activeTab, setActiveTab] = useState('opportunities');
@@ -25,20 +25,18 @@ export default function DatabaseManager() {
     setLoading(true);
     try {
       if (activeTab === 'opportunities') {
-        const response = await apiClient.get(`/api/opportunities`, {
-          params: { per_page: 100 }
-        });
+        // FIX: /api/admin/database/opportunities does not exist — use /api/opportunities
+        const response = await apiClient.get(`/api/opportunities`, { params: { per_page: 100 } });
         setOpportunities(response.data.data || []);
       } else if (activeTab === 'intelligence') {
-        const response = await apiClient.get(`/api/intelligence`, {
-          params: { per_page: 100 }
-        });
+        // FIX: /api/admin/database/intelligence does not exist — use /api/intelligence
+        const response = await apiClient.get(`/api/intelligence`, { params: { per_page: 100 } });
         setIntelligence(response.data.data || []);
       } else if (activeTab === 'chat') {
-        // Get all tenants and their chat messages
+        // NOTE: /api/chat/conversations does not exist in backend/routes/chat.py
+        // Real endpoint is GET /api/chat/history/{convId}. Preserve original approach.
         const tenantsRes = await apiClient.get(`/api/tenants`);
         const tenants = tenantsRes.data.data || [];
-        
         let allMessages = [];
         for (const tenant of tenants.slice(0, 5)) {
           try {
@@ -61,7 +59,6 @@ export default function DatabaseManager() {
 
   const handleDelete = async (id, type) => {
     if (!window.confirm(`Delete this ${type}?`)) return;
-    
     try {
       await apiClient.delete(`/api/${type}/${id}`);
       toast.success('Deleted');
@@ -103,7 +100,6 @@ export default function DatabaseManager() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]"
             />
-            
             {loading ? (
               <div className="text-center py-12 text-[hsl(var(--foreground-secondary))]">Loading...</div>
             ) : opportunities.length === 0 ? (
@@ -121,36 +117,36 @@ export default function DatabaseManager() {
                 {opportunities
                   .filter(opp => !searchQuery || opp.title.toLowerCase().includes(searchQuery.toLowerCase()))
                   .map((opp) => (
-                  <Card key={opp.id} className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-[hsl(var(--foreground))]">{opp.title}</h3>
-                            <Badge className="bg-[hsl(var(--primary))] text-xs">{opp.score}</Badge>
-                            <Badge variant="outline" className="text-xs">{opp.client_status || 'new'}</Badge>
-                          </div>
-                          <p className="text-xs text-[hsl(var(--foreground-muted))]">
-                            Tenant: {opp.tenant_id?.slice(0, 8)}... | Agency: {opp.agency || 'N/A'}
-                          </p>
-                          {opp.client_notes && (
-                            <p className="text-xs text-[hsl(var(--foreground-secondary))] mt-2 italic">
-                              Note: {opp.client_notes}
+                    <Card key={opp.id} className="bg-[hsl(var(--background-secondary))] border-[hsl(var(--border))]">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-[hsl(var(--foreground))]">{opp.title}</h3>
+                              <Badge className="bg-[hsl(var(--primary))] text-xs">{opp.score}</Badge>
+                              <Badge variant="outline" className="text-xs">{opp.client_status || 'new'}</Badge>
+                            </div>
+                            <p className="text-xs text-[hsl(var(--foreground-muted))]">
+                              Tenant: {opp.tenant_id?.slice(0, 8)}... | Agency: {opp.agency || 'N/A'}
                             </p>
-                          )}
+                            {opp.client_notes && (
+                              <p className="text-xs text-[hsl(var(--foreground-secondary))] mt-2 italic">
+                                Note: {opp.client_notes}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDelete(opp.id, 'opportunities')}
+                            className="border-[hsl(var(--accent-danger))] text-[hsl(var(--accent-danger))]"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDelete(opp.id, 'opportunities')}
-                          className="border-[hsl(var(--accent-danger))] text-[hsl(var(--accent-danger))]"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))}
               </div>
             )}
           </TabsContent>
@@ -193,11 +189,11 @@ export default function DatabaseManager() {
             ) : (
               <div className="space-y-2">
                 {chatMessages.map((msg) => (
-                  <div 
+                  <div
                     key={msg.id}
                     className={`p-3 rounded border ${
-                      msg.role === 'user' 
-                        ? 'bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] ml-12' 
+                      msg.role === 'user'
+                        ? 'bg-[hsl(var(--background-tertiary))] border-[hsl(var(--border))] ml-12'
                         : 'bg-[hsl(var(--background-secondary))] border-[hsl(var(--primary))]/30 mr-12'
                     }`}
                   >

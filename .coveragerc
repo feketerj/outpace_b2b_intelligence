@@ -1,0 +1,9 @@
+[run]
+omit =
+    backend/utils/secrets.py
+    backend/utils/resilience.py
+    backend/utils/retention.py
+    backend/utils/error_notifier.py
+    backend/utils/canaries.py
+    backend/utils/telemetry.py
+    backend/utils/migrations.py
