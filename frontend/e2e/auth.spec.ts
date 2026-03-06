@@ -53,7 +53,7 @@ test.describe('Login Page', () => {
 
     // Fill in valid super_admin credentials
     await page.getByTestId('login-email-input').fill('admin@outpace.ai');
-    await page.getByTestId('login-password-input').fill('Admin123!');
+    await page.getByTestId('login-password-input').fill(process.env.E2E_ADMIN_PASSWORD || 'changeme');
     await page.getByTestId('login-submit-button').click();
 
     // Should redirect to admin dashboard
@@ -70,7 +70,7 @@ test.describe('Login Page', () => {
 
     // Fill in credentials
     await page.getByTestId('login-email-input').fill('admin@outpace.ai');
-    await page.getByTestId('login-password-input').fill('Admin123!');
+    await page.getByTestId('login-password-input').fill(process.env.E2E_ADMIN_PASSWORD || 'changeme');
 
     // Click and immediately check button text
     const button = page.getByTestId('login-submit-button');
@@ -99,7 +99,7 @@ test.describe('Protected Routes', () => {
     // First login to get a token
     await page.goto('/login');
     await page.getByTestId('login-email-input').fill('admin@outpace.ai');
-    await page.getByTestId('login-password-input').fill('Admin123!');
+    await page.getByTestId('login-password-input').fill(process.env.E2E_ADMIN_PASSWORD || 'changeme');
     await page.getByTestId('login-submit-button').click();
 
     // Wait for redirect
@@ -116,7 +116,7 @@ test.describe('Logout', () => {
     // Login first
     await page.goto('/login');
     await page.getByTestId('login-email-input').fill('admin@outpace.ai');
-    await page.getByTestId('login-password-input').fill('Admin123!');
+    await page.getByTestId('login-password-input').fill(process.env.E2E_ADMIN_PASSWORD || 'changeme');
     await page.getByTestId('login-submit-button').click();
     await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
 

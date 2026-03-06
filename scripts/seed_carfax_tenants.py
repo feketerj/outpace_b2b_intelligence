@@ -102,7 +102,7 @@ def main():
 
     # Pre-compute password hashes once for efficiency
     test_password_hash = hash_pw("Test123!")
-    admin_password_hash = hash_pw("Admin123!")
+    admin_password_hash = hash_pw(os.environ.get("CARFAX_ADMIN_PASSWORD", "Admin123!"))
 
     # Define all 6 tenants per v3 spec
     tenants = [
@@ -169,7 +169,7 @@ def main():
         # Super admin (no tenant)
         create_user(
             user_id="super_admin_001",
-            email="admin@outpace.ai",
+            email=os.environ.get("CARFAX_ADMIN_EMAIL", "admin@outpace.ai"),
             full_name="Super Admin",
             role="super_admin",
             tenant_id=None,

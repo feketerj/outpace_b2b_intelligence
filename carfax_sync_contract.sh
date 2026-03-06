@@ -97,7 +97,7 @@ fail() {
 echo -e "${YELLOW}Authenticating...${NC}"
 ADMIN_TOKEN=$(curl -s -X POST "$API_URL/api/auth/login" \
     -H "Content-Type: application/json" \
-    -d '{"email":"admin@outpace.ai","password":"Admin123!"}' | \
+    -d '{"email":"$ADMIN_EMAIL","password":"$ADMIN_PASSWORD"}' | \
     python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))")
 
 TENANT_TOKEN=$(curl -s -X POST "$API_URL/api/auth/login" \

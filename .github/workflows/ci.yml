@@ -69,6 +69,13 @@ jobs:
         PYTHONPATH: .
         RATE_LIMIT_DEFAULT: "1000/minute"
         RATE_LIMIT_AUTH: "1000/minute"
+        CARFAX_ADMIN_EMAIL: ${{ secrets.CARFAX_ADMIN_EMAIL }}
+        CARFAX_ADMIN_PASSWORD: ${{ secrets.CARFAX_ADMIN_PASSWORD }}
+        CARFAX_TENANT_A_EMAIL: ${{ secrets.CARFAX_TENANT_A_EMAIL }}
+        CARFAX_TENANT_A_PASSWORD: ${{ secrets.CARFAX_TENANT_A_PASSWORD }}
+        CARFAX_TENANT_B_EMAIL: ${{ secrets.CARFAX_TENANT_B_EMAIL }}
+        CARFAX_TENANT_B_PASSWORD: ${{ secrets.CARFAX_TENANT_B_PASSWORD }}
+        E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
       run: |
         uvicorn backend.server:app --host 0.0.0.0 --port 8000 &
         sleep 5
