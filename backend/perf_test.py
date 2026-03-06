@@ -1,9 +1,10 @@
+import os
 ﻿import requests
 import time
 
 API = 'http://localhost:8000'
 
-token = requests.post(f'{API}/api/auth/login', json={'email':'admin@example.com','password':'REDACTED_ADMIN_PASSWORD'}).json()['access_token']
+token = requests.post(f'{API}/api/auth/login', json={'email':os.getenv('CARFAX_ADMIN_EMAIL', 'admin@example.com'),'password':os.getenv('CARFAX_ADMIN_PASSWORD', 'changeme')}).json()['access_token']
 headers = {'Authorization': f'Bearer {token}'}
 
 tenant = requests.post(f'{API}/api/tenants', headers=headers, json={'name':'Perf Test','slug':'perf-test'}).json()

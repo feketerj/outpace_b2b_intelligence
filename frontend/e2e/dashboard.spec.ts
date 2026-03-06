@@ -1,3 +1,5 @@
+const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@example.com';
+const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'changeme';
 import { test, expect } from '@playwright/test';
 
 /**
@@ -10,8 +12,8 @@ test.describe('Super Admin Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto('/login');
-    await page.getByTestId('login-email-input').fill('admin@example.com');
-    await page.getByTestId('login-password-input').fill('REDACTED_ADMIN_PASSWORD');
+    await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
+    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
     await page.getByTestId('login-submit-button').click();
     await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
   });
@@ -42,8 +44,8 @@ test.describe('Super Admin Dashboard', () => {
 test.describe('Tenants Page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
-    await page.getByTestId('login-email-input').fill('admin@example.com');
-    await page.getByTestId('login-password-input').fill('REDACTED_ADMIN_PASSWORD');
+    await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
+    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
     await page.getByTestId('login-submit-button').click();
     await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
   });
@@ -65,8 +67,8 @@ test.describe('Tenants Page', () => {
 test.describe('Users Page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
-    await page.getByTestId('login-email-input').fill('admin@example.com');
-    await page.getByTestId('login-password-input').fill('REDACTED_ADMIN_PASSWORD');
+    await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
+    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
     await page.getByTestId('login-submit-button').click();
     await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
   });
@@ -80,8 +82,8 @@ test.describe('Users Page', () => {
 test.describe('Export Modal', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
-    await page.getByTestId('login-email-input').fill('admin@example.com');
-    await page.getByTestId('login-password-input').fill('REDACTED_ADMIN_PASSWORD');
+    await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
+    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
     await page.getByTestId('login-submit-button').click();
     await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
   });

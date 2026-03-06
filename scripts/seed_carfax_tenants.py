@@ -101,8 +101,8 @@ def main():
     yesterday = (now - timedelta(days=1)).isoformat()
 
     # Pre-compute password hashes once for efficiency
-    test_password_hash = hash_pw("REDACTED_TEST_PASSWORD")
-    admin_password_hash = hash_pw("REDACTED_ADMIN_PASSWORD")
+    test_password_hash = hash_pw(os.getenv("CARFAX_TENANT_A_PASSWORD", "changeme"))
+    admin_password_hash = hash_pw(os.getenv("CARFAX_ADMIN_PASSWORD", "changeme"))
 
     # Define all 6 tenants per v3 spec
     tenants = [
@@ -169,7 +169,7 @@ def main():
         # Super admin (no tenant)
         create_user(
             user_id="super_admin_001",
-            email="admin@example.com",
+            email=os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com"),
             full_name="Super Admin",
             role="super_admin",
             tenant_id=None,

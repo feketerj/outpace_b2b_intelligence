@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """
 Stress Test: Tenant Onboarding
 Creates 20 tenants, 2 users each, 50 opportunities each
@@ -27,8 +28,8 @@ results = {
 def login_admin():
     global ADMIN_TOKEN
     resp = requests.post(f"{BASE_URL}/api/auth/login", json={
-        "email": "admin@example.com",
-        "password": "REDACTED_ADMIN_PASSWORD"
+        "email": os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com"),
+        "password": os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")
     })
     if resp.status_code != 200:
         raise Exception(f"Admin login failed: {resp.text}")

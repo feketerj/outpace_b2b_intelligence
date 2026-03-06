@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """
 Comprehensive API Endpoint Test Suite.
 
@@ -58,15 +59,15 @@ def run_auth_tests():
 
     # Valid login
     status, body = api_call("POST", "/api/auth/login", {
-        "email": "admin@example.com",
-        "password": "REDACTED_ADMIN_PASSWORD"
+        "email": os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com"),
+        "password": os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")
     })
     test("Valid login returns token", status == 200 and "access_token" in body)
     token = body.get("access_token")
 
     # Wrong password
     status, body = api_call("POST", "/api/auth/login", {
-        "email": "admin@example.com",
+        "email": os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com"),
         "password": "wrongpassword"
     })
     test("Wrong password returns 401", status == 401)
@@ -101,13 +102,13 @@ def run_auth_tests():
 
     # SQL injection attempts
     status, body = api_call("POST", "/api/auth/login", {
-        "email": "admin@example.com' OR '1'='1",
+        "email": "attacker@example.com' OR '1'='1",
         "password": "x"
     })
     test("SQL injection in email blocked", status in [401, 422])
 
     status, body = api_call("POST", "/api/auth/login", {
-        "email": "admin@example.com",
+        "email": os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com"),
         "password": "' OR '1'='1"
     })
     test("SQL injection in password blocked", status == 401)

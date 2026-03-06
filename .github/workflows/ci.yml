@@ -76,6 +76,12 @@ jobs:
     - name: Run carfax tests
       env:
         API_URL: http://localhost:8000
+        CARFAX_ADMIN_EMAIL: ${{ secrets.CARFAX_ADMIN_EMAIL }}
+        CARFAX_ADMIN_PASSWORD: ${{ secrets.CARFAX_ADMIN_PASSWORD }}
+        CARFAX_TENANT_A_EMAIL: ${{ secrets.CARFAX_TENANT_A_EMAIL }}
+        CARFAX_TENANT_A_PASSWORD: ${{ secrets.CARFAX_TENANT_A_PASSWORD }}
+        CARFAX_TENANT_B_EMAIL: ${{ secrets.CARFAX_TENANT_B_EMAIL }}
+        CARFAX_TENANT_B_PASSWORD: ${{ secrets.CARFAX_TENANT_B_PASSWORD }}
       run: |
         chmod +x carfax.sh
         ./carfax.sh all

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """
 CONTRACT TEST: Sync Endpoint Determinism & Permissions
 ======================================================
@@ -28,10 +29,10 @@ API_URL = os.environ.get("TEST_API_URL", "https://integrity-shield-1.preview.eme
 TEST_TENANT_ID = "8aa521eb-56ad-4727-8f09-c01fc7921c21"
 
 # Test credentials
-SUPER_ADMIN_EMAIL = "admin@example.com"
-SUPER_ADMIN_PASSWORD = "REDACTED_ADMIN_PASSWORD"
+SUPER_ADMIN_EMAIL = os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com")
+SUPER_ADMIN_PASSWORD = os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")
 TENANT_USER_EMAIL = "tenant-b-test@test.com"
-TENANT_USER_PASSWORD = "REDACTED_TEST_PASSWORD"
+TENANT_USER_PASSWORD = os.getenv("CARFAX_TENANT_A_PASSWORD", "changeme")
 
 # Required response fields (hardened contract)
 REQUIRED_FIELDS = [

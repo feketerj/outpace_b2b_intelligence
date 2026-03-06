@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """
 OutPace Intelligence Platform - Backend API Testing
 Tests authentication, tenant management, sync, chat, and integrations
@@ -103,8 +104,8 @@ class OutPaceAPITester:
             "auth/login",
             200,
             data={
-                "email": "admin@example.com",
-                "password": "REDACTED_ADMIN_PASSWORD"
+                "email": os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com"),
+                "password": os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")
             }
         )
         
