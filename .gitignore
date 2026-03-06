@@ -122,3 +122,19 @@ chainlit.md
 
 # Server logs
 backend/logs/
+
+# Agent temp files
+tmpclaude-*
+
+# Test artifacts
+test_export.*
+carfax_reports/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Playwright artifacts
+frontend/playwright-report/
+frontend/test-results/

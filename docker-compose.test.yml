@@ -26,6 +26,12 @@ services:
     environment:
       - MONGO_URL=mongodb://mongodb:27017
       - DB_NAME=outpace_intelligence
+      - CARFAX_ADMIN_EMAIL=${CARFAX_ADMIN_EMAIL:-admin@example.com}
+      - CARFAX_ADMIN_PASSWORD=${CARFAX_ADMIN_PASSWORD:-changeme}
+      - CARFAX_TENANT_A_EMAIL=${CARFAX_TENANT_A_EMAIL:-tenant-a@test.com}
+      - CARFAX_TENANT_A_PASSWORD=${CARFAX_TENANT_A_PASSWORD:-changeme}
+      - CARFAX_TENANT_B_EMAIL=${CARFAX_TENANT_B_EMAIL:-tenant-b@test.com}
+      - CARFAX_TENANT_B_PASSWORD=${CARFAX_TENANT_B_PASSWORD:-changeme}
     restart: "no"
     networks:
       - test-net
@@ -39,6 +45,12 @@ services:
       - MONGO_URL=mongodb://mongodb:27017
       - DB_NAME=outpace_intelligence
       - JWT_SECRET=test-secret-key
+      - CARFAX_ADMIN_EMAIL=${CARFAX_ADMIN_EMAIL:-admin@example.com}
+      - CARFAX_ADMIN_PASSWORD=${CARFAX_ADMIN_PASSWORD:-changeme}
+      - CARFAX_TENANT_A_EMAIL=${CARFAX_TENANT_A_EMAIL:-tenant-a@test.com}
+      - CARFAX_TENANT_A_PASSWORD=${CARFAX_TENANT_A_PASSWORD:-changeme}
+      - CARFAX_TENANT_B_EMAIL=${CARFAX_TENANT_B_EMAIL:-tenant-b@test.com}
+      - CARFAX_TENANT_B_PASSWORD=${CARFAX_TENANT_B_PASSWORD:-changeme}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -57,6 +69,14 @@ services:
       dockerfile: Dockerfile.test
     environment:
       - API_URL=http://api:8000
+      - CARFAX_ADMIN_EMAIL=${CARFAX_ADMIN_EMAIL:-admin@example.com}
+      - CARFAX_ADMIN_PASSWORD=${CARFAX_ADMIN_PASSWORD:-changeme}
+      - CARFAX_TENANT_A_EMAIL=${CARFAX_TENANT_A_EMAIL:-tenant-a@test.com}
+      - CARFAX_TENANT_A_PASSWORD=${CARFAX_TENANT_A_PASSWORD:-changeme}
+      - CARFAX_TENANT_B_EMAIL=${CARFAX_TENANT_B_EMAIL:-tenant-b@test.com}
+      - CARFAX_TENANT_B_PASSWORD=${CARFAX_TENANT_B_PASSWORD:-changeme}
+      - E2E_ADMIN_EMAIL=${E2E_ADMIN_EMAIL:-admin@example.com}
+      - E2E_ADMIN_PASSWORD=${E2E_ADMIN_PASSWORD:-changeme}
     depends_on:
       api:
         condition: service_healthy

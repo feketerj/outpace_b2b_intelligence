@@ -1,3 +1,5 @@
+const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@example.com';
+const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'changeme';
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
 
@@ -9,8 +11,8 @@ test.describe('Export Download Verification', () => {
     // Login
     await page.goto(BASE_URL);
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
-    await page.fill('input[type="email"]', 'admin@outpace.ai');
-    await page.fill('input[type="password"]', 'Admin123!');
+    await page.fill('input[type="email"]', E2E_ADMIN_EMAIL);
+    await page.fill('input[type="password"]', E2E_ADMIN_PASSWORD);
     await page.click('button[type="submit"]');
     await page.waitForTimeout(3000);
   });

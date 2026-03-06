@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """
 Initialize super admin user for OutPace Intelligence platform.
 Run this once to create the default super admin account.
@@ -33,7 +34,7 @@ async def create_super_admin():
     # Create super admin
     super_admin = {
         "id": str(uuid.uuid4()),
-        "email": "admin@outpace.ai",
+        "email": os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com"),
         "full_name": "Super Admin",
         "role": "super_admin",
         "tenant_id": None,

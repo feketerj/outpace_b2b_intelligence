@@ -70,6 +70,10 @@ else
 fi
 
 TENANT_ID="8aa521eb-56ad-4727-8f09-c01fc7921c21"
+CARFAX_ADMIN_EMAIL="${CARFAX_ADMIN_EMAIL:?CARFAX_ADMIN_EMAIL not set}"
+CARFAX_ADMIN_PASSWORD="${CARFAX_ADMIN_PASSWORD:?CARFAX_ADMIN_PASSWORD not set}"
+CARFAX_TENANT_A_EMAIL="${CARFAX_TENANT_A_EMAIL:?CARFAX_TENANT_A_EMAIL not set}"
+CARFAX_TENANT_A_PASSWORD="${CARFAX_TENANT_A_PASSWORD:?CARFAX_TENANT_A_PASSWORD not set}"
 
 echo -e "${BLUE}╔═══════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║      CARFAX SYNC CONTRACT REGRESSION TEST (CI-SAFE)           ║${NC}"
@@ -97,12 +101,12 @@ fail() {
 echo -e "${YELLOW}Authenticating...${NC}"
 ADMIN_TOKEN=$(curl -s -X POST "$API_URL/api/auth/login" \
     -H "Content-Type: application/json" \
-    -d '{"email":"admin@outpace.ai","password":"Admin123!"}' | \
+    -d "{\"email\":\"$CARFAX_ADMIN_EMAIL\",\"password\":\"$CARFAX_ADMIN_PASSWORD\"}" | \
     python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))")
 
 TENANT_TOKEN=$(curl -s -X POST "$API_URL/api/auth/login" \
     -H "Content-Type: application/json" \
-    -d '{"email":"tenant-b-test@test.com","password":"Test123!"}' | \
+    -d "{\"email\":\"$CARFAX_TENANT_A_EMAIL\",\"password\":\"$CARFAX_TENANT_A_PASSWORD\"}" | \
     python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))")
 
 if [ -z "$ADMIN_TOKEN" ]; then

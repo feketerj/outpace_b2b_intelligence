@@ -15,7 +15,7 @@ import TenantDashboard from './pages/TenantDashboard';
 import OpportunityDetail from './pages/OpportunityDetail';
 import IntelligenceFeed from './pages/IntelligenceFeed';
 import UsersPage from './pages/UsersPage';
-import TenantsPage from './pages/TenantsPage';
+import TenantsPage from './pages/tenants';
 import DatabaseManager from './pages/DatabaseManager';
 import TenantPreview from './pages/TenantPreview';
 import UserProfilePage from './pages/UserProfilePage';
