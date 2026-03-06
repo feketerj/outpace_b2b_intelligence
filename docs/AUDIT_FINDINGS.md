@@ -214,6 +214,72 @@ The following items are **low priority** and do not block production deployment.
 
 ---
 
+## Milestone 8: Branch Cleanup & PR Decisions
+
+**Date**: 2026-03-06
+**Branch**: `copilot/close-stale-prs-document-cleanup`
+**Executed by**: GitHub Copilot Coding Agent
+
+### PR Decisions
+
+| PR | Title | Decision | Rationale |
+|----|-------|----------|-----------|
+| #25 | `chore: repo cleanup — remove temp files, update .gitignore, and record M0/M1 status` | Closed (not merged) | Superseded by later remediation work; changes were re-applied cleanly in subsequent milestones M0–M7. |
+| #26 | `chore(remediation): repo cleanup (M0/M1) and partial credential purge (M2)` | Closed (not merged) | Superseded by later remediation work; overlapped with and was replaced by M0–M7 implementation. |
+| #27 | `chore: start remediation M0–M2 (cleanup + credential env migration)` | Closed (not merged) | Superseded by later remediation work; overlapped with and was replaced by M0–M7 implementation. |
+
+All three PRs were closed without merging because a subsequent, more complete remediation pass (Milestones 0–7) addressed all of their changes and more.
+
+### Stale Branches — Manual Deletion Required
+
+The following remote branches are stale (all changes were re-applied in main via the remediation milestones). They should be deleted by the repository owner using the commands below. **Do not delete without confirming no unmerged work.**
+
+| Branch | Reason Stale |
+|--------|-------------|
+| `claude/add-ci-workflows-s7vHh` | CI workflow additions superseded by M6/M7 remediation |
+| `claude/add-test-dockerfile-kya9r` | Test Dockerfile additions superseded by M1 cleanup |
+| `feature/docker-compose-test` | Docker Compose test config superseded by current `docker-compose.test.yml` |
+| `feature/test-infrastructure` | Test infrastructure superseded by multi-layer test strategy in main |
+| `fix/production-audit-remediation` | All audit remediations applied via M0–M7 milestones on main |
+| `codex/execute-remediation-plan-milestone-by-milestone-mjf043` | Codex attempt #1 — superseded |
+| `codex/execute-remediation-plan-milestone-by-milestone-gi2j5a` | Codex attempt #2 — superseded |
+| `codex/execute-remediation-plan-milestone-by-milestone-orlnsf` | Codex attempt #3 — superseded |
+| Any other `codex/execute-remediation-plan-milestone-by-milestone-*` | All superseded |
+
+**Deletion commands (run by owner after review):**
+```bash
+git push origin --delete claude/add-ci-workflows-s7vHh || true
+git push origin --delete claude/add-test-dockerfile-kya9r || true
+git push origin --delete feature/docker-compose-test || true
+git push origin --delete feature/test-infrastructure || true
+git push origin --delete fix/production-audit-remediation || true
+# Delete all codex attempt branches (no-op if none exist):
+git branch -r | grep "origin/codex/execute-remediation-plan-milestone-by-milestone-" \
+  | sed 's|  origin/||' \
+  | xargs -r -I{} git push origin --delete {} || true
+```
+
+### Branch Protection Recommendation
+
+**Recommendation**: Enable branch protection rules on `main` in GitHub repository settings.
+
+**Suggested settings** (`Settings → Branches → Add rule → Branch name pattern: main`):
+
+| Setting | Recommended Value | Reason |
+|---------|------------------|--------|
+| Require a pull request before merging | ✅ Enabled | Prevents direct pushes; ensures review |
+| Require approvals | 1+ approvals | Code review gate |
+| Require status checks to pass before merging | ✅ Enabled | CI must pass (pytest, gitleaks) |
+| Required status checks | `test`, `lint` (or CI job names) | Prevents broken code on main |
+| Require branches to be up to date before merging | ✅ Enabled | Prevents merge of stale branches |
+| Do not allow bypassing the above settings | ✅ Enabled | Applies to admins as well |
+| Allow force pushes | ❌ Disabled (except for M9 if executed) | Prevents accidental history rewrite |
+| Allow deletions | ❌ Disabled | Prevents accidental branch deletion |
+
+**Why this matters**: Without branch protection, credentials or breaking changes can be pushed directly to `main` without review. The gitleaks pre-commit hook provides local protection only — branch protection enforces it at the GitHub level.
+
+---
+
 ## Milestone 6 Security Hardening — Remediation Summary
 
 **Date**: 2026-03-06

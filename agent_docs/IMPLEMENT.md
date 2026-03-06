@@ -117,9 +117,9 @@ Update this section after completing each milestone.
 | M5: Frontend Fixes | ✅ Completed | 2026-03-06 | 2026-03-06 | TenantContext/App.jsx/SuperAdminDashboard already done; added /api/chat/conversations backend endpoint, updated DatabaseManager, removed unused zustand/recharts, moved export-download spec to e2e/.spec.ts. |
 | M6: Security Hardening | ✅ Completed | 2026-03-06 | 2026-03-06 | Gitleaks, pre-commit, GCP Secret Manager, CORS hardening, AUDIT_FINDINGS.md. |
 | M7: DB & Backend Hardening | ✅ Completed | 2026-03-06 | 2026-03-06 | Added retryWrites/retryReads/write-concern/readPreference + connection retry backoff to database.py; added _sync_with_retry helper with dead-letter (sync_failures collection) and structured logs to sync_scheduler.py; coverage gate already at 70% in ci.yml. |
-| M8: Branch Cleanup & PR #23 | ⬜ Not Started | — | — | |
-| M9: Git History Cleanup | ⬜ Not Started | — | — | |
-| M10: Final Validation | ⬜ Not Started | — | — | |
+| M8: Branch Cleanup & PR #23 | ✅ Completed | 2026-03-06 | 2026-03-06 | PRs #25/#26/#27 were already closed; stale branches documented in AUDIT_FINDINGS.md with deletion commands; branch protection recommendation added. |
+| M9: Git History Cleanup | ⏸ Pending Owner Approval | — | — | Requires force-push to main — destructive action; must be coordinated with repo owner. |
+| M10: Final Validation | ✅ Completed | 2026-03-06 | 2026-03-06 | IMPLEMENT.md updated; PROJECT_STATUS.md updated; README.md updated with new env vars; Done-When checklist run and documented. |
 
 ---
 
