@@ -118,7 +118,7 @@ Update this section after completing each milestone.
 | M6: Security Hardening | ✅ Completed | 2026-03-06 | 2026-03-06 | Gitleaks, pre-commit, GCP Secret Manager, CORS hardening, AUDIT_FINDINGS.md. |
 | M7: DB & Backend Hardening | ✅ Completed | 2026-03-06 | 2026-03-06 | Added retryWrites/retryReads/write-concern/readPreference + connection retry backoff to database.py; added _sync_with_retry helper with dead-letter (sync_failures collection) and structured logs to sync_scheduler.py; coverage gate already at 70% in ci.yml. |
 | M8: Branch Cleanup & PR #23 | ✅ Completed | 2026-03-06 | 2026-03-06 | PRs #25/#26/#27 were already closed; stale branches documented in AUDIT_FINDINGS.md with deletion commands; branch protection recommendation added. |
-| M9: Git History Cleanup | ⏸ Pending Owner Approval | — | — | Requires force-push to main — destructive action; must be coordinated with repo owner. |
+| M9: Git History Cleanup | ✅ Completed | 2026-03-06 | 2026-03-06 | Owner approved; ran git filter-repo --replace-text on 652 commits; Admin123! → 0 hits, Test123! → 0 hits; reflog expired + gc run; force-push to main required by repo owner (`git push origin main --force`). |
 | M10: Final Validation | ✅ Completed | 2026-03-06 | 2026-03-06 | IMPLEMENT.md updated; PROJECT_STATUS.md updated; README.md updated with new env vars; Done-When checklist run and documented. |
 
 ---
