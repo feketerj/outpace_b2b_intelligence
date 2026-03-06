@@ -115,8 +115,8 @@ Update this section after completing each milestone.
 | M3: chat.py Decomposition | ✅ Completed | 2026-03-06 | 2026-03-06 | Split monolith into `backend/routes/chat/` package and removed legacy file. |
 | M4: TenantsPage Decomposition | ✅ Completed | 2026-03-06 | 2026-03-06 | Moved page entrypoint to `frontend/src/pages/tenants/index.jsx` and removed legacy route file path. |
 | M5: Frontend Fixes | ✅ Completed | 2026-03-06 | 2026-03-06 | TenantContext/App.jsx/SuperAdminDashboard already done; added /api/chat/conversations backend endpoint, updated DatabaseManager, removed unused zustand/recharts, moved export-download spec to e2e/.spec.ts. |
-| M6: Security Hardening | ✅ Completed | 2026-03-06 | 2026-03-06 | .gitleaks.toml, .pre-commit-config.yaml, secret_manager.py, CORS hardening, AUDIT_FINDINGS.md updated. |
-| M7: DB & Backend Hardening | ⬜ Not Started | — | — | |
+| M6: Security Hardening | ✅ Completed | 2026-03-06 | 2026-03-06 | Gitleaks, pre-commit, GCP Secret Manager, CORS hardening, AUDIT_FINDINGS.md. |
+| M7: DB & Backend Hardening | ✅ Completed | 2026-03-06 | 2026-03-06 | Added retryWrites/retryReads/write-concern/readPreference + connection retry backoff to database.py; added _sync_with_retry helper with dead-letter (sync_failures collection) and structured logs to sync_scheduler.py; coverage gate already at 70% in ci.yml. |
 | M8: Branch Cleanup & PR #23 | ⬜ Not Started | — | — | |
 | M9: Git History Cleanup | ⬜ Not Started | — | — | |
 | M10: Final Validation | ⬜ Not Started | — | — | |

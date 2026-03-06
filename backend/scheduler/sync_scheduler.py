@@ -13,6 +13,70 @@ from backend.utils.retention import apply_retention_policies
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 
+_SYNC_MAX_ATTEMPTS = 3
+_SYNC_RETRY_BASE_DELAY = 2  # seconds
+
+
+async def _sync_with_retry(label: str, coro_factory, tenant_id: str, db):
+    """
+    Run an async coroutine with up to _SYNC_MAX_ATTEMPTS retries and exponential
+    backoff.  Returns (result, None) on success or (None, last_exc) on exhaustion.
+    Dead-letter records are written to the ``sync_failures`` collection on every
+    failed attempt so that operators can diagnose and replay.
+    """
+    last_exc = None
+    for attempt in range(1, _SYNC_MAX_ATTEMPTS + 1):
+        attempt_start = datetime.now(timezone.utc)
+        try:
+            result = await coro_factory()
+            logger.info(
+                "[sync_scheduler] %s succeeded on attempt %d/%d tenant_id=%s",
+                label, attempt, _SYNC_MAX_ATTEMPTS, tenant_id,
+            )
+            return result, None
+        except Exception as exc:
+            last_exc = exc
+            logger.warning(
+                "[sync_scheduler] %s attempt %d/%d failed tenant_id=%s error=%s",
+                label, attempt, _SYNC_MAX_ATTEMPTS, tenant_id, exc,
+            )
+            attempt_end = datetime.now(timezone.utc)
+            duration_ms = int((attempt_end - attempt_start).total_seconds() * 1000)
+
+            # Dead-letter: record every failed attempt for later inspection/replay
+            failure_record = {
+                "id": str(uuid.uuid4()),
+                "tenant_id": tenant_id,
+                "sync_type": label,
+                "attempt": attempt,
+                "max_attempts": _SYNC_MAX_ATTEMPTS,
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+                "failed_at": attempt_end.isoformat(),
+                "duration_ms": duration_ms,
+            }
+            try:
+                await db.sync_failures.insert_one(failure_record)
+            except Exception as db_exc:
+                logger.error(
+                    "[sync_scheduler] Failed to write dead-letter record tenant_id=%s error=%s",
+                    tenant_id, db_exc,
+                )
+
+            if attempt < _SYNC_MAX_ATTEMPTS:
+                delay = _SYNC_RETRY_BASE_DELAY * (2 ** (attempt - 1))
+                logger.info(
+                    "[sync_scheduler] Retrying %s in %ss tenant_id=%s",
+                    label, delay, tenant_id,
+                )
+                await asyncio.sleep(delay)
+
+    logger.error(
+        "[sync_scheduler] %s exhausted all %d attempts tenant_id=%s last_error=%s",
+        label, _SYNC_MAX_ATTEMPTS, tenant_id, last_exc,
+    )
+    return None, last_exc
+
 def start_scheduler(db):
     """Start the background scheduler for automated syncs"""
     logger.info("Starting automated sync scheduler...")
@@ -128,69 +192,81 @@ async def daily_sync_all_tenants(db):
         logger.error(f"Error in daily sync: {e}")
 
 async def sync_tenant_data(db, tenant: dict):
-    """Sync data for a single tenant"""
+    """Sync data for a single tenant with retry logic and dead-letter logging."""
     tenant_id = tenant["id"]
-    logger.info(f"Syncing data for tenant: {tenant['name']} ({tenant_id})")
-    
+    logger.info(
+        "[sync_scheduler] Starting sync tenant_id=%s name=%s",
+        tenant_id, tenant["name"],
+    )
+
     sync_start = datetime.now(timezone.utc)
     errors = []
     opp_count = 0
     intel_count = 0
-    
-    try:
-        # Sync HigherGov opportunities
-        try:
-            opp_count = await sync_highergov_opportunities(db, tenant)
-            logger.info(f"Synced {opp_count} opportunities from HigherGov for tenant {tenant_id}")
-        except Exception as e:
-            error_msg = f"HigherGov sync failed: {str(e)}"
-            errors.append(error_msg)
-            logger.error(error_msg)
-        
-        # Sync Perplexity intelligence
-        try:
-            intel_count = await sync_perplexity_intelligence(db, tenant)
-            logger.info(f"Synced {intel_count} intelligence items from Perplexity for tenant {tenant_id}")
-        except Exception as e:
-            error_msg = f"Perplexity sync failed: {str(e)}"
-            errors.append(error_msg)
-            logger.error(error_msg)
-        
-    except Exception as e:
-        error_msg = f"General sync error: {str(e)}"
-        errors.append(error_msg)
-        logger.error(error_msg)
-    
+
+    # Sync HigherGov opportunities — with retry + dead-letter
+    result, exc = await _sync_with_retry(
+        label="highergov",
+        coro_factory=lambda: sync_highergov_opportunities(db, tenant),
+        tenant_id=tenant_id,
+        db=db,
+    )
+    if exc is None:
+        opp_count = result or 0
+    else:
+        errors.append(f"HigherGov sync failed: {exc}")
+
+    # Sync Perplexity intelligence — with retry + dead-letter
+    result, exc = await _sync_with_retry(
+        label="perplexity",
+        coro_factory=lambda: sync_perplexity_intelligence(db, tenant),
+        tenant_id=tenant_id,
+        db=db,
+    )
+    if exc is None:
+        intel_count = result or 0
+    else:
+        errors.append(f"Perplexity sync failed: {exc}")
+
     # Calculate sync duration
     sync_end = datetime.now(timezone.utc)
-    duration = (sync_end - sync_start).total_seconds()
-    
-    # Log sync results
+    duration_ms = int((sync_end - sync_start).total_seconds() * 1000)
+    duration_seconds = duration_ms / 1000.0
+    sync_result = "failed" if errors else "success"
+
+    # Structured observability log
+    logger.info(
+        "[sync_scheduler] sync_complete tenant_id=%s sync_type=automated "
+        "result=%s duration_ms=%d opp_count=%d intel_count=%d errors=%s",
+        tenant_id, sync_result, duration_ms, opp_count, intel_count, errors,
+    )
+
+    # Persist sync log
     sync_log = {
         "id": str(uuid.uuid4()),
         "tenant_id": tenant_id,
         "sync_type": "automated",
         "sync_timestamp": sync_start.isoformat(),
+        "end_time": sync_end.isoformat(),
+        "duration_ms": duration_ms,
         "records_fetched": opp_count + intel_count,
         "records_created": opp_count + intel_count,
         "records_updated": 0,
         "errors": errors,
-        "sync_duration_seconds": duration,
-        "status": "failed" if errors else "success"
+        "sync_duration_seconds": duration_seconds,
+        "status": sync_result,
     }
-    
     await db.sync_logs.insert_one(sync_log)
-    
+
     # Update tenant's last sync timestamp
     await db.tenants.update_one(
         {"id": tenant_id},
-        {"$set": {"last_synced_at": sync_end.isoformat()}}
+        {"$set": {"last_synced_at": sync_end.isoformat()}},
     )
-    
-    # Return sync results for deterministic API responses
+
     return {
         "opportunities_synced": opp_count,
         "intelligence_synced": intel_count,
         "errors": errors,
-        "duration_seconds": duration
+        "duration_seconds": duration_seconds,
     }
