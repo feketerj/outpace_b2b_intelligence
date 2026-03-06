@@ -75,10 +75,10 @@ else
 fi
 
 # Guard: Tenant isolation in chat
-if grep -q "tenant_id" "$BACKEND_DIR/routes/chat.py"; then
-    echo -e "${GREEN}PASS${NC}: chat.py contains tenant_id checks"
+if grep -rq "tenant_id" "$BACKEND_DIR/routes/chat/"; then
+    echo -e "${GREEN}PASS${NC}: chat/ contains tenant_id checks"
 else
-    echo -e "${RED}FAIL${NC}: chat.py missing tenant_id checks"
+    echo -e "${RED}FAIL${NC}: chat/ missing tenant_id checks"
     FAILED=1
 fi
 
