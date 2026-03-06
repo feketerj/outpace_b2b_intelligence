@@ -112,8 +112,8 @@ Update this section after completing each milestone.
 | M0: Recon | ✅ Completed | 2026-03-06 | 2026-03-06 | Read all required files; captured baseline inventory and command outputs. |
 | M1: Repo Cleanup | ✅ Completed | 2026-03-06 | 2026-03-06 | Deleted temp/dead files and updated .gitignore; pytest has pre-existing environment/import issues. |
 | M2: Credential Purge | 🟨 In Progress | 2026-03-06 | — | Replaced hardcoded credentials across shell/python/e2e files and .env.example; broader test suite still failing for unrelated baseline reasons. |
-| M3: chat.py Decomposition | ⬜ Not Started | — | — | |
-| M4: TenantsPage Decomposition | ⬜ Not Started | — | — | |
+| M3: chat.py Decomposition | ✅ Completed | 2026-03-06 | 2026-03-06 | Split monolith into `backend/routes/chat/` package and removed legacy file. |
+| M4: TenantsPage Decomposition | ✅ Completed | 2026-03-06 | 2026-03-06 | Moved page entrypoint to `frontend/src/pages/tenants/index.jsx` and removed legacy route file path. |
 | M5: Frontend Fixes | ⬜ Not Started | — | — | |
 | M6: Security Hardening | ⬜ Not Started | — | — | |
 | M7: DB & Backend Hardening | ⬜ Not Started | — | — | |
