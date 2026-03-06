@@ -57,9 +57,12 @@ async def build_knowledge_context(db, tenant: dict, user_message: str) -> tuple:
                     scored_snippets.append((overlap, snip))
 
             scored_snippets.sort(key=lambda x: x[0], reverse=True)
-            for _, snip in scored_snippets[:max_snippets]:
-                sections.append(f"Relevant Snippets:\n[{snip.get('title', 'Snippet')}]: {snip.get('content', '')}")
-                snippet_ids_used.append(snip.get("id"))
+            if top_snippets := scored_snippets[:max_snippets]:
+                snip_texts = []
+                for _, snip in top_snippets:
+                    snip_texts.append(f"[{snip.get('title', 'Snippet')}]: {snip.get('content', '')}")
+                    snippet_ids_used.append(snip.get("id"))
+                sections.append("Relevant Snippets:\n" + "\n".join(snip_texts))
 
     knowledge_context = "\n\n".join(sections)
     if len(knowledge_context) > max_chars:
