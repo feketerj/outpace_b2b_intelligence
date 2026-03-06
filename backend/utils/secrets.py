@@ -27,6 +27,8 @@ import logging
 from functools import lru_cache
 from typing import Optional, Dict, Any
 
+from backend.utils.secret_manager import get_secret as _sm_get_secret
+
 logger = logging.getLogger(__name__)
 
 # Backend selection via environment
@@ -335,8 +337,14 @@ def get_secret(key: str, default: Optional[str] = None) -> Optional[str]:
     """
     Get a secret value.
 
-    This is the main entry point for retrieving secrets. It automatically
-    uses the configured backend (env, aws, or vault).
+    Resolution order:
+    1. GCP Secret Manager auto-detection via ``secret_manager`` module
+       (active when ``GOOGLE_CLOUD_PROJECT`` env var is set, regardless of
+       ``SECRETS_BACKEND``).  Results are cached in-memory for the process
+       lifetime by ``secret_manager``.
+    2. Configured secrets provider (``SECRETS_BACKEND`` = env / aws / gcp /
+       vault) — covers explicit backend selection and AWS/Vault use-cases.
+    3. Provided *default* value.
 
     Args:
         key: Secret name (e.g., "JWT_SECRET", "MONGO_URL")
@@ -350,8 +358,14 @@ def get_secret(key: str, default: Optional[str] = None) -> Optional[str]:
         if not jwt_secret:
             raise RuntimeError("JWT_SECRET not configured")
     """
-    provider = get_secrets_provider()
-    value = provider.get_secret(key)
+    # Delegate to the GCP-aware module first (handles caching + env fallback)
+    value = _sm_get_secret(key)
+
+    # Fall through to the explicit provider chain (AWS/Vault/explicit GCP)
+    # only when the lightweight module didn't resolve a value.
+    if value is None:
+        provider = get_secrets_provider()
+        value = provider.get_secret(key)
 
     if value is None:
         if default is not None:

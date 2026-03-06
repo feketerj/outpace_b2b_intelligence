@@ -211,3 +211,62 @@ The following items are **low priority** and do not block production deployment.
 ---
 
 *Audit completed 2026-02-27. All critical findings resolved. Platform approved for production deployment.*
+
+---
+
+## Milestone 6 Security Hardening — Remediation Summary
+
+**Date**: 2026-03-06
+**Branch**: `copilot/execute-milestone-6-security-hardening`
+**Executed by**: GitHub Copilot Coding Agent
+
+### Findings & Remediations
+
+| # | Finding | Severity | Status | File(s) |
+|---|---------|----------|--------|---------|
+| M6-01 | No secret-scanning gate on commits — credentials could be committed undetected | High | ✅ Resolved | `.gitleaks.toml`, `.pre-commit-config.yaml` |
+| M6-02 | No pre-commit hooks enforcing secret scanning | Medium | ✅ Resolved | `.pre-commit-config.yaml` (gitleaks v8.21.2) |
+| M6-03 | No GCP Secret Manager integration — secrets only read from env vars, no rotation path | High | ✅ Resolved | `backend/utils/secret_manager.py` (new); `backend/utils/secrets.py` (delegating) |
+| M6-04 | CORS allowed origins read from `CORS_ORIGINS` env var with no wildcard guard — wildcards possible | High | ✅ Resolved | `backend/server.py` — now uses `CORS_ALLOWED_ORIGINS`, startup aborts on `*` |
+| M6-05 | `CORS_ALLOWED_ORIGINS` undocumented in `.env.example` | Low | ✅ Resolved | `.env.example` — entry added in prior milestone; confirmed present |
+
+### Changes Made
+
+#### `.gitleaks.toml` (new)
+- Configures gitleaks with an allowlist that suppresses false positives in:
+  - `.env.example` (placeholder values only, no real secrets)
+  - `docs/*.md` and `agent_docs/*.md` (documentation referencing key names)
+  - `mocks/*` (mock data, not real credentials)
+
+#### `.pre-commit-config.yaml` (new)
+- Wires gitleaks v8.21.2 as a pre-commit hook so every `git commit` scans staged
+  files for leaked credentials before they reach the remote.
+
+#### `backend/utils/secret_manager.py` (new)
+- `get_secret(name, default=None)` — resolution order:
+  1. In-memory cache (process lifetime)
+  2. GCP Secret Manager (when `GOOGLE_CLOUD_PROJECT` env var is set)
+  3. Environment variable
+  4. Provided default
+- Gracefully degrades when `google-cloud-secret-manager` is not installed.
+- `clear_cache()` for secret rotation use-cases.
+
+#### `backend/utils/secrets.py` (modified)
+- `get_secret` now delegates to `secret_manager.get_secret` as the first step,
+  enabling GCP auto-detection and in-memory caching without breaking the existing
+  `SECRETS_BACKEND` provider chain (AWS, Vault, explicit GCP).
+
+#### `backend/server.py` (modified)
+- CORS allowed origins now read from `CORS_ALLOWED_ORIGINS` env var
+  (comma-separated, stripped of whitespace).
+- Default: `http://localhost:3000,http://localhost:3333,http://host.docker.internal:3000`
+- Application raises `RuntimeError` at startup if `*` is in the origin list,
+  preventing accidental wildcard CORS in production.
+
+### Validation Results
+
+```
+python -c "from backend.utils.secret_manager import get_secret; print('OK')"  → OK
+grep CORS_ALLOWED_ORIGINS backend/server.py                                    → match found
+docs/AUDIT_FINDINGS.md                                                         → non-empty ✅
+```
