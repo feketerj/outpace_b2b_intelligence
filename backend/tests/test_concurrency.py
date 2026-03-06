@@ -113,22 +113,22 @@ class TestChatQuotaConcurrency:
         Static analysis test to ensure the pattern isn't accidentally removed.
         """
         import inspect
-        from backend.routes import chat
+        from backend.routes.chat import quota as chat_quota
 
-        # Get the source of send_chat_message
-        source = inspect.getsource(chat.send_chat_message)
+        # After chat.py decomposition, quota logic lives in increment_quota
+        source = inspect.getsource(chat_quota.increment_quota)
 
-        # Verify atomic increment pattern exists
-        assert '"$inc"' in source or "'$inc'" in source, \
-            "send_chat_message must use atomic $inc for quota"
+        # Accept $inc (original) or $add (aggregation-pipeline equivalent)
+        assert '"$inc"' in source or "'$inc'" in source or '"$add"' in source or "'$add'" in source, \
+            "increment_quota must use atomic $inc or $add for quota"
 
         # Verify conditional check pattern (only increment if under limit)
         assert '"$lt"' in source or "'$lt'" in source, \
-            "send_chat_message must use conditional check ($lt) with $inc"
+            "increment_quota must use conditional check ($lt) with atomic increment"
 
         # Verify the increment targets messages_used
         assert "messages_used" in source, \
-            "send_chat_message must increment messages_used"
+            "increment_quota must increment messages_used"
 
     @pytest.mark.asyncio
     async def test_concurrent_quota_with_mock_db(self):
