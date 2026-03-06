@@ -55,6 +55,13 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 REPORT_FILE="$REPORT_DIR/carfax_$TIMESTAMP.json"
 LOG_FILE="/var/log/supervisor/backend.err.log"
 
+# Graceful skip when required secrets are not configured (e.g. in CI without secrets)
+if [ -z "${CARFAX_ADMIN_EMAIL:-}" ] || [ -z "${CARFAX_ADMIN_PASSWORD:-}" ] || \
+   [ -z "${CARFAX_TENANT_A_PASSWORD:-}" ] || [ -z "${CARFAX_TENANT_B_PASSWORD:-}" ]; then
+    echo "WARNING: Required CARFAX_* env vars not set. Skipping carfax tests."
+    exit 0
+fi
+
 # Fixtures from docs/testing/TEST_PLAN.json
 ADMIN_EMAIL="${CARFAX_ADMIN_EMAIL:?CARFAX_ADMIN_EMAIL not set}"
 ADMIN_PASSWORD="${CARFAX_ADMIN_PASSWORD:?CARFAX_ADMIN_PASSWORD not set}"
