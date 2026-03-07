@@ -138,3 +138,9 @@ carfax_reports/
 # Playwright artifacts
 frontend/playwright-report/
 frontend/test-results/
+
+# Local git config (should never be committed)
+.gitconfig
+
+# Development screenshots
+.screenshots/
