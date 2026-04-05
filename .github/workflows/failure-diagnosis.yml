@@ -1,0 +1,155 @@
+name: Failure Diagnosis & Agent Prompt
+
+on:
+  workflow_run:
+    workflows: ["*"]
+    types: [completed]
+
+permissions:
+  issues: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  diagnose:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get failed run details
+        id: run_info
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID="${{ github.event.workflow_run.id }}"
+          REPO="${{ github.repository }}"
+          WF_NAME="${{ github.event.workflow_run.name }}"
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          RUN_URL="${{ github.event.workflow_run.html_url }}"
+
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "repo=$REPO" >> "$GITHUB_OUTPUT"
+          echo "wf_name=$WF_NAME" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "sha=${SHA:0:7}" >> "$GITHUB_OUTPUT"
+          echo "run_url=$RUN_URL" >> "$GITHUB_OUTPUT"
+
+          # Check if this run is associated with a PR
+          EVENT="${{ github.event.workflow_run.event }}"
+          if [ "$EVENT" = "pull_request" ]; then
+            # Get PR number from the workflow run's pull_requests array
+            PR_NUM=$(gh api "repos/$REPO/actions/runs/$RUN_ID" \
+              --jq '.pull_requests[0].number // empty' 2>/dev/null || true)
+            echo "pr_number=$PR_NUM" >> "$GITHUB_OUTPUT"
+            echo "is_pr=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pr_number=" >> "$GITHUB_OUTPUT"
+            echo "is_pr=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download and extract failure logs
+        id: logs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID="${{ steps.run_info.outputs.run_id }}"
+          REPO="${{ steps.run_info.outputs.repo }}"
+
+          # Get failed jobs
+          FAILED_JOBS=$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" \
+            --jq '[.jobs[] | select(.conclusion == "failure") | {name: .name, id: .id, failed_step: ([.steps[] | select(.conclusion == "failure")][0].name // "unknown")}]')
+
+          echo "failed_jobs<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$FAILED_JOBS" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          # Download logs and extract error lines
+          mkdir -p /tmp/logs
+          gh api "repos/$REPO/actions/runs/$RUN_ID/logs" > /tmp/logs/run.zip 2>/dev/null || true
+
+          ERROR_LINES=""
+          if [ -f /tmp/logs/run.zip ] && file /tmp/logs/run.zip | grep -q 'Zip'; then
+            cd /tmp/logs && unzip -o run.zip -d extracted/ 2>/dev/null || true
+            # Extract error-relevant lines (last 80 lines of each failed job log, filtered)
+            ERROR_LINES=$(find extracted/ -name "*.txt" -exec grep -l -iE "error|failed|exception|cannot|conflict|denied|fatal" {} \; | while read f; do
+              echo "--- $(basename "$f") ---"
+              grep -iE "error|Error|failed|exception|cannot|Cannot|conflict|denied|fatal|FAILED|pip|npm|ModuleNotFoundError|ImportError|ResolutionImpossible|SyntaxError" "$f" | tail -30
+              echo ""
+            done | head -200)
+          fi
+
+          # Fallback: use annotations
+          if [ -z "$ERROR_LINES" ]; then
+            ERROR_LINES=$(gh api "repos/$REPO/check-runs?filter=latest&check_suite_id=$(gh api repos/$REPO/actions/runs/$RUN_ID --jq '.check_suite_id')" \
+              --jq '[.check_runs[] | select(.conclusion == "failure") | .output.summary // .output.text // empty] | join("\n")' 2>/dev/null | head -200 || echo "Could not retrieve error details")
+          fi
+
+          echo "error_lines<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$ERROR_LINES" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Build and post agent prompt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="${{ steps.run_info.outputs.repo }}"
+          WF_NAME="${{ steps.run_info.outputs.wf_name }}"
+          BRANCH="${{ steps.run_info.outputs.branch }}"
+          SHA="${{ steps.run_info.outputs.sha }}"
+          RUN_URL="${{ steps.run_info.outputs.run_url }}"
+          IS_PR="${{ steps.run_info.outputs.is_pr }}"
+          PR_NUM="${{ steps.run_info.outputs.pr_number }}"
+          FAILED_JOBS='${{ steps.logs.outputs.failed_jobs }}'
+          ERROR_LINES='${{ steps.logs.outputs.error_lines }}'
+
+          # Build the agent prompt
+          BODY="## 🔧 CI Failure — Agent Fix Prompt
+
+**Workflow:** \`$WF_NAME\`
+**Branch:** \`$BRANCH\` (\`$SHA\`)
+**Run:** $RUN_URL
+
+### Failed Jobs
+\`\`\`json
+$FAILED_JOBS
+\`\`\`
+
+### Error Log (extracted)
+\`\`\`
+$ERROR_LINES
+\`\`\`
+
+### Agent Task
+**Repo:** $REPO
+**Branch:** $BRANCH
+**Priority:** HIGH
+
+#### Context
+The \`$WF_NAME\` workflow failed on branch \`$BRANCH\`. See error log above for root cause.
+
+#### Objective
+Fix the root cause of this CI failure. The error log above contains the relevant failure output.
+
+#### Constraints
+- Do not remove or weaken existing tests
+- If the fix involves a dependency version change, ensure all other dependencies remain compatible
+- If the fix requires a breaking change, document it clearly in the commit message
+
+#### Verification
+- [ ] The \`$WF_NAME\` workflow passes on this branch
+- [ ] No new warnings or deprecations introduced
+- [ ] All other existing workflows still pass
+"
+
+          if [ "$IS_PR" = "true" ] && [ -n "$PR_NUM" ]; then
+            # Post as PR comment
+            gh pr comment "$PR_NUM" --repo "$REPO" --body "$BODY"
+            echo "Posted agent prompt as comment on PR #$PR_NUM"
+          else
+            # Post as new Issue
+            gh issue create --repo "$REPO" \
+              --title "🔧 CI Failure: $WF_NAME on $BRANCH ($SHA)" \
+              --body "$BODY" \
+              --label "ci-failure,agent-task"
+            echo "Created issue for CI failure on $BRANCH"
+          fi
