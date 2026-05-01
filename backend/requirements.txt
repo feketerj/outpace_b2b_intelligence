@@ -6,7 +6,7 @@ anyio==4.12.0
 APScheduler==3.11.1
 attrs==25.4.0
 bcrypt==4.0.1  # Pin to 4.0.x for passlib 1.7.4 compatibility (4.1+ removed __about__)
-black==25.12.0
+black==26.3.1
 boto3==1.42.5
 botocore==1.42.5
 cachetools==6.2.3
