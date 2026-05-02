@@ -262,42 +262,27 @@ test_S0_auth_happy_expansion() {
     section "S0_auth_happy_expansion (3 tests)"
 
     # AUTH-H-002: Tenant admin login
-    # Note: Seed data uses .test TLD which API rejects - register valid admin first
     echo -e "\n${BOLD}AUTH-H-002: tenant_admin_login_valid${NC}"
-    local admin_email="carfax-admin-$(date +%s)@tenant-a-test.com"
-    local admin_password="$TENANT_A_PASSWORD"
-
-    # Register a tenant_admin with valid email domain
-    local reg_resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/register" \
+    local resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/login" \
         -H "Content-Type: application/json" \
-        -d "{\"email\":\"$admin_email\",\"password\":\"$admin_password\",\"full_name\":\"CARFAX Test Admin\",\"role\":\"tenant_admin\",\"tenant_id\":\"$TENANT_A_ID\"}")
-    local reg_status=$(echo "$reg_resp" | tail -n1)
-
-    if [[ ! "$reg_status" =~ ^(200|201)$ ]]; then
-        evidence "Failed to register tenant_admin: HTTP $reg_status"
-        fail "AUTH-H-002: tenant_admin_login_valid (registration failed)"
+        -d "{\"email\":\"$TENANT_A_ADMIN_EMAIL\",\"password\":\"$TENANT_A_ADMIN_PASSWORD\"}")
+    local status=$(echo "$resp" | tail -n1)
+    local body=$(echo "$resp" | sed '$d')
+    local token=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
+    local role=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('user',{}).get('role',''))" 2>/dev/null)
+    evidence "email=$TENANT_A_ADMIN_EMAIL -> HTTP $status, role=$role, access_token=${token:+present}"
+    if [ "$status" = "200" ] && [ -n "$token" ] && [ "$role" = "tenant_admin" ]; then
+        TENANT_A_ADMIN_TOKEN="$token"
+        pass "AUTH-H-002: tenant_admin_login_valid"
     else
-        # Now test login
-        local resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/login" \
-            -H "Content-Type: application/json" \
-            -d "{\"email\":\"$admin_email\",\"password\":\"$admin_password\"}")
-        local status=$(echo "$resp" | tail -n1)
-        local body=$(echo "$resp" | sed '$d')
-        local token=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
-        local role=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('user',{}).get('role',''))" 2>/dev/null)
-        evidence "email=$admin_email -> HTTP $status, role=$role, access_token=${token:+present}"
-        if [ "$status" = "200" ] && [ -n "$token" ] && [ "$role" = "tenant_admin" ]; then
-            TENANT_A_ADMIN_TOKEN="$token"
-            pass "AUTH-H-002: tenant_admin_login_valid"
-        else
-            fail "AUTH-H-002: tenant_admin_login_valid (status=$status, role=$role)"
-        fi
+        fail "AUTH-H-002: tenant_admin_login_valid (status=$status, role=$role)"
     fi
 
-    # AUTH-H-005: Register new user (valid payload → 200/201)
-    echo -e "\n${BOLD}AUTH-H-005: register_new_user_valid${NC}"
+    # AUTH-H-005: Create new tenant user through authenticated admin API
+    echo -e "\n${BOLD}AUTH-H-005: admin_create_new_user_valid${NC}"
     local unique_email="carfax-test-$(date +%s)@test.com"
-    resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/register" \
+    resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/users" \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
         -H "Content-Type: application/json" \
         -d "{\"email\":\"$unique_email\",\"password\":\"$TENANT_A_PASSWORD\",\"full_name\":\"CARFAX Test User\",\"role\":\"tenant_user\",\"tenant_id\":\"$TENANT_A_ID\"}")
     status=$(echo "$resp" | tail -n1)
@@ -305,9 +290,9 @@ test_S0_auth_happy_expansion() {
     local user_id=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null)
     evidence "email=$unique_email -> HTTP $status, user_id=${user_id:+present}"
     if [[ "$status" =~ ^(200|201)$ ]] && [ -n "$user_id" ]; then
-        pass "AUTH-H-005: register_new_user_valid"
+        pass "AUTH-H-005: admin_create_new_user_valid"
     else
-        fail "AUTH-H-005: register_new_user_valid ($status)"
+        fail "AUTH-H-005: admin_create_new_user_valid ($status)"
     fi
 
     # AUTH-H-006: Token contains correct claims (sub, role, tenant_id)
@@ -427,9 +412,10 @@ test_S0_auth_invalid_expansion() {
         fail "AUTH-I-006: tampered_token_rejected ($auth_status)"
     fi
 
-    # AUTH-I-007: Duplicate email registration
+    # AUTH-I-007: Duplicate email rejected by authenticated admin user creation
     echo -e "\n${BOLD}AUTH-I-007: duplicate_email_rejected${NC}"
-    resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/register" \
+    resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/users" \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
         -H "Content-Type: application/json" \
         -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$TENANT_A_PASSWORD\",\"full_name\":\"Duplicate User\",\"role\":\"tenant_user\",\"tenant_id\":\"$TENANT_A_ID\"}")
     status=$(echo "$resp" | tail -n1)
@@ -477,7 +463,8 @@ test_S0_auth_boundary_expansion() {
     echo -e "\n${BOLD}AUTH-B-002: password_min_length_accepted${NC}"
     local min_pass_email="carfax-minpass-$(date +%s)@test.com"
     local min_password="${CARFAX_MIN_PASSWORD:-$TENANT_A_PASSWORD}" # Exactly 8 characters
-    resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/register" \
+    resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/users" \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
         -H "Content-Type: application/json" \
         -d "{\"email\":\"$min_pass_email\",\"password\":\"$min_password\",\"full_name\":\"Min Pass User\",\"role\":\"tenant_user\",\"tenant_id\":\"$TENANT_A_ID\"}")
     status=$(echo "$resp" | tail -n1)
@@ -506,7 +493,8 @@ test_S0_auth_boundary_expansion() {
     local long_domain=$(python3 -c "print('b'*189 + '.com')")  # 189 + 4 = 193, total 50+1+193=244 (under 254)
     local max_email="${long_local}@${long_domain}"
     local email_len=${#max_email}
-    resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/register" \
+    resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/users" \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
         -H "Content-Type: application/json" \
         -d "{\"email\":\"$max_email\",\"password\":\"$TENANT_A_PASSWORD\",\"full_name\":\"Max Email User\",\"role\":\"tenant_user\",\"tenant_id\":\"$TENANT_A_ID\"}")
     status=$(echo "$resp" | tail -n1)
