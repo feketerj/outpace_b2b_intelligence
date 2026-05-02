@@ -25,6 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Secret and artifact scan
+        run: bash scripts/secret_scan.sh
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -40,6 +43,10 @@ jobs:
         env:
           MONGO_URL: mongodb://localhost:27017
           DB_NAME: outpace_intelligence
+          CARFAX_ADMIN_EMAIL: ${{ secrets.CARFAX_ADMIN_EMAIL || 'admin@example.com' }}
+          CARFAX_ADMIN_PASSWORD: ${{ secrets.CARFAX_ADMIN_PASSWORD || 'CIOnlyAdminPassword!2026' }}
+          CARFAX_TENANT_A_PASSWORD: ${{ secrets.CARFAX_TENANT_A_PASSWORD || 'CIOnlyTenantAPassword!2026' }}
+          CARFAX_TENANT_B_PASSWORD: ${{ secrets.CARFAX_TENANT_B_PASSWORD || 'CIOnlyTenantBPassword!2026' }}
         run: |
           pip install pymongo bcrypt
           python scripts/seed_carfax_tenants.py
@@ -81,12 +88,12 @@ jobs:
       - name: Run carfax tests
         env:
           API_URL: http://localhost:8000
-          CARFAX_ADMIN_EMAIL: ${{ secrets.CARFAX_ADMIN_EMAIL }}
-          CARFAX_ADMIN_PASSWORD: ${{ secrets.CARFAX_ADMIN_PASSWORD }}
-          CARFAX_TENANT_A_EMAIL: ${{ secrets.CARFAX_TENANT_A_EMAIL }}
-          CARFAX_TENANT_A_PASSWORD: ${{ secrets.CARFAX_TENANT_A_PASSWORD }}
-          CARFAX_TENANT_B_EMAIL: ${{ secrets.CARFAX_TENANT_B_EMAIL }}
-          CARFAX_TENANT_B_PASSWORD: ${{ secrets.CARFAX_TENANT_B_PASSWORD }}
+          CARFAX_ADMIN_EMAIL: ${{ secrets.CARFAX_ADMIN_EMAIL || 'admin@example.com' }}
+          CARFAX_ADMIN_PASSWORD: ${{ secrets.CARFAX_ADMIN_PASSWORD || 'CIOnlyAdminPassword!2026' }}
+          CARFAX_TENANT_A_EMAIL: ${{ secrets.CARFAX_TENANT_A_EMAIL || 'tenant-a@test.com' }}
+          CARFAX_TENANT_A_PASSWORD: ${{ secrets.CARFAX_TENANT_A_PASSWORD || 'CIOnlyTenantAPassword!2026' }}
+          CARFAX_TENANT_B_EMAIL: ${{ secrets.CARFAX_TENANT_B_EMAIL || 'tenant-b@test.com' }}
+          CARFAX_TENANT_B_PASSWORD: ${{ secrets.CARFAX_TENANT_B_PASSWORD || 'CIOnlyTenantBPassword!2026' }}
         run: |
           chmod +x carfax.sh
           ./carfax.sh all

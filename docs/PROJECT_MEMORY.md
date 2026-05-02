@@ -24,7 +24,7 @@ Updated: 2026-01-15
 | Doctor command | `python scripts/doctor.py` (10 checks) |
 | Frontend | Vite + React at http://localhost:3000 |
 | Build tool | Vite (migrated from CRA) |
-| Admin credentials | admin@example.com / REDACTED_ADMIN_PASSWORD |
+| Admin credentials | admin@example.com / REPLACE_WITH_CARFAX_ADMIN_PASSWORD |
 | DB name | outpace_intelligence |
 | API port | 8000 |
 | Production | `docker compose up -d` (see docs/DEPLOYMENT.md) |
@@ -435,7 +435,7 @@ grep "trace=<trace_id>" backend/logs/server.log
 **Context:** User wants to finish the dashboard and verify production-readiness.
 
 **HigherGov Integration - VERIFIED WORKING:**
-1. Created `backend/.env` with `HIGHERGOV_API_KEY=REDACTED_HIGHERGOV_API_KEY`
+1. Created `backend/.env` with `HIGHERGOV_API_KEY=<redacted-highergov-api-key>`
 2. Configured Tenant A with search ID `L2NTs2qFXaB5q3zicavuB`
 3. Triggered sync: `POST /api/sync/manual/{tenant_id}?sync_type=opportunities`
 4. Result: **10 real opportunities synced from HigherGov**
@@ -454,7 +454,7 @@ URL: https://www.highergov.com/contract-opportunity/27245/
 | Test | Result | Details |
 |------|--------|---------|
 | Login page | PASS | http://host.docker.internal:3000/login loads correctly |
-| Login auth | PASS | admin@example.com / REDACTED_ADMIN_PASSWORD succeeds |
+| Login auth | PASS | admin@example.com / REPLACE_WITH_CARFAX_ADMIN_PASSWORD succeeds |
 | Dashboard stats | PASS | Shows 7 tenants, 30 users, 194 opportunities |
 | Tenants page | PASS | All 7 tenants displayed |
 | Tenant Preview | PASS | Opens new tab with 50 opportunities for Tenant A |
@@ -507,7 +507,7 @@ URL: https://www.highergov.com/contract-opportunity/27245/
    - `fullyParallel: false`
 
 **Browser Testing Completed:**
-- ✓ Login page (admin@example.com / REDACTED_ADMIN_PASSWORD)
+- ✓ Login page (admin@example.com / REPLACE_WITH_CARFAX_ADMIN_PASSWORD)
 - ✓ Dashboard (6 tenants, 30 users, 184 opportunities)
 - ✓ Tenants page (all 6 tenants visible)
 - ✓ Tenant Config Modal (all 8 tabs: Basic, Master WL, Branding, Search, Intelligence, Chat, Knowledge, Agents)
@@ -1123,6 +1123,6 @@ python scripts/doctor.py  # All 10 checks should pass
 When Docker is available:
 1. `docker start mongo-b2b`
 2. `python scripts/doctor.py` - verify all checks pass
-3. Start server: `MONGO_URL=mongodb://localhost:27017 DB_NAME=outpace_intelligence JWT_SECRET=REDACTED_LOCAL_JWT_SECRET python -m uvicorn backend.server:app --port 8000`
+3. Start server: `MONGO_URL=mongodb://localhost:27017 DB_NAME=outpace_intelligence JWT_SECRET=REPLACE_WITH_LOCAL_JWT_SECRET python -m uvicorn backend.server:app --port 8000`
 4. Hit health endpoints: `curl http://localhost:8000/health` and `/health/deep`
 5. Run carfax.sh integration tests if seeded data exists

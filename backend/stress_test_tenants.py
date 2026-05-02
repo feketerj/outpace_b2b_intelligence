@@ -13,6 +13,8 @@ from datetime import datetime
 
 BASE_URL = "http://localhost:8000"
 ADMIN_TOKEN = None
+ADMIN_EMAIL = os.environ["CARFAX_ADMIN_EMAIL"]
+ADMIN_PASSWORD = os.environ["CARFAX_ADMIN_PASSWORD"]
 
 # Results storage
 results = {
@@ -28,8 +30,8 @@ results = {
 def login_admin():
     global ADMIN_TOKEN
     resp = requests.post(f"{BASE_URL}/api/auth/login", json={
-        "email": os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com"),
-        "password": os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")
+        "email": ADMIN_EMAIL,
+        "password": ADMIN_PASSWORD
     })
     if resp.status_code != 200:
         raise Exception(f"Admin login failed: {resp.text}")

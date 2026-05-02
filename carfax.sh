@@ -45,7 +45,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${GITHUB_WORKSPACE:-${REPO_ROOT:-$SCRIPT_DIR}}"
 
 # Single source of truth for API_URL (matches docs/testing/TEST_PLAN.json)
-API_URL="${API_URL:-https://integrity-shield-1.preview.emergentagent.com}"
+API_URL="${API_URL:-http://localhost:8000}"
 
 # Stratum selection for stratified Monte Carlo testing (default: all)
 STRATUM="${1:-all}"

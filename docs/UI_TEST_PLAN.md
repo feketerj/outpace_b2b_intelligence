@@ -10,7 +10,7 @@
 
 | Role | Email | Password |
 |------|-------|----------|
-| Super Admin | admin@example.com | REDACTED_ADMIN_PASSWORD |
+| Super Admin | admin@example.com | REPLACE_WITH_CARFAX_ADMIN_PASSWORD |
 | Tenant User | (create via Super Admin) | (set during creation) |
 
 ---
@@ -35,7 +35,7 @@
 | L2 | Empty submit | Click Sign In with empty fields | Validation error, no submission | [ ] |
 | L3 | Invalid email | Enter "notanemail", valid password | Validation error on email format | [ ] |
 | L4 | Wrong credentials | Enter wrong email/password | Toast error "Invalid credentials" | [ ] |
-| L5 | Successful login (Super Admin) | admin@example.com / REDACTED_ADMIN_PASSWORD | Redirect to /admin dashboard | [ ] |
+| L5 | Successful login (Super Admin) | admin@example.com / REPLACE_WITH_CARFAX_ADMIN_PASSWORD | Redirect to /admin dashboard | [ ] |
 | L6 | Successful login (Tenant User) | Tenant user credentials | Redirect to /dashboard | [ ] |
 | L7 | Loading state | Click Sign In with valid creds | Button shows "Signing in..." | [ ] |
 | L8 | Already logged in | Navigate to /login while authenticated | Redirect to appropriate dashboard | [ ] |

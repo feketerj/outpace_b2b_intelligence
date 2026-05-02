@@ -127,18 +127,18 @@ CATEGORY (1 per route file)
 
 | ID | Email | Password | Role | Tenant | Purpose |
 |----|-------|----------|------|--------|---------|
-| `super_admin_001` | admin@example.com | REDACTED_ADMIN_PASSWORD | super_admin | null | Super admin operations |
-| `tenant_admin_a` | admin-a@test.com | REDACTED_TEST_PASSWORD | tenant_admin | tenant-a | Tenant A admin |
-| `tenant_admin_b` | admin-b@test.com | REDACTED_TEST_PASSWORD | tenant_admin | tenant-b | Tenant B admin |
-| `tenant_user_a1` | user-a@test.com | REDACTED_TEST_PASSWORD | tenant_user | tenant-a | Regular user A |
-| `tenant_user_b1` | user-b@test.com | REDACTED_TEST_PASSWORD | tenant_user | tenant-b | Regular user B |
-| `tenant_user_a2` | user2-a@test.com | REDACTED_TEST_PASSWORD | tenant_user | tenant-a | Second user A (concurrency) |
-| `inactive_user` | inactive@test.com | REDACTED_TEST_PASSWORD | tenant_user | tenant-a | `is_active=false` |
-| `expired_user` | expired@test.com | REDACTED_TEST_PASSWORD | tenant_user | tenant-expired | Expired tenant user |
-| `noquota_user` | noquota@test.com | REDACTED_TEST_PASSWORD | tenant_user | tenant-noquota | No quota user |
-| `master_admin` | master@test.com | REDACTED_TEST_PASSWORD | tenant_admin | tenant-master | Master tenant admin |
-| `norag_user` | norag@test.com | REDACTED_TEST_PASSWORD | tenant_user | tenant-norag | No RAG user |
-| `readonly_user` | readonly@test.com | REDACTED_TEST_PASSWORD | tenant_user | tenant-a | Read-only tests |
+| `super_admin_001` | admin@example.com | REPLACE_WITH_CARFAX_ADMIN_PASSWORD | super_admin | null | Super admin operations |
+| `tenant_admin_a` | admin-a@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_admin | tenant-a | Tenant A admin |
+| `tenant_admin_b` | admin-b@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_admin | tenant-b | Tenant B admin |
+| `tenant_user_a1` | user-a@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_user | tenant-a | Regular user A |
+| `tenant_user_b1` | user-b@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_user | tenant-b | Regular user B |
+| `tenant_user_a2` | user2-a@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_user | tenant-a | Second user A (concurrency) |
+| `inactive_user` | inactive@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_user | tenant-a | `is_active=false` |
+| `expired_user` | expired@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_user | tenant-expired | Expired tenant user |
+| `noquota_user` | noquota@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_user | tenant-noquota | No quota user |
+| `master_admin` | master@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_admin | tenant-master | Master tenant admin |
+| `norag_user` | norag@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_user | tenant-norag | No RAG user |
+| `readonly_user` | readonly@test.com | REPLACE_WITH_CARFAX_TENANT_PASSWORD | tenant_user | tenant-a | Read-only tests |
 
 ### 4.3 Opportunities (12 canonical)
 
@@ -326,9 +326,9 @@ CATEGORY (1 per route file)
 
 | ID | Test | Input | Expected | Line |
 |----|------|-------|----------|------|
-| AUTH-H-001 | Super admin login | admin@example.com / REDACTED_ADMIN_PASSWORD | 200, access_token | L17-49 |
-| AUTH-H-002 | Tenant admin login | admin-a@test.com / REDACTED_TEST_PASSWORD | 200, access_token | L17-49 |
-| AUTH-H-003 | Tenant user login | user-a@test.com / REDACTED_TEST_PASSWORD | 200, access_token | L17-49 |
+| AUTH-H-001 | Super admin login | admin@example.com / REPLACE_WITH_CARFAX_ADMIN_PASSWORD | 200, access_token | L17-49 |
+| AUTH-H-002 | Tenant admin login | admin-a@test.com / REPLACE_WITH_CARFAX_TENANT_PASSWORD | 200, access_token | L17-49 |
+| AUTH-H-003 | Tenant user login | user-a@test.com / REPLACE_WITH_CARFAX_TENANT_PASSWORD | 200, access_token | L17-49 |
 | AUTH-H-004 | Get current user | valid token | 200, user object | L93-105 |
 | AUTH-H-005 | Register new user | valid user data | 200, user created | L51-91 |
 | AUTH-H-006 | Token contains correct claims | login response | sub, role, tenant_id present | L38-44 |
@@ -1509,7 +1509,7 @@ services:
     environment:
       MONGO_URL: mongodb://test-mongo:27017
       DB_NAME: outpace_intelligence
-      JWT_SECRET: test-secret-key-12345
+      JWT_SECRET: REPLACE_WITH_TEST_JWT_SECRET
       MISTRAL_API_KEY: mock-key
       MISTRAL_API_URL: http://mock-mistral:8082
       HIGHERGOV_API_URL: http://mock-highergov:8081

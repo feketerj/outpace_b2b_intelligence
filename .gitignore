@@ -104,6 +104,8 @@ artifacts/SOURCE_MAP.txt
 
 # === Claude temp files ===
 tmpclaude-*
+.claude/
+agent_docs/
 
 # === Mobile development ===
 android-sdk/

@@ -22,6 +22,9 @@ def get_db():
 
 def main():
     now = datetime.now(timezone.utc).isoformat()
+    admin_password = os.environ["CARFAX_ADMIN_PASSWORD"]
+    tenant_a_password = os.environ["CARFAX_TENANT_A_PASSWORD"]
+    tenant_b_password = os.environ["CARFAX_TENANT_B_PASSWORD"]
     users = [
         {
             "id": "super_admin_001",
@@ -29,7 +32,7 @@ def main():
             "full_name": "Super Admin",
             "role": "super_admin",
             "tenant_id": None,
-            "hashed_password": hash_pw(os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")),
+            "hashed_password": hash_pw(admin_password),
             "created_at": now,
             "updated_at": now,
             "last_login": None,
@@ -40,7 +43,7 @@ def main():
             "full_name": "Tenant A User",
             "role": "tenant_user",
             "tenant_id": TENANT_A_ID,
-            "hashed_password": hash_pw(os.getenv("CARFAX_TENANT_A_PASSWORD", "changeme")),
+            "hashed_password": hash_pw(tenant_a_password),
             "created_at": now,
             "updated_at": now,
             "last_login": None,
@@ -51,7 +54,7 @@ def main():
             "full_name": "Tenant B User",
             "role": "tenant_user",
             "tenant_id": TENANT_B_ID,
-            "hashed_password": hash_pw(os.getenv("CARFAX_TENANT_A_PASSWORD", "changeme")),
+            "hashed_password": hash_pw(tenant_b_password),
             "created_at": now,
             "updated_at": now,
             "last_login": None,

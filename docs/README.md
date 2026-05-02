@@ -26,7 +26,7 @@ This folder is organized by intent. Use this index to find the right doc fast.
 - `TESTING.md` - test execution
 - `QC_CHECKLIST.md`, `QC_REPORT.md` - QA process + latest report
 - `UI_TEST_PLAN.md` - UI testing
-- `test-plan-v3.md`, `test_result.md` - legacy test artifacts (candidates for archive)
+- `test-plan-v3.md` - legacy test plan artifact
 - `testing/` - detailed testing methodology
 
 ## Audits & Reviews

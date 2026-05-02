@@ -19,7 +19,7 @@ A B2B intelligence platform for tracking government contracting opportunities, g
 
 - Python 3.11+
 - MongoDB
-- Node.js 18+ (for frontend)
+- Node.js 20.19+ or 22.12+ (for frontend)
 
 ### Backend Setup
 
@@ -30,7 +30,7 @@ pip install -r requirements.txt
 # Required environment variables
 export MONGO_URL=mongodb://localhost:27017
 export DB_NAME=outpace_intelligence
-export JWT_SECRET=your-secret-key
+export JWT_SECRET=REPLACE_WITH_STRONG_JWT_SECRET
 
 # Optional: CORS (defaults to localhost origins if unset)
 export CORS_ALLOWED_ORIGINS="https://your-domain.com,https://app.your-domain.com"
@@ -49,7 +49,7 @@ uvicorn server:app --reload --port 8000
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
@@ -95,7 +95,13 @@ Run tests in Docker:
 
 ```bash
 docker build -f Dockerfile.test -t test-runner .
-docker run --rm -e API_URL=http://host.docker.internal:8000 test-runner all
+docker run --rm \
+  -e API_URL=http://host.docker.internal:8000 \
+  -e CARFAX_ADMIN_EMAIL="$CARFAX_ADMIN_EMAIL" \
+  -e CARFAX_ADMIN_PASSWORD="$CARFAX_ADMIN_PASSWORD" \
+  -e CARFAX_TENANT_A_PASSWORD="$CARFAX_TENANT_A_PASSWORD" \
+  -e CARFAX_TENANT_B_PASSWORD="$CARFAX_TENANT_B_PASSWORD" \
+  test-runner all
 ```
 
 ## Project Structure

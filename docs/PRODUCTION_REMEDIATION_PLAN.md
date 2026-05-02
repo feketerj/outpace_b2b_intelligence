@@ -68,7 +68,7 @@ CORS_ORIGINS=http://localhost:3000,http://localhost:3333
 # ═══════════════════════════════════════════════════
 
 # HigherGov (required for opportunity sync)
-HIGHERGOV_API_KEY=your-highergov-api-key
+HIGHERGOV_API_KEY=<set-your-highergov-api-key>
 
 # Mistral AI (required for AI scoring)
 MISTRAL_API_KEY=your-mistral-api-key

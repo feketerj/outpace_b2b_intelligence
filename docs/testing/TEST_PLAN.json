@@ -2,7 +2,7 @@
   "test_plan": "OutPace Carfax Test Plan",
   "as_of": "2025-12-18",
   "environments": {
-    "base_url": "https://integrity-shield-1.preview.emergentagent.com"
+    "base_url": "http://localhost:8000"
   },
   "principles": [
     "Evidence-first: every test records curl + HTTP code + key log/db checks",
@@ -11,9 +11,9 @@
     "No silent pass: every test has explicit PASS criteria"
   ],
   "fixtures": {
-    "super_admin": { "email": "admin@example.com", "password": "REDACTED_ADMIN_PASSWORD" },
-    "tenant_a_user": { "email": "tenant-test@test.com", "password": "REDACTED_TEST_PASSWORD" },
-    "tenant_b_user": { "email": "tenant-b-test@test.com", "password": "REDACTED_TEST_PASSWORD" },
+    "super_admin": { "email": "admin@example.com", "password": "REPLACE_WITH_CARFAX_ADMIN_PASSWORD" },
+    "tenant_a_user": { "email": "tenant-test@test.com", "password": "REPLACE_WITH_CARFAX_TENANT_PASSWORD" },
+    "tenant_b_user": { "email": "tenant-b-test@test.com", "password": "REPLACE_WITH_CARFAX_TENANT_PASSWORD" },
     "tenant_a_id": "bec8a414-b00d-4a58-9539-5f732db23b35",
     "tenant_b_id": "8aa521eb-56ad-4727-8f09-c01fc7921c21"
   },

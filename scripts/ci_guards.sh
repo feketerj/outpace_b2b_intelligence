@@ -46,8 +46,16 @@ else
 fi
 
 # Guard: No hardcoded dev secrets in code
-if grep -rn "local-dev-secret\|test-secret-key\|changeme" "$BACKEND_DIR" --include="*.py" | grep -v "test_" | grep -v "__pycache__" | grep -v "canaries.py"; then
+if grep -rn "local-dev-secret\|test-secret-key\|changeme\|outpace[0-9][0-9][0-9][0-9]" "$BACKEND_DIR" --include="*.py" | grep -v "test_" | grep -v "__pycache__" | grep -v "canaries.py" | grep -v "preflight.py"; then
     echo -e "${YELLOW}WARN${NC}: Found potential hardcoded dev secrets"
+fi
+
+# Guard: No hardcoded password hashes in seed/bootstrap scripts
+if grep -rn "get_password_hash([\"']" "$BACKEND_DIR" "$PROJECT_ROOT/scripts" --include="*.py" | grep -v "test_" | grep -v "__pycache__"; then
+    echo -e "${RED}FAIL${NC}: Found hardcoded password passed to get_password_hash"
+    FAILED=1
+else
+    echo -e "${GREEN}PASS${NC}: No hardcoded password hashing in seed/bootstrap scripts"
 fi
 
 # Guard: No TODO/FIXME in critical security files

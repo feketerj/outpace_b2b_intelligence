@@ -168,10 +168,6 @@ consolidation:
       reason: "Point-in-time PR description, now stale"
       action: "Move to archive/ or delete"
 
-    - file: test_result.md
-      reason: "Superseded by PROJECT_STATUS.md"
-      action: "Move to archive/ or delete"
-
     - file: test-plan-v3.md
       reason: "Plan is now in execution, covered by TESTING.md"
       action: "Merge useful parts into TESTING.md, then archive"
@@ -219,4 +215,4 @@ quick_reference:
   commands:
     health_check: "python scripts/doctor.py"
     unit_tests: "pytest backend/tests/ -v"
-    start_server: "MONGO_URL=mongodb://localhost:27017 DB_NAME=outpace_intelligence JWT_SECRET=REDACTED_LOCAL_JWT_SECRET python -m uvicorn backend.server:app --port 8000"
+    start_server: "MONGO_URL=mongodb://localhost:27017 DB_NAME=outpace_intelligence JWT_SECRET=REPLACE_WITH_LOCAL_JWT_SECRET python -m uvicorn backend.server:app --port 8000"

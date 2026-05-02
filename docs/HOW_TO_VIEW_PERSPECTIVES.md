@@ -10,7 +10,7 @@
 
 1. **Login as Super Admin:**
    - Email: `admin@example.com`
-   - Password: `REDACTED_BOOTSTRAP_PASSWORD`
+   - Password: use the value configured in `SUPER_ADMIN_PASSWORD` or `CARFAX_ADMIN_PASSWORD`
 
 2. **Go to Tenants** (sidebar)
 
@@ -32,7 +32,7 @@
 **Test Account Already Created:**
 - **Tenant:** Test Marine Corp
 - **Email:** `user@testmarine.com`
-- **Password:** `REDACTED_DEMO_PASSWORD`
+- **Password:** use the tenant test password configured in your environment
 
 **Steps:**
 1. Logout from admin
@@ -178,12 +178,12 @@ Then login with that user.
 
 ### Super Admin
 - Email: `admin@example.com`
-- Password: `REDACTED_BOOTSTRAP_PASSWORD`
+- Password: use the value configured in `SUPER_ADMIN_PASSWORD` or `CARFAX_ADMIN_PASSWORD`
 - View: Admin panel
 
 ### Tenant User (Test Marine Corp)
 - Email: `user@testmarine.com`
-- Password: `REDACTED_DEMO_PASSWORD`
+- Password: use the tenant test password configured in your environment
 - View: White-labeled Test Marine dashboard
 
 ---

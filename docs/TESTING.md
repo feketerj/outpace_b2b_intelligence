@@ -86,12 +86,30 @@ docker run --rm -e API_URL=https://your-api.example.com test-runner all
 docker run --rm -e API_URL=https://your-api.example.com test-runner happy
 ```
 
+Pass the CARFAX credential environment variables when running the containerized test runner:
+
+```bash
+docker run --rm \
+  -e API_URL=http://host.docker.internal:8000 \
+  -e CARFAX_ADMIN_EMAIL="$CARFAX_ADMIN_EMAIL" \
+  -e CARFAX_ADMIN_PASSWORD="$CARFAX_ADMIN_PASSWORD" \
+  -e CARFAX_TENANT_A_PASSWORD="$CARFAX_TENANT_A_PASSWORD" \
+  -e CARFAX_TENANT_B_PASSWORD="$CARFAX_TENANT_B_PASSWORD" \
+  test-runner all
+```
+
 ### WSL/Docker Desktop Networking
 
 When running Docker on Windows with WSL2, use `host.docker.internal` to reach services running on the host:
 
 ```bash
-docker run --rm -e API_URL=http://host.docker.internal:8000 test-runner all
+docker run --rm \
+  -e API_URL=http://host.docker.internal:8000 \
+  -e CARFAX_ADMIN_EMAIL="$CARFAX_ADMIN_EMAIL" \
+  -e CARFAX_ADMIN_PASSWORD="$CARFAX_ADMIN_PASSWORD" \
+  -e CARFAX_TENANT_A_PASSWORD="$CARFAX_TENANT_A_PASSWORD" \
+  -e CARFAX_TENANT_B_PASSWORD="$CARFAX_TENANT_B_PASSWORD" \
+  test-runner all
 ```
 
 ## Test Reports

@@ -29,8 +29,8 @@ from typing import Tuple, List
 
 BACKEND_URL = "http://localhost:8000"
 FRONTEND_URL = "http://localhost:3000"
-TEST_EMAIL = os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com")
-TEST_PASSWORD = os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")
+TEST_EMAIL = os.environ["CARFAX_ADMIN_EMAIL"]
+TEST_PASSWORD = os.environ["CARFAX_ADMIN_PASSWORD"]
 
 
 def make_request(url: str, method: str = "GET", data: dict = None, headers: dict = None) -> Tuple[int, str, dict]:

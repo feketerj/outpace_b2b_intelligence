@@ -131,9 +131,8 @@ export const ColorPicker = ({
         const hsl = hexToHsl(hex);
         setHslValue(hsl);
         onChange(hsl);
-      } catch (e) {
-        // User cancelled or error
-        console.log('EyeDropper cancelled or error:', e);
+      } catch {
+        // The browser throws here when the user cancels the picker.
       }
     }
   };

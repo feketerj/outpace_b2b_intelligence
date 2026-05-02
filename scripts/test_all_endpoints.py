@@ -60,7 +60,7 @@ def run_auth_tests():
     # Valid login
     status, body = api_call("POST", "/api/auth/login", {
         "email": os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com"),
-        "password": os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")
+        "password": os.environ["CARFAX_ADMIN_PASSWORD"]
     })
     test("Valid login returns token", status == 200 and "access_token" in body)
     token = body.get("access_token")

@@ -11,8 +11,10 @@ import json
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-# Use public endpoint
-API_URL = "https://integrity-shield-1.preview.emergentagent.com/api"
+API_BASE_URL = os.environ.get("TEST_API_URL") or os.environ.get("API_URL") or "http://localhost:8000"
+API_URL = API_BASE_URL.rstrip("/")
+if not API_URL.endswith("/api"):
+    API_URL = f"{API_URL}/api"
 
 class OutPaceAPITester:
     def __init__(self):
@@ -105,7 +107,7 @@ class OutPaceAPITester:
             200,
             data={
                 "email": os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com"),
-                "password": os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")
+                "password": os.environ["CARFAX_ADMIN_PASSWORD"]
             }
         )
         
@@ -138,8 +140,8 @@ class OutPaceAPITester:
             "auth/login",
             200,
             data={
-                "email": "user@testmarine.com",
-                "password": "REDACTED_DEMO_PASSWORD"
+                "email": os.getenv("CARFAX_TENANT_A_EMAIL", "tenant-a@test.com"),
+                "password": os.environ["CARFAX_TENANT_A_PASSWORD"]
             }
         )
         

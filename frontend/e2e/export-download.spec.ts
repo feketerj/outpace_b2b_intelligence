@@ -2,7 +2,12 @@ import { test, expect } from '@playwright/test';
 import { statSync } from 'fs';
 
 const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@example.com';
-const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'changeme';
+const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD;
+
+const requireAdminPassword = () => {
+  test.skip(!E2E_ADMIN_PASSWORD, 'E2E_ADMIN_PASSWORD must be set for export tests.');
+  return E2E_ADMIN_PASSWORD!;
+};
 
 /**
  * Playwright e2e test — Export Download (PDF + Excel)
@@ -15,10 +20,11 @@ const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'changeme';
  * Helper: log in and navigate to the dashboard.
  */
 async function loginAndGoToDashboard(page: import('@playwright/test').Page) {
+  const adminPassword = requireAdminPassword();
   await page.goto('/login');
 
   await page.fill('input[type="email"], input[name="email"]', E2E_ADMIN_EMAIL);
-  await page.fill('input[type="password"], input[name="password"]', E2E_ADMIN_PASSWORD);
+  await page.fill('input[type="password"], input[name="password"]', adminPassword);
   await page.click('button[type="submit"]');
 
   await page.waitForURL('**/dashboard', { timeout: 15_000 });

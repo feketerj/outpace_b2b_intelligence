@@ -1,6 +1,12 @@
-const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@example.com';
-const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'changeme';
 import { test, expect } from '@playwright/test';
+
+const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@example.com';
+const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD;
+
+const requireAdminPassword = () => {
+  test.skip(!E2E_ADMIN_PASSWORD, 'E2E_ADMIN_PASSWORD must be set for dashboard tests.');
+  return E2E_ADMIN_PASSWORD!;
+};
 
 /**
  * Dashboard E2E Tests
@@ -10,10 +16,11 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Super Admin Dashboard', () => {
   test.beforeEach(async ({ page }) => {
+    const adminPassword = requireAdminPassword();
     // Login before each test
     await page.goto('/login');
     await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
-    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
+    await page.getByTestId('login-password-input').fill(adminPassword);
     await page.getByTestId('login-submit-button').click();
     await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
   });
@@ -43,9 +50,10 @@ test.describe('Super Admin Dashboard', () => {
 
 test.describe('Tenants Page', () => {
   test.beforeEach(async ({ page }) => {
+    const adminPassword = requireAdminPassword();
     await page.goto('/login');
     await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
-    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
+    await page.getByTestId('login-password-input').fill(adminPassword);
     await page.getByTestId('login-submit-button').click();
     await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
   });
@@ -66,9 +74,10 @@ test.describe('Tenants Page', () => {
 
 test.describe('Users Page', () => {
   test.beforeEach(async ({ page }) => {
+    const adminPassword = requireAdminPassword();
     await page.goto('/login');
     await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
-    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
+    await page.getByTestId('login-password-input').fill(adminPassword);
     await page.getByTestId('login-submit-button').click();
     await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
   });
@@ -81,9 +90,10 @@ test.describe('Users Page', () => {
 
 test.describe('Export Modal', () => {
   test.beforeEach(async ({ page }) => {
+    const adminPassword = requireAdminPassword();
     await page.goto('/login');
     await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
-    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
+    await page.getByTestId('login-password-input').fill(adminPassword);
     await page.getByTestId('login-submit-button').click();
     await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
   });

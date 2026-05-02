@@ -1,10 +1,12 @@
 import os
-﻿import requests
+import requests
 import time
 
 API = 'http://localhost:8000'
 
-token = requests.post(f'{API}/api/auth/login', json={'email':os.getenv('CARFAX_ADMIN_EMAIL', 'admin@example.com'),'password':os.getenv('CARFAX_ADMIN_PASSWORD', 'changeme')}).json()['access_token']
+admin_email = os.environ["CARFAX_ADMIN_EMAIL"]
+admin_password = os.environ["CARFAX_ADMIN_PASSWORD"]
+token = requests.post(f'{API}/api/auth/login', json={'email': admin_email, 'password': admin_password}).json()['access_token']
 headers = {'Authorization': f'Bearer {token}'}
 
 tenant = requests.post(f'{API}/api/tenants', headers=headers, json={'name':'Diag Test','slug':'diag-test'}).json()

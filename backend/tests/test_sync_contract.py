@@ -25,14 +25,18 @@ import time
 import os
 
 # Configuration
-API_URL = os.environ.get("TEST_API_URL", "https://integrity-shield-1.preview.emergentagent.com")
+API_URL = os.environ.get("TEST_API_URL", "http://localhost:8000")
 TEST_TENANT_ID = "8aa521eb-56ad-4727-8f09-c01fc7921c21"
 
 # Test credentials
 SUPER_ADMIN_EMAIL = os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com")
-SUPER_ADMIN_PASSWORD = os.getenv("CARFAX_ADMIN_PASSWORD", "changeme")
+SUPER_ADMIN_PASSWORD = os.getenv("CARFAX_ADMIN_PASSWORD")
 TENANT_USER_EMAIL = "tenant-b-test@test.com"
-TENANT_USER_PASSWORD = os.getenv("CARFAX_TENANT_A_PASSWORD", "changeme")
+TENANT_USER_PASSWORD = os.getenv("CARFAX_TENANT_A_PASSWORD")
+pytestmark = pytest.mark.skipif(
+    not SUPER_ADMIN_PASSWORD or not TENANT_USER_PASSWORD,
+    reason="CARFAX_ADMIN_PASSWORD and CARFAX_TENANT_A_PASSWORD are required for live sync contract tests",
+)
 
 # Required response fields (hardened contract)
 REQUIRED_FIELDS = [

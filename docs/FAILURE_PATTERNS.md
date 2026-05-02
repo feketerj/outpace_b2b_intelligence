@@ -23,7 +23,7 @@ netstat -an | grep 8000                   # Is port listening?
 ```bash
 docker-compose up -d
 # OR
-MONGO_URL=mongodb://localhost:27017 DB_NAME=outpace_intelligence JWT_SECRET=REDACTED_LOCAL_JWT_SECRET python -m uvicorn backend.server:app --port 8000
+MONGO_URL=mongodb://localhost:27017 DB_NAME=outpace_intelligence JWT_SECRET=REPLACE_WITH_LOCAL_JWT_SECRET python -m uvicorn backend.server:app --port 8000
 ```
 
 ---
@@ -45,7 +45,7 @@ grep JWT_SECRET backend/.env              # What secret is server using?
 
 **Fix:**
 ```bash
-export JWT_SECRET=REDACTED_LOCAL_JWT_SECRET
+export JWT_SECRET=REPLACE_WITH_LOCAL_JWT_SECRET
 # Restart server with same secret
 ```
 

@@ -1,6 +1,12 @@
-const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@example.com';
-const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'changeme';
 import { test, expect } from '@playwright/test';
+
+const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@example.com';
+const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD;
+
+const requireAdminPassword = () => {
+  test.skip(!E2E_ADMIN_PASSWORD, 'E2E_ADMIN_PASSWORD must be set for credentialed tests.');
+  return E2E_ADMIN_PASSWORD!;
+};
 
 /**
  * Authentication E2E Tests
@@ -51,11 +57,12 @@ test.describe('Login Page', () => {
   });
 
   test('successful login redirects to admin dashboard', async ({ page }) => {
+    const adminPassword = requireAdminPassword();
     await page.goto('/login');
 
     // Fill in valid super_admin credentials
     await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
-    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
+    await page.getByTestId('login-password-input').fill(adminPassword);
     await page.getByTestId('login-submit-button').click();
 
     // Should redirect to admin dashboard
@@ -68,11 +75,12 @@ test.describe('Login Page', () => {
   });
 
   test('button shows loading state during login', async ({ page }) => {
+    const adminPassword = requireAdminPassword();
     await page.goto('/login');
 
     // Fill in credentials
     await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
-    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
+    await page.getByTestId('login-password-input').fill(adminPassword);
 
     // Click and immediately check button text
     const button = page.getByTestId('login-submit-button');
@@ -98,10 +106,11 @@ test.describe('Protected Routes', () => {
   });
 
   test('allows access to protected routes with valid token', async ({ page }) => {
+    const adminPassword = requireAdminPassword();
     // First login to get a token
     await page.goto('/login');
     await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
-    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
+    await page.getByTestId('login-password-input').fill(adminPassword);
     await page.getByTestId('login-submit-button').click();
 
     // Wait for redirect
@@ -115,10 +124,11 @@ test.describe('Protected Routes', () => {
 
 test.describe('Logout', () => {
   test('logout clears token and redirects to login', async ({ page }) => {
+    const adminPassword = requireAdminPassword();
     // Login first
     await page.goto('/login');
     await page.getByTestId('login-email-input').fill(E2E_ADMIN_EMAIL);
-    await page.getByTestId('login-password-input').fill(E2E_ADMIN_PASSWORD);
+    await page.getByTestId('login-password-input').fill(adminPassword);
     await page.getByTestId('login-submit-button').click();
     await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
 

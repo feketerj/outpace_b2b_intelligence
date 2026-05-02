@@ -275,7 +275,7 @@ docker start mongo-b2b
 
 # 2. Start Backend (port 8000)
 cd backend
-MONGO_URL=mongodb://localhost:27017 DB_NAME=outpace_intelligence JWT_SECRET=REDACTED_LOCAL_JWT_SECRET python -m uvicorn server:app --reload --port 8000
+MONGO_URL=mongodb://localhost:27017 DB_NAME=outpace_intelligence JWT_SECRET=REPLACE_WITH_LOCAL_JWT_SECRET python -m uvicorn server:app --reload --port 8000
 
 # 3. Start Frontend (port 3000)
 cd frontend
@@ -289,7 +289,7 @@ python scripts/smoke_test.py   # All 4 E2E tests should pass
 ### Login
 - URL: http://localhost:3000
 - Email: admin@example.com
-- Password: REDACTED_ADMIN_PASSWORD
+- Password: REPLACE_WITH_CARFAX_ADMIN_PASSWORD
 
 ---
 
@@ -299,7 +299,7 @@ python scripts/smoke_test.py   # All 4 E2E tests should pass
 ```
 MONGO_URL=mongodb://localhost:27017
 DB_NAME=outpace_intelligence
-JWT_SECRET=REDACTED_LOCAL_JWT_SECRET
+JWT_SECRET=REPLACE_WITH_LOCAL_JWT_SECRET
 API_URL=http://localhost:8000  (Windows)
 API_URL=http://host.docker.internal:8000  (WSL)
 ```

@@ -9,7 +9,7 @@ Before running any tests, set the required environment variables:
 ```bash
 export MONGO_URL=mongodb://localhost:27017
 export DB_NAME=outpace_intelligence
-export JWT_SECRET=your-secret-key
+export JWT_SECRET=REPLACE_WITH_STRONG_JWT_SECRET
 ```
 
 Copy `.env.example` to get started:
@@ -19,7 +19,7 @@ cp .env.example .env
 # Edit .env with your values
 ```
 
-The test harness (`carfax.sh`) also reads these optional credentials:
+The test harness (`carfax.sh`) also reads these credentials:
 
 ```bash
 export CARFAX_ADMIN_EMAIL="admin@example.com"
@@ -115,7 +115,13 @@ docker build -f Dockerfile.test -t test-runner .
 ### Run tests against a running API
 
 ```bash
-docker run --rm -e API_URL=http://host.docker.internal:8000 test-runner all
+docker run --rm \
+  -e API_URL=http://host.docker.internal:8000 \
+  -e CARFAX_ADMIN_EMAIL="$CARFAX_ADMIN_EMAIL" \
+  -e CARFAX_ADMIN_PASSWORD="$CARFAX_ADMIN_PASSWORD" \
+  -e CARFAX_TENANT_A_PASSWORD="$CARFAX_TENANT_A_PASSWORD" \
+  -e CARFAX_TENANT_B_PASSWORD="$CARFAX_TENANT_B_PASSWORD" \
+  test-runner all
 ```
 
 ### Two-step containerized flow (Docker Compose)
@@ -123,6 +129,11 @@ docker run --rm -e API_URL=http://host.docker.internal:8000 test-runner all
 **Step 1: Seed the database**
 
 ```bash
+export CARFAX_ADMIN_EMAIL="admin@example.com"
+export CARFAX_ADMIN_PASSWORD="<your-admin-password>"
+export CARFAX_TENANT_A_PASSWORD="<tenant-a-password>"
+export CARFAX_TENANT_B_PASSWORD="<tenant-b-password>"
+
 docker-compose -f docker-compose.test.yml --profile seed up -d mongodb
 docker-compose -f docker-compose.test.yml --profile seed up seeder
 ```
@@ -144,7 +155,13 @@ docker-compose -f docker-compose.test.yml down -v
 When running on Windows with WSL2, use `host.docker.internal` to reach services on the host:
 
 ```bash
-docker run --rm -e API_URL=http://host.docker.internal:8000 test-runner all
+docker run --rm \
+  -e API_URL=http://host.docker.internal:8000 \
+  -e CARFAX_ADMIN_EMAIL="$CARFAX_ADMIN_EMAIL" \
+  -e CARFAX_ADMIN_PASSWORD="$CARFAX_ADMIN_PASSWORD" \
+  -e CARFAX_TENANT_A_PASSWORD="$CARFAX_TENANT_A_PASSWORD" \
+  -e CARFAX_TENANT_B_PASSWORD="$CARFAX_TENANT_B_PASSWORD" \
+  test-runner all
 ```
 
 ## CI Integration

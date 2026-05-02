@@ -61,11 +61,11 @@ No proof block = not done.
 ```
 MONGO_URL=mongodb://localhost:27017
 DB_NAME=outpace_intelligence
-JWT_SECRET=REDACTED_LOCAL_JWT_SECRET
+JWT_SECRET=REPLACE_WITH_LOCAL_JWT_SECRET
 ```
 
 ### Key Files
-- `carfax.sh` - Test harness runner (expects admin@example.com / REDACTED_ADMIN_PASSWORD)
+- `carfax.sh` - Test harness runner (expects admin@example.com / REPLACE_WITH_CARFAX_ADMIN_PASSWORD)
 - `seed_carfax_tenants.py`, `seed_carfax_users.py` - Database seeding
 - MongoDB container: `mongo-b2b`
 

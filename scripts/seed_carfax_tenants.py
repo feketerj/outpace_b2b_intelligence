@@ -101,8 +101,8 @@ def main():
     yesterday = (now - timedelta(days=1)).isoformat()
 
     # Pre-compute password hashes once for efficiency
-    test_password_hash = hash_pw(os.getenv("CARFAX_TENANT_A_PASSWORD", "changeme"))
-    admin_password_hash = hash_pw(os.getenv("CARFAX_ADMIN_PASSWORD", "changeme"))
+    test_password_hash = hash_pw(os.environ["CARFAX_TENANT_A_PASSWORD"])
+    admin_password_hash = hash_pw(os.environ["CARFAX_ADMIN_PASSWORD"])
 
     # Define all 6 tenants per v3 spec
     tenants = [
