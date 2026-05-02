@@ -4,8 +4,13 @@ const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@example.com';
 const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD;
 
 const requireAdminPassword = () => {
-  test.skip(!E2E_ADMIN_PASSWORD, 'E2E_ADMIN_PASSWORD must be set for dashboard tests.');
-  return E2E_ADMIN_PASSWORD!;
+  if (!E2E_ADMIN_PASSWORD) {
+    if (process.env.CI) {
+      throw new Error('E2E_ADMIN_PASSWORD must be set for dashboard tests in CI.');
+    }
+    test.skip(true, 'E2E_ADMIN_PASSWORD must be set for dashboard tests.');
+  }
+  return E2E_ADMIN_PASSWORD;
 };
 
 /**

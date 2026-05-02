@@ -39,14 +39,26 @@ jobs:
           pip install -r requirements.txt
           pip install "pytest-asyncio>=0.26" --upgrade
 
+      - name: Generate CI test credentials
+        run: |
+          admin_password="CI$(openssl rand -hex 18)Aa1!"
+          tenant_a_password="CI$(openssl rand -hex 18)Aa1!"
+          tenant_b_password="CI$(openssl rand -hex 18)Aa1!"
+          {
+            echo "CARFAX_ADMIN_EMAIL=admin@example.com"
+            echo "CARFAX_ADMIN_PASSWORD=$admin_password"
+            echo "CARFAX_TENANT_A_EMAIL=tenant-a@test.com"
+            echo "CARFAX_TENANT_A_PASSWORD=$tenant_a_password"
+            echo "CARFAX_TENANT_B_EMAIL=tenant-b@test.com"
+            echo "CARFAX_TENANT_B_PASSWORD=$tenant_b_password"
+            echo "E2E_ADMIN_EMAIL=admin@example.com"
+            echo "E2E_ADMIN_PASSWORD=$admin_password"
+          } >> "$GITHUB_ENV"
+
       - name: Seed test data
         env:
           MONGO_URL: mongodb://localhost:27017
           DB_NAME: outpace_intelligence
-          CARFAX_ADMIN_EMAIL: ${{ secrets.CARFAX_ADMIN_EMAIL || 'admin@example.com' }}
-          CARFAX_ADMIN_PASSWORD: ${{ secrets.CARFAX_ADMIN_PASSWORD || 'CIOnlyAdminPassword!2026' }}
-          CARFAX_TENANT_A_PASSWORD: ${{ secrets.CARFAX_TENANT_A_PASSWORD || 'CIOnlyTenantAPassword!2026' }}
-          CARFAX_TENANT_B_PASSWORD: ${{ secrets.CARFAX_TENANT_B_PASSWORD || 'CIOnlyTenantBPassword!2026' }}
         run: |
           pip install pymongo bcrypt
           python scripts/seed_carfax_tenants.py
@@ -88,12 +100,6 @@ jobs:
       - name: Run carfax tests
         env:
           API_URL: http://localhost:8000
-          CARFAX_ADMIN_EMAIL: ${{ secrets.CARFAX_ADMIN_EMAIL || 'admin@example.com' }}
-          CARFAX_ADMIN_PASSWORD: ${{ secrets.CARFAX_ADMIN_PASSWORD || 'CIOnlyAdminPassword!2026' }}
-          CARFAX_TENANT_A_EMAIL: ${{ secrets.CARFAX_TENANT_A_EMAIL || 'tenant-a@test.com' }}
-          CARFAX_TENANT_A_PASSWORD: ${{ secrets.CARFAX_TENANT_A_PASSWORD || 'CIOnlyTenantAPassword!2026' }}
-          CARFAX_TENANT_B_EMAIL: ${{ secrets.CARFAX_TENANT_B_EMAIL || 'tenant-b@test.com' }}
-          CARFAX_TENANT_B_PASSWORD: ${{ secrets.CARFAX_TENANT_B_PASSWORD || 'CIOnlyTenantBPassword!2026' }}
         run: |
           chmod +x carfax.sh
           ./carfax.sh all
