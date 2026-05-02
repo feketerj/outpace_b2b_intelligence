@@ -43,9 +43,9 @@ jobs:
           DB_NAME: "test_db"
           JWT_SECRET: "test-secret-for-ci-only"
         run: |
-          python -m pytest tests/test_invariants.py -v --tb=short || true
-          python -m pytest tests/test_contracts.py -v --tb=short || true
-          python -m pytest tests/test_state_transitions.py -v --tb=short || true
+          python -m pytest tests/test_invariants.py -v --tb=short
+          python -m pytest tests/test_contracts.py -v --tb=short
+          python -m pytest tests/test_state_transitions.py -v --tb=short
 
       - name: Summary
         if: always()

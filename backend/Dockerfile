@@ -28,6 +28,6 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Run uvicorn with multiple workers for production
-# Workers = 2 * CPU cores + 1 (adjust via env var or override)
-CMD ["uvicorn", "backend.server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Keep the default web process single-worker so in-process schedulers do not duplicate work.
+# Set WEB_CONCURRENCY only when ENABLE_SCHEDULER=false or a distributed scheduler lock is in place.
+CMD ["sh", "-c", "uvicorn backend.server:app --host 0.0.0.0 --port 8000 --workers ${WEB_CONCURRENCY:-1}"]

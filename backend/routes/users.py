@@ -14,6 +14,15 @@ def get_db():
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
+async def _revoke_all_user_refresh_tokens(db, user_id: str) -> int:
+    """Revoke refresh tokens when privilege or credential state changes."""
+    result = await db.refresh_tokens.update_many(
+        {"user_id": user_id, "revoked": False},
+        {"$set": {"revoked": True, "revoked_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return result.modified_count
+
 @router.post("", response_model=User)
 async def create_user(
     user_data: UserCreate,
@@ -176,6 +185,18 @@ async def update_user(
     
     # Update user
     update_data = {k: v for k, v in user_data.model_dump(exclude_unset=True).items() if v is not None}
+
+    if current_user.role == UserRole.TENANT_ADMIN and "role" in update_data:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tenant admins cannot change user roles"
+        )
+
+    if update_data.get("role") == UserRole.SUPER_ADMIN and current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only super admins can assign super admin role"
+        )
     
     # Validate and hash password if updating
     if "password" in update_data:
@@ -193,6 +214,9 @@ async def update_user(
         {"id": user_id},
         {"$set": update_data}
     )
+
+    if "role" in update_data or "hashed_password" in update_data:
+        await _revoke_all_user_refresh_tokens(db, user_id)
     
     # Return updated user
     updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "hashed_password": 0})

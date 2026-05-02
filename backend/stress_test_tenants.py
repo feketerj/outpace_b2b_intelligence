@@ -13,8 +13,8 @@ from datetime import datetime
 
 BASE_URL = "http://localhost:8000"
 ADMIN_TOKEN = None
-ADMIN_EMAIL = os.environ["CARFAX_ADMIN_EMAIL"]
-ADMIN_PASSWORD = os.environ["CARFAX_ADMIN_PASSWORD"]
+ADMIN_EMAIL = os.getenv("CARFAX_ADMIN_EMAIL", "admin@example.com")
+ADMIN_PASSWORD = os.getenv("CARFAX_ADMIN_PASSWORD", "local-test-password")
 
 # Results storage
 results = {

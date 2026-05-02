@@ -220,8 +220,27 @@ async def logout_all(current_user=Depends(get_current_user)):
 @router.post("/register", response_model=User)
 @limiter.limit(AUTH_RATE_LIMIT)
 async def register(request: Request, user_data: UserCreate):
-    """Register new user (super admin or tenant user)"""
+    """Register a tenant user only when public registration is explicitly enabled."""
     db = get_db()
+
+    public_registration_enabled = os.getenv("ALLOW_PUBLIC_REGISTRATION", "").lower() in {"1", "true", "yes"}
+    if not public_registration_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Public registration is disabled"
+        )
+
+    if user_data.role != UserRole.TENANT_USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Public registration cannot create privileged users"
+        )
+
+    if not user_data.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required for public registration"
+        )
     
     # Validate password policy
     is_valid, errors = validate_password_policy(user_data.password)
@@ -239,14 +258,13 @@ async def register(request: Request, user_data: UserCreate):
             detail="Email already registered"
         )
     
-    # Validate tenant exists if tenant_id provided
-    if user_data.tenant_id:
-        tenant = await db.tenants.find_one({"id": user_data.tenant_id})
-        if not tenant:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tenant not found"
-            )
+    # Validate tenant exists
+    tenant = await db.tenants.find_one({"id": user_data.tenant_id})
+    if not tenant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tenant not found"
+        )
     
     # Create user
     now = datetime.now(timezone.utc).isoformat()
@@ -254,7 +272,7 @@ async def register(request: Request, user_data: UserCreate):
         "id": str(uuid.uuid4()),
         "email": user_data.email,
         "full_name": user_data.full_name,
-        "role": user_data.role,
+        "role": UserRole.TENANT_USER.value,
         "tenant_id": user_data.tenant_id,
         "hashed_password": get_password_hash(user_data.password),
         "created_at": now,

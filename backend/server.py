@@ -69,7 +69,10 @@ async def lifespan(app: FastAPI):
     await run_migrations(get_database())
     await _cleanup_stuck_rag_documents()
     await _ensure_rag_indexes()
-    start_scheduler(get_database())
+    if os.getenv("ENABLE_SCHEDULER", "true").lower() in {"1", "true", "yes"}:
+        start_scheduler(get_database())
+    else:
+        logger.info("Scheduler disabled by ENABLE_SCHEDULER")
     logger.info("Application startup complete")
     yield
     # Shutdown
@@ -150,10 +153,14 @@ app.include_router(api_router)
 # TracingMiddleware FIRST (outermost layer) - adds trace_id to all requests
 app.add_middleware(TracingMiddleware)
 
-cors_origins_raw = os.environ.get(
-    'CORS_ALLOWED_ORIGINS',
-    'http://localhost:3000,http://localhost:3333,http://host.docker.internal:3000',
-)
+cors_origins_raw = os.environ.get('CORS_ALLOWED_ORIGINS') or os.environ.get('CORS_ORIGINS')
+if not cors_origins_raw:
+    if os.getenv("ENV", "development").lower() in {"production", "prod"}:
+        raise RuntimeError(
+            "CORS_ALLOWED_ORIGINS must be set in production. "
+            "Set explicit origin(s), for example https://app.example.com."
+        )
+    cors_origins_raw = 'http://localhost:3000,http://localhost:3333,http://host.docker.internal:3000'
 _cors_allowed_origins = [o.strip() for o in cors_origins_raw.split(',') if o.strip()]
 # Wildcard origins are never permitted — enforce at startup
 if '*' in _cors_allowed_origins:

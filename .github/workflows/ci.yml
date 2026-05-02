@@ -88,7 +88,8 @@ jobs:
         if: always()
         with:
           name: coverage-report
-          path: backend/coverage.xml
+          path: coverage.xml
+          if-no-files-found: warn
 
       - name: Start API server
         env:

@@ -21,7 +21,7 @@ spec:
       timeoutSeconds: 300
       serviceAccountName: outpace-api-sa@PROJECT_ID.iam.gserviceaccount.com
       containers:
-        - image: REGION-docker.pkg.dev/PROJECT_ID/outpace/backend:latest
+        - image: BACKEND_IMAGE
           ports:
             - name: http1
               containerPort: 8000
@@ -35,6 +35,12 @@ spec:
               value: outpace_intelligence
             - name: PORT
               value: '8000'
+            - name: ENV
+              value: production
+            - name: ENABLE_SCHEDULER
+              value: 'false'
+            - name: CORS_ALLOWED_ORIGINS
+              value: WEB_ORIGIN
             # Secrets from Secret Manager
             - name: MONGO_URL
               valueFrom:

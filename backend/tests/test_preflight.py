@@ -120,7 +120,7 @@ class TestCORSSecurity:
     """Test CORS security - warnings in dev, HARD FAIL in production."""
 
     def test_missing_cors_origins_warns_in_development(self):
-        """Missing CORS_ORIGINS in development mode should warn but not error."""
+        """Missing CORS_ALLOWED_ORIGINS in development mode should warn but not error."""
         from backend.utils.preflight import PreflightResult, _check_cors_security
 
         result = PreflightResult()
@@ -134,12 +134,12 @@ class TestCORSSecurity:
         assert any("ANY origin" in w for w in result.warnings)
 
     def test_wildcard_cors_warns_in_development(self):
-        """Explicit CORS_ORIGINS='*' in development should warn but not error."""
+        """Explicit CORS_ALLOWED_ORIGINS='*' in development should warn but not error."""
         from backend.utils.preflight import PreflightResult, _check_cors_security
 
         result = PreflightResult()
 
-        with patch.dict(os.environ, {"CORS_ORIGINS": "*", "ENV": "development"}, clear=True):
+        with patch.dict(os.environ, {"CORS_ALLOWED_ORIGINS": "*", "ENV": "development"}, clear=True):
             _check_cors_security(result)
 
         assert len(result.warnings) > 0
@@ -152,7 +152,7 @@ class TestCORSSecurity:
         result = PreflightResult()
 
         # Production mode with wildcard - must FAIL
-        with patch.dict(os.environ, {"CORS_ORIGINS": "*", "ENV": "production"}, clear=True):
+        with patch.dict(os.environ, {"CORS_ALLOWED_ORIGINS": "*", "ENV": "production"}, clear=True):
             _check_cors_security(result)
 
         assert result.critical_failure  # MUST be a critical error
@@ -160,7 +160,7 @@ class TestCORSSecurity:
         assert any("will not start" in e.lower() for e in result.errors)
 
     def test_missing_cors_fails_hard_in_production(self):
-        """CRITICAL: Missing CORS_ORIGINS in production must be a HARD FAILURE."""
+        """CRITICAL: Missing CORS_ALLOWED_ORIGINS in production must be a HARD FAILURE."""
         from backend.utils.preflight import PreflightResult, _check_cors_security
 
         result = PreflightResult()
@@ -173,7 +173,23 @@ class TestCORSSecurity:
         assert len(result.errors) > 0
 
     def test_explicit_origin_passes_in_production(self):
-        """Explicit CORS_ORIGINS in production should pass."""
+        """Explicit CORS_ALLOWED_ORIGINS in production should pass."""
+        from backend.utils.preflight import PreflightResult, _check_cors_security
+
+        result = PreflightResult()
+
+        with patch.dict(os.environ, {
+            "CORS_ALLOWED_ORIGINS": "https://myapp.com",
+            "ENV": "production"
+        }, clear=True):
+            _check_cors_security(result)
+
+        assert not result.critical_failure
+        assert len(result.warnings) == 0
+        assert result.checks_passed == 1
+
+    def test_legacy_cors_origins_still_passes(self):
+        """Legacy CORS_ORIGINS remains supported as a compatibility fallback."""
         from backend.utils.preflight import PreflightResult, _check_cors_security
 
         result = PreflightResult()
@@ -185,7 +201,6 @@ class TestCORSSecurity:
             _check_cors_security(result)
 
         assert not result.critical_failure
-        assert len(result.warnings) == 0
         assert result.checks_passed == 1
 
 

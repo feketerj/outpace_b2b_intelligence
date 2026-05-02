@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set
 from datetime import datetime, timezone, timedelta
 import uuid
 import logging
@@ -9,7 +9,7 @@ import io
 
 from backend.models import (
     Tenant, TenantCreate, TenantUpdate, PaginatedResponse, PaginationMetadata,
-    TenantStatus
+    TenantStatus, UserRole
 )
 from backend.utils.auth import get_current_super_admin, get_current_user, TokenData
 from backend.utils.state_machines import validate_tenant_status_transition
@@ -21,6 +21,17 @@ logger = logging.getLogger(__name__)
 TENANT_NOT_FOUND_DETAIL = "Tenant not found"
 INVALID_JSON_DETAIL = "Invalid JSON body"
 EMPTY_JSON_OBJECT_DETAIL = "Request body must be a non-empty JSON object"
+SENSITIVE_FIELD_NAMES = {
+    "hashed_password",
+    "password",
+    "refresh_token",
+    "token_hash",
+    "api_key",
+    "highergov_api_key",
+    "mistral_api_key",
+    "perplexity_api_key",
+    "jwt_secret",
+}
 
 def get_db():
     return get_database()
@@ -32,10 +43,42 @@ def _json_default(value):
     return str(value)
 
 
+def _redact_sensitive(value: Any, replacement: Any = None) -> Any:
+    if isinstance(value, dict):
+        redacted = {}
+        for key, nested_value in value.items():
+            key_lower = str(key).lower()
+            if (
+                key_lower in SENSITIVE_FIELD_NAMES
+                or key_lower.endswith("_api_key")
+                or key_lower.endswith("_token")
+                or key_lower.endswith("_secret")
+            ):
+                redacted[key] = replacement
+            else:
+                redacted[key] = _redact_sensitive(nested_value, replacement=replacement)
+        return redacted
+    if isinstance(value, list):
+        return [_redact_sensitive(item, replacement=replacement) for item in value]
+    return value
+
+
+def _tenant_from_doc(tenant_doc: dict) -> Tenant:
+    return Tenant(**_redact_sensitive(tenant_doc, replacement=None))
+
+
+def _require_tenant_data_admin(current_user: TokenData, tenant_id: str) -> None:
+    if current_user.role == UserRole.SUPER_ADMIN:
+        return
+    if current_user.role == UserRole.TENANT_ADMIN and current_user.tenant_id == tenant_id:
+        return
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
+
 async def _export_collection(db, name: str, tenant_id: str) -> List[dict]:
     cursor = db[name].find({"tenant_id": tenant_id}, {"_id": 0})
     docs = await cursor.to_list(length=None)
-    return docs
+    return [_redact_sensitive(doc, replacement="[REDACTED]") for doc in docs]
 
 @router.post("", response_model=Tenant, dependencies=[Depends(get_current_super_admin)])
 async def create_tenant(tenant_data: TenantCreate):
@@ -64,7 +107,7 @@ async def create_tenant(tenant_data: TenantCreate):
     
     await db.tenants.insert_one(tenant_doc)
     logger.info(f"[audit.tenant_create] tenant_id={tenant_doc['id']} slug={tenant_doc['slug']} name={tenant_doc['name']}")
-    return Tenant(**tenant_doc)
+    return _tenant_from_doc(tenant_doc)
 
 @router.get("", response_model=PaginatedResponse)
 async def list_tenants(
@@ -88,7 +131,9 @@ async def list_tenants(
         ]
     
     # Non-super admins only see their own tenant
-    if current_user.role != "super_admin" and current_user.tenant_id:
+    if current_user.role != UserRole.SUPER_ADMIN:
+        if not current_user.tenant_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
         query["id"] = current_user.tenant_id
     
     # Get total count
@@ -102,7 +147,7 @@ async def list_tenants(
     pages = (total + per_page - 1) // per_page
     
     return PaginatedResponse(
-        data=[Tenant(**t) for t in tenants],
+        data=[_tenant_from_doc(t) for t in tenants],
         pagination=PaginationMetadata(
             total=total,
             page=page,
@@ -116,8 +161,8 @@ async def get_tenant(tenant_id: str, current_user: TokenData = Depends(get_curre
     """Get tenant by ID"""
     db = get_db()
     
-    # Check permissions - allow tenant users to view their own tenant
-    if current_user.role not in ["super_admin", "tenant_admin"] and current_user.tenant_id != tenant_id:
+    # Check permissions - non-super admins can only view their own tenant.
+    if current_user.role != UserRole.SUPER_ADMIN and current_user.tenant_id != tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
@@ -131,7 +176,7 @@ async def get_tenant(tenant_id: str, current_user: TokenData = Depends(get_curre
             detail=TENANT_NOT_FOUND_DETAIL
         )
     
-    return Tenant(**tenant_doc)
+    return _tenant_from_doc(tenant_doc)
 
 def deep_merge(base: dict, updates: dict) -> dict:
     """Deep merge updates into base, preserving unspecified nested fields."""
@@ -280,7 +325,7 @@ async def patch_tenant(
 
     logger.info(f"[audit.tenant_patch] tenant_id={tenant_id} fields={list(payload.keys())} by={current_user.user_id}")
     updated_tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
-    return Tenant(**updated_tenant)
+    return _tenant_from_doc(updated_tenant)
 
 
 @router.put("/{tenant_id}", response_model=Tenant)
@@ -362,7 +407,7 @@ async def update_tenant(
     logger.info(f"[audit.tenant_update] tenant_id={tenant_id} fields={list(raw_body.keys())} by={current_user.user_id}")
     # Return updated tenant
     updated_tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
-    return Tenant(**updated_tenant)
+    return _tenant_from_doc(updated_tenant)
 
 @router.delete("/{tenant_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_tenant(
@@ -399,18 +444,14 @@ async def export_tenant_data(
     """Export tenant data for GDPR data portability."""
     db = get_db()
 
-    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
-        )
+    _require_tenant_data_admin(current_user, tenant_id)
 
     tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
     if not tenant:
         raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND_DETAIL)
 
     export_data = {
-        "tenant": tenant,
+        "tenant": _redact_sensitive(tenant, replacement="[REDACTED]"),
         "users": await _export_collection(db, "users", tenant_id),
         "opportunities": await _export_collection(db, "opportunities", tenant_id),
         "intelligence": await _export_collection(db, "intelligence", tenant_id),
@@ -449,7 +490,7 @@ async def suspend_tenant(tenant_id: str):
         {"$set": {"status": TenantStatus.SUSPENDED.value, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     updated = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
-    return Tenant(**updated)
+    return _tenant_from_doc(updated)
 
 
 @router.post("/{tenant_id}/activate", response_model=Tenant, dependencies=[Depends(get_current_super_admin)])
@@ -465,18 +506,20 @@ async def activate_tenant(tenant_id: str):
         {"$set": {"status": TenantStatus.ACTIVE.value, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     updated = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
-    return Tenant(**updated)
+    return _tenant_from_doc(updated)
 
 
 @router.post("/{tenant_id}/gdpr/delete")
 async def gdpr_delete_tenant_data(
     tenant_id: str,
+    confirm: bool = Query(False, description="Must be true to confirm destructive tenant data deletion"),
     current_user: TokenData = Depends(get_current_user)
 ):
     """GDPR delete: purge tenant data but keep tenant record."""
     db = get_db()
-    if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
-        raise HTTPException(status_code=403, detail="Access denied")
+    _require_tenant_data_admin(current_user, tenant_id)
+    if not confirm:
+        raise HTTPException(status_code=400, detail="GDPR delete requires confirm=true")
 
     tenant = await db.tenants.find_one({"id": tenant_id})
     if not tenant:

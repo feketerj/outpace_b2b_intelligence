@@ -47,7 +47,7 @@ cp .env.example .env
 | `MONGO_APP_USERNAME` | App database user | `outpace_app` |
 | `MONGO_APP_PASSWORD` | App database password | (generate strong password) |
 | `JWT_SECRET` | JWT signing key | `openssl rand -hex 32` |
-| `CORS_ORIGINS` | Allowed origins | `https://your-domain.com` |
+| `CORS_ALLOWED_ORIGINS` | Allowed origins | `https://your-domain.com` |
 | `ENV` | Environment mode | `production` |
 
 **Production-specific variables:**

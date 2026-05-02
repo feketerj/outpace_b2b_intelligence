@@ -120,7 +120,7 @@ def _check_cors_security(result: PreflightResult) -> None:
     In production (ENV=production): Wildcard CORS is a CRITICAL ERROR - server won't start.
     In development: Wildcard CORS is a WARNING - server starts but logs the risk.
     """
-    cors_origins = os.environ.get("CORS_ORIGINS", "")
+    cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS") or os.environ.get("CORS_ORIGINS", "")
     environment = os.environ.get("ENV", "development").lower()
     is_production = environment in ("production", "prod")
 
@@ -129,20 +129,20 @@ def _check_cors_security(result: PreflightResult) -> None:
     if is_wildcard and is_production:
         # PRODUCTION: This is a critical security error - fail hard
         result.add_error(
-            "CORS_ORIGINS is wildcard ('*') in production environment. "
+            "CORS_ALLOWED_ORIGINS is wildcard ('*') in production environment. "
             "This allows ANY website to make authenticated API calls. "
-            "Set CORS_ORIGINS to your allowed domains (e.g., https://yourdomain.com). "
+            "Set CORS_ALLOWED_ORIGINS to your allowed domains (e.g., https://yourdomain.com). "
             "Server will NOT start until this is fixed."
         )
     elif is_wildcard:
         # DEVELOPMENT: Warn but allow startup
         result.add_warning(
-            "CORS_ORIGINS not set or is '*' - allowing ANY origin. "
+            "CORS_ALLOWED_ORIGINS not set or is '*' - allowing ANY origin. "
             "This is acceptable for local development but WILL FAIL in production (ENV=production). "
-            "Set CORS_ORIGINS=http://localhost:3000 for dev."
+            "Set CORS_ALLOWED_ORIGINS=http://localhost:3000 for dev."
         )
     else:
-        result.add_pass("CORS_ORIGINS_CONFIGURED")
+        result.add_pass("CORS_ALLOWED_ORIGINS_CONFIGURED")
 
 
 def _check_secrets_backend(result: PreflightResult) -> None:

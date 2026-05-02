@@ -153,17 +153,18 @@ async def get_intelligence_config(
 ):
     """Get current intelligence configuration for a tenant"""
     db = get_db()
-    cache_key = f"{tenant_id}:intelligence_config"
-    cached = _tenant_config_cache.get(cache_key)
-    if cached:
-        return cached
-    
+
     # Access control
     if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
+
+    cache_key = f"{tenant_id}:intelligence_config"
+    cached = _tenant_config_cache.get(cache_key)
+    if cached:
+        return cached
     
     tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
     if not tenant:

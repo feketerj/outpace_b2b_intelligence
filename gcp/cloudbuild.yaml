@@ -1,5 +1,5 @@
 steps:
-  # ── Build backend image ────────────────────────────────────────────────────────────────────────────
+  # Build backend image from the backend context expected by backend/Dockerfile.
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-backend'
     args:
@@ -10,9 +10,9 @@ steps:
       - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/backend:$SHORT_SHA'
       - '-f'
       - 'backend/Dockerfile'
-      - '.'
+      - 'backend'
 
-  # ── Build frontend image ───────────────────────────────────────────────────────────────────────────
+  # Build frontend image from the frontend context expected by frontend/Dockerfile.
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-frontend'
     args:
@@ -21,11 +21,12 @@ steps:
       - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/frontend:latest'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/frontend:$SHORT_SHA'
+      - '--build-arg'
+      - 'REACT_APP_BACKEND_URL=${_API_URL}'
       - '-f'
       - 'frontend/Dockerfile'
-      - '.'
+      - 'frontend'
 
-  # ── Push backend images ────────────────────────────────────────────────────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-backend-latest'
     waitFor: ['build-backend']
@@ -40,7 +41,6 @@ steps:
       - 'push'
       - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/backend:$SHORT_SHA'
 
-  # ── Push frontend images ───────────────────────────────────────────────────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-frontend-latest'
     waitFor: ['build-frontend']
@@ -55,31 +55,51 @@ steps:
       - 'push'
       - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/frontend:$SHORT_SHA'
 
-  # ── Deploy backend to Cloud Run ───────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'render-manifests'
+    waitFor: ['push-backend-sha', 'push-frontend-sha']
+    entrypoint: bash
+    args:
+      - '-ceu'
+      - |
+        test -n '${_PROJECT_ID}' || { echo "_PROJECT_ID substitution is required"; exit 1; }
+        test -n '${_WEB_ORIGIN}' || { echo "_WEB_ORIGIN substitution is required"; exit 1; }
+        test -n '${_API_URL}' || { echo "_API_URL substitution is required"; exit 1; }
+        mkdir -p /workspace/rendered
+        sed \
+          -e 's|PROJECT_ID|${_PROJECT_ID}|g' \
+          -e 's|REGION|${_REGION}|g' \
+          -e 's|BACKEND_IMAGE|${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/backend:'"$SHORT_SHA"'|g' \
+          -e 's|WEB_ORIGIN|${_WEB_ORIGIN}|g' \
+          gcp/cloud-run-api.yaml > /workspace/rendered/cloud-run-api.yaml
+        sed \
+          -e 's|PROJECT_ID|${_PROJECT_ID}|g' \
+          -e 's|REGION|${_REGION}|g' \
+          -e 's|FRONTEND_IMAGE|${_REGION}-docker.pkg.dev/${_PROJECT_ID}/outpace/frontend:'"$SHORT_SHA"'|g' \
+          gcp/cloud-run-web.yaml > /workspace/rendered/cloud-run-web.yaml
+
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-backend'
-    waitFor: ['push-backend-latest', 'push-backend-sha']
+    waitFor: ['render-manifests']
     entrypoint: gcloud
     args:
       - 'run'
       - 'services'
       - 'replace'
-      - 'gcp/cloud-run-api.yaml'
+      - '/workspace/rendered/cloud-run-api.yaml'
       - '--region=${_REGION}'
 
-  # ── Deploy frontend to Cloud Run ───────────────────────────────────────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-frontend'
-    waitFor: ['push-frontend-latest', 'push-frontend-sha']
+    waitFor: ['render-manifests']
     entrypoint: gcloud
     args:
       - 'run'
       - 'services'
       - 'replace'
-      - 'gcp/cloud-run-web.yaml'
+      - '/workspace/rendered/cloud-run-web.yaml'
       - '--region=${_REGION}'
 
-  # ── Route 100% traffic to new revision (backend) ───────────────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'traffic-backend'
     waitFor: ['deploy-backend']
@@ -92,7 +112,6 @@ steps:
       - '--to-latest'
       - '--region=${_REGION}'
 
-  # ── Route 100% traffic to new revision (frontend) ───────────────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'traffic-frontend'
     waitFor: ['deploy-frontend']
@@ -113,7 +132,9 @@ images:
 
 substitutions:
   _REGION: us-central1
-  _PROJECT_ID: ''   # Required — set via trigger or --substitutions flag
+  _PROJECT_ID: ''  # Required; set via trigger or --substitutions flag.
+  _API_URL: ''     # Required public API origin, e.g. https://outpace-api-...run.app.
+  _WEB_ORIGIN: ''  # Required public frontend origin for CORS.
 
 options:
   logging: CLOUD_LOGGING_ONLY

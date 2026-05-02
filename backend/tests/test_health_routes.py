@@ -76,14 +76,12 @@ class TestCheckMongoDB:
 
         mock_db = MagicMock()
         mock_db.command = AsyncMock(return_value={"ok": 1})
-        mock_db.tenants.count_documents = AsyncMock(return_value=5)
-
         with patch("backend.routes.health.get_database", return_value=mock_db):
             result = await _check_mongodb()
 
         assert result["ok"] is True
         assert "latency_ms" in result
-        assert result["tenant_count"] == 5
+        assert "tenant_count" not in result
 
     @pytest.mark.asyncio
     async def test_returns_not_ok_when_db_is_none(self):
@@ -106,7 +104,7 @@ class TestCheckMongoDB:
             result = await _check_mongodb()
 
         assert result["ok"] is False
-        assert "connection refused" in result.get("error", "")
+        assert result.get("error") == "Exception"
 
     @pytest.mark.asyncio
     async def test_returns_not_ok_on_timeout(self):

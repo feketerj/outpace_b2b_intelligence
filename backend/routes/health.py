@@ -12,7 +12,7 @@ Usage:
     curl http://localhost:8000/health/deep
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
 import os
 import logging
@@ -20,6 +20,7 @@ import asyncio
 from typing import Dict, Any
 
 from backend.database import get_database
+from backend.utils.auth import get_current_super_admin
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ async def health_check():
 
 
 @router.get("/deep")
-async def deep_health_check():
+async def deep_health_check(current_user=Depends(get_current_super_admin)):
     """
     Deep health check probing all dependencies.
 
@@ -108,18 +109,11 @@ async def _check_mongodb() -> Dict[str, Any]:
             timeout=5.0
         )
 
-        # Check we can read
-        tenant_count = await asyncio.wait_for(
-            db.tenants.count_documents({}),
-            timeout=5.0
-        )
-
         duration_ms = (datetime.now(timezone.utc) - start).total_seconds() * 1000
 
         return {
             "ok": True,
-            "latency_ms": round(duration_ms, 2),
-            "tenant_count": tenant_count
+            "latency_ms": round(duration_ms, 2)
         }
 
     except asyncio.TimeoutError:
@@ -127,7 +121,7 @@ async def _check_mongodb() -> Dict[str, Any]:
         return {"ok": False, "error": "Timeout"}
     except Exception as e:
         logger.error(f"[health.mongodb] Error: {e}")
-        return {"ok": False, "error": str(e)}
+        return {"ok": False, "error": type(e).__name__}
 
 
 async def _check_mistral() -> Dict[str, Any]:

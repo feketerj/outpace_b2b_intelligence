@@ -105,6 +105,9 @@ dump.rdb
 tmpclaude-*
 .claude/
 agent_docs/
+CLAUDE.md
+docs/PROJECT_MEMORY.md
+docs/*MEMORY*.md
 
 # === Mobile development ===
 android-sdk/
