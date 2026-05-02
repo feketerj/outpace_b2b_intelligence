@@ -44,7 +44,6 @@ This folder is organized by intent. Use this index to find the right doc fast.
 ## CI / Evidence
 
 - `github_actions_proof_runbook.md` - CI proof steps
-- `proof/` - evidence packets and indexes
 
 ## Misc / References
 

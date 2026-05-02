@@ -24,12 +24,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install secret scan tooling
         run: sudo apt-get update && sudo apt-get install -y ripgrep
 
       - name: Secret and artifact scan
-        run: bash scripts/secret_scan.sh
+        run: bash scripts/secret_scan.sh --history
 
       - name: Set up Python
         uses: actions/setup-python@v5

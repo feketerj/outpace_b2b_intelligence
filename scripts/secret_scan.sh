@@ -6,6 +6,11 @@
 
 set -euo pipefail
 
+SCAN_HISTORY=false
+if [ "${1:-}" = "--history" ]; then
+  SCAN_HISTORY=true
+fi
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
@@ -49,11 +54,27 @@ if rg -n "${RG_ARGS[@]}" -e '^[[:space:]#]*(HIGHERGOV|MISTRAL|PERPLEXITY)_API_KE
   failed=1
 fi
 
-tracked_artifacts="$(git ls-files '.claude' 'agent_docs' 'frontend/playwright-report' 'frontend/test-results' 'carfax_reports/*.json')"
+tracked_artifacts="$(git ls-files '.claude' 'agent_docs' 'test_reports' 'artifacts' 'docs/proof' 'frontend/playwright-report' 'frontend/test-results' 'carfax_reports/*.json')"
 if [ -n "$tracked_artifacts" ]; then
   echo "Generated/internal artifacts are tracked:" >&2
   echo "$tracked_artifacts" >&2
   failed=1
+fi
+
+if [ "$SCAN_HISTORY" = true ]; then
+  HISTORY_SECRET_PATTERN='Admin[0-9]{3}!|Test[0-9]{3}!|outpace[0-9]{4}|demo[0-9]{3}|sk-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{20,}|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'
+  if git rev-list --all | xargs git grep -n -E "$HISTORY_SECRET_PATTERN" 2>/dev/null; then
+    echo "Secret-like value found in git history" >&2
+    failed=1
+  fi
+
+  HISTORY_PATH_PATTERN='(^|/)(backend/\.env|frontend/\.env|\.env|\.env\.local|\.env\.production|\.env\.test)$|(^|/)(\.claude/|agent_docs/|test_reports/|artifacts/|docs/proof/|frontend/playwright-report/|frontend/test-results/)|(^|/)carfax_reports/.*\.json$|(^|/)test_result\.md$'
+  history_artifacts="$(git log --all --name-only --pretty=format: | sort -u | grep -E "$HISTORY_PATH_PATTERN" || true)"
+  if [ -n "$history_artifacts" ]; then
+    echo "Generated/internal paths found in git history:" >&2
+    echo "$history_artifacts" >&2
+    failed=1
+  fi
 fi
 
 if [ "$failed" -ne 0 ]; then

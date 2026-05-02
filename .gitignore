@@ -33,6 +33,8 @@ carfax_*.log
 test_reports/
 evidence/
 mc_reports/
+artifacts/
+docs/proof/
 test_export.pdf
 test_export.xlsx
 
@@ -94,9 +96,6 @@ dump.rdb
 
 # === Local development ===
 *.local
-artifacts/*.local
-artifacts/*.log
-artifacts/SOURCE_MAP.txt
 .emergent/
 
 # === Build caches ===

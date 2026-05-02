@@ -119,13 +119,6 @@ routing:
     stop_if: "Need a quick map of the docs"
     authority: "Docs folder index"
 
-  # --- Evidence/Proof Questions ---
-
-  "where is test evidence":
-    file: proof/README.md
-    stop_if: "Need test artifacts, evidence packets for audits"
-    also_check: "proof/TH-MC-003_ARTIFACT_INDEX.json"
-
 # =============================================================================
 # REFERENCE LIBRARY (Read-only - patterns from other projects)
 # =============================================================================
@@ -184,9 +177,6 @@ consolidation:
   specialized:
     - path: testing/
       purpose: "Detailed testing methodology"
-
-    - path: proof/
-      purpose: "Audit evidence packets"
 
     - path: UNIVERSAL_LESSONS_LEARNED/
       purpose: "Cross-project reference library (read-only)"
