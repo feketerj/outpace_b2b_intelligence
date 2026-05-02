@@ -263,19 +263,33 @@ test_S0_auth_happy_expansion() {
 
     # AUTH-H-002: Tenant admin login
     echo -e "\n${BOLD}AUTH-H-002: tenant_admin_login_valid${NC}"
-    local resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/login" \
+    local admin_email="carfax-admin-$(date +%s)@tenant-a-test.com"
+    local admin_password="$TENANT_A_PASSWORD"
+
+    local reg_resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/users" \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
         -H "Content-Type: application/json" \
-        -d "{\"email\":\"$TENANT_A_ADMIN_EMAIL\",\"password\":\"$TENANT_A_ADMIN_PASSWORD\"}")
-    local status=$(echo "$resp" | tail -n1)
-    local body=$(echo "$resp" | sed '$d')
-    local token=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
-    local role=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('user',{}).get('role',''))" 2>/dev/null)
-    evidence "email=$TENANT_A_ADMIN_EMAIL -> HTTP $status, role=$role, access_token=${token:+present}"
-    if [ "$status" = "200" ] && [ -n "$token" ] && [ "$role" = "tenant_admin" ]; then
-        TENANT_A_ADMIN_TOKEN="$token"
-        pass "AUTH-H-002: tenant_admin_login_valid"
+        -d "{\"email\":\"$admin_email\",\"password\":\"$admin_password\",\"full_name\":\"CARFAX Test Admin\",\"role\":\"tenant_admin\",\"tenant_id\":\"$TENANT_A_ID\"}")
+    local reg_status=$(echo "$reg_resp" | tail -n1)
+
+    if [[ ! "$reg_status" =~ ^(200|201)$ ]]; then
+        evidence "Failed to create tenant_admin via /api/users: HTTP $reg_status"
+        fail "AUTH-H-002: tenant_admin_login_valid (admin creation failed)"
     else
-        fail "AUTH-H-002: tenant_admin_login_valid (status=$status, role=$role)"
+        local resp=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/login" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"$admin_email\",\"password\":\"$admin_password\"}")
+        local status=$(echo "$resp" | tail -n1)
+        local body=$(echo "$resp" | sed '$d')
+        local token=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
+        local role=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('user',{}).get('role',''))" 2>/dev/null)
+        evidence "email=$admin_email -> HTTP $status, role=$role, access_token=${token:+present}"
+        if [ "$status" = "200" ] && [ -n "$token" ] && [ "$role" = "tenant_admin" ]; then
+            TENANT_A_ADMIN_TOKEN="$token"
+            pass "AUTH-H-002: tenant_admin_login_valid"
+        else
+            fail "AUTH-H-002: tenant_admin_login_valid (status=$status, role=$role)"
+        fi
     fi
 
     # AUTH-H-005: Create new tenant user through authenticated admin API
